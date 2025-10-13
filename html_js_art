@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Canvas Lifeform</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the canvas and background */
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background */
+        }
+        #drawingCanvas {
+            display: block;
+            background: linear-gradient(45deg, #0f1621, #1a1a2e);
+            cursor: crosshair;
+        }
+        .ui-panel {
+            position: absolute;
+            top: 1rem;
+            right: 1rem; /* New position: 1rem from the right edge */
+            padding: 1rem;
+            border: 2px solid #3c5186;
+            background-color: rgba(60, 81, 134, 0.3);
+            backdrop-filter: blur(8px);
+            color: #d1d5db;
+            font-size: 0.875rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            max-width: 95%;
+            width: 350px; /* Reduced width for less obstruction */
+            transition: all 0.3s ease-in-out;
+        }
+        #llmResult {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            min-height: 50px;
+            overflow-y: auto;
+            max-height: 30vh;
+        }
+        #llmResult strong {
+            color: #8c9eff;
+        }
+        @media (min-width: 640px) {
+            .ui-panel {
+                top: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas element will cover the entire screen -->
+    <canvas id="drawingCanvas"></canvas>
+
+    <!-- Control Panel -->
+    <div id="controlPanel" class="ui-panel flex flex-col items-center space-y-4">
+        
+        <!-- Kawaii Cat-Bot Avatar Section -->
+        <div class="w-full space-y-2 pb-3 border-b border-gray-600">
+            <h2 class="text-lg font-bold text-pink-300">🐾 Kawaii Cat-Bot Mood Echo</h2>
+            <p class="text-xs text-gray-300">The Cat-Bot's purr and pounce reflects your mood. Tell it how you feel today.</p>
+            <input 
+                id="moodInput" 
+                type="text" 
+                placeholder="e.g., 'I'm excited about the weekend!'"
+                class="w-full p-2 rounded-lg bg-gray-800 text-white border border-indigo-500 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            >
+            <button 
+                id="checkMoodButton" 
+                class="w-full py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg shadow-lg transition duration-150 disabled:opacity-50 text-sm">
+                Check Mood & Update Cat-Bot
+            </button>
+            <p id="avatarMoodStatus" class="text-xs text-center pt-1 italic text-gray-400">Current Purr-sistence: Calm (Default)</p>
+        </div>
+
+
+        <!-- Root Analysis Section -->
+        <h2 class="text-lg font-bold text-indigo-300 w-full pt-2 border-t border-gray-600">Root Species Analysis</h2>
+        <p class="text-sm">Press and hold the mouse button to draw organic roots and flowers.</p>
+        <button 
+            id="analyzeButton" 
+            class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition duration-150 ease-in-out disabled:opacity-50 text-sm"
+            disabled>
+            ✨ Analyze and Describe Root Species
+        </button>
+        <div id="llmResult" class="text-xs text-gray-300">
+            <p id="resultText">Species analysis will appear here after you draw and click the button.</p>
+        </div>
+    </div>
+
+    <script>
+        // Set up the canvas and context
+        const canvas = document.getElementById('drawingCanvas');
+        /** @type {CanvasRenderingContext2D} */
+        const ctx = canvas.getContext('2d');
+        
+        // UI Elements
+        const analyzeButton = document.getElementById('analyzeButton');
+        const checkMoodButton = document.getElementById('checkMoodButton');
+        const moodInput = document.getElementById('moodInput');
+        const resultText = document.getElementById('resultText');
+        const avatarMoodStatus = document.getElementById('avatarMoodStatus');
+
+        let isDrawing = false;
+        const allRoots = []; // Global array to store completed root characteristics for LLM analysis
+        const allFlowers = []; // Global array to keep track of flower instances
+        const apiKey = ""; // API Key for Gemini
+        const textApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent";
+
+        // Constants for Flower Sprite Sheet (3x3 grid, 9 frames total)
+        const SPRITE_URL = 'https://placehold.co/300x300/e0b1cb/5c007c?text=Flower+Sprite';
+        const FRAME_SIZE = 100; // 300px / 3 frames = 100px per frame
+
+        // Preload the flower image
+        const flowerImage = new Image();
+        flowerImage.src = SPRITE_URL;
+        flowerImage.onerror = () => console.warn("Failed to load flower sprite image.");
+
+        // Avatar instance (initialized after resize)
+        let avatar;
+
+        // Function to resize the canvas to fit the window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Re-center the avatar after resize
+            if (avatar) {
+                avatar.x = canvas.width / 2;
+                avatar.y = canvas.height / 2;
+            }
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Function to clear the canvas with a translucent layer for the fade effect
+        function clearCanvas() {
+            // Fades the previous frame by drawing a translucent rectangle over it
+            ctx.fillStyle = 'rgba(15, 22, 33, 0.08)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // -------------------------------------------------------------
+        // 1. LLM API UTILITIES
+        // -------------------------------------------------------------
+
+        async function retryWithBackoff(func, maxRetries = 5, delay = 1000) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const result = await func();
+                    return result;
+                } catch (error) {
+                    if (i === maxRetries - 1) {
+                        throw error;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function generateDescription(prompt) {
+            analyzeButton.disabled = true;
+            resultText.innerHTML = '<span class="animate-pulse">Analyzing botanical data...</span>';
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "You are a witty, authoritative botanist specializing in exotic, generative species. Invent a name (e.g., Radix Genus), habitat, and description for a new plant based on the provided data. Keep the response to 4-6 sentences, starting with the species name in bold." }]
+                }
+            };
+
+            const apiCall = async () => {
+                const response = await fetch(`${textApiUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!text) {
+                    throw new Error("Received empty response from LLM.");
+                }
+                return text;
+            };
+
+            try {
+                const description = await retryWithBackoff(apiCall);
+                resultText.innerHTML = description.replace(/^(\S+:\s)/, '<strong>$1</strong>');
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                resultText.innerHTML = "Error generating description. Please try again later.";
+            } finally {
+                analyzeButton.disabled = false;
+            }
+        }
+
+        /**
+         * Calls the Gemini API to classify the user's mood and return structured JSON.
+         */
+        async function checkMood(textInput) {
+            checkMoodButton.disabled = true;
+            avatarMoodStatus.textContent = "Analyzing purr-sistence...";
+
+            const responseSchema = {
+                type: "OBJECT",
+                properties: {
+                    mood: { type: "STRING", description: "Classified mood: Cuddly, Jittery, Calm, or Pouncing." },
+                    colorHue: { type: "NUMBER", description: "HSL hue value (0-360) corresponding to the mood. Pouncing/Energetic=0, Jittery/Anxious=300, Cuddly/Calm=240, Happy/Joyful=60." },
+                    speedMultiplier: { type: "NUMBER", description: "Movement speed multiplier (0.5 for calm/cuddly, 2.0 for pouncing/energetic, 1.0 for neutral)." }
+                },
+                propertyOrdering: ["mood", "colorHue", "speedMultiplier"]
+            };
+
+            const systemPrompt = `Analyze the user's statement for mood and classify it as one of the following: Cuddly (low speed), Jittery (mid speed/high wobble), Calm (low speed), or Pouncing (high speed). Return the results in the specified JSON format.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: textInput }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema
+                },
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const apiCall = async () => {
+                const response = await fetch(`${textApiUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Mood API call failed with status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!jsonText) {
+                    throw new Error("Received empty JSON response from LLM.");
+                }
+                return JSON.parse(jsonText);
+            };
+
+            try {
+                const moodData = await retryWithBackoff(apiCall);
+                avatar.updateFromMood(moodData);
+                avatarMoodStatus.textContent = `Current Purr-sistence: ${moodData.mood} | Hue: ${moodData.colorHue}°`;
+            } catch (error) {
+                console.error("Gemini Mood API Error:", error);
+                avatarMoodStatus.textContent = "Error: Could not analyze mood.";
+                avatar.updateFromMood({ mood: 'Error', colorHue: 0, speedMultiplier: 1.0 }); // Reset state
+            } finally {
+                checkMoodButton.disabled = false;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 2. AVATAR CLASS IMPLEMENTATION (Kawaii Cat-Bot)
+        // -------------------------------------------------------------
+        
+        class Avatar {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = 20;
+                this.targetX = x;
+                this.targetY = y;
+
+                // State driven by LLM mood analysis
+                this.currentHue = 240; // Default Calm/Blue
+                this.speedMultiplier = 0.5; // Default Slow/Calm
+                this.moodText = 'Calm';
+                
+                // Rotation for purr/wobble effect
+                this.wobbleAngle = 0;
+                this.wobbleSpeed = 0.05; 
+                this.wobbleMagnitude = 0.05;
+
+                // Base movement speed
+                this.baseSpeed = 0.01; 
+                this.wanderAngle = Math.random() * Math.PI * 2;
+            }
+
+            // Update state based on LLM response
+            updateFromMood(moodData) {
+                this.moodText = moodData.mood;
+                this.currentHue = moodData.colorHue;
+                this.speedMultiplier = moodData.speedMultiplier;
+
+                // Adjust wobble magnitude and speed based on mood
+                if (moodData.mood === 'Jittery') {
+                    this.wobbleMagnitude = 0.2; 
+                    this.wobbleSpeed = 0.8;
+                } else if (moodData.mood === 'Pouncing') {
+                    this.wobbleMagnitude = 0.08;
+                    this.wobbleSpeed = 0.4;
+                } else { // Calm or Cuddly
+                    this.wobbleMagnitude = 0.03;
+                    this.wobbleSpeed = 0.05;
+                }
+                
+                this.size = 20 + this.speedMultiplier * 5; 
+            }
+
+            // Continuous animation update
+            update() {
+                // 1. Wobble/Purr update
+                this.wobbleAngle += this.wobbleSpeed; 
+                
+                // 2. Wander movement (slowly adjust target position)
+                const wanderDistance = 150 * this.speedMultiplier;
+                const centerW = canvas.width / 2;
+                const centerH = canvas.height / 2;
+
+                this.wanderAngle += (Math.random() - 0.5) * 0.5 * this.speedMultiplier;
+                this.targetX = centerW + Math.cos(this.wanderAngle) * wanderDistance;
+                this.targetY = centerH + Math.sin(this.wanderAngle) * wanderDistance;
+                
+                // 3. Smoothly interpolate current position towards target
+                const easing = 0.02 * this.speedMultiplier;
+                this.x += (this.targetX - this.x) * easing;
+                this.y += (this.targetY - this.y) * easing;
+            }
+
+            draw() {
+                const bodyColor = `hsl(${this.currentHue}, 90%, 80%)`; // Lighter body for kawaii look
+                const strokeColor = `hsl(${this.currentHue}, 50%, 40%)`; // Darker stroke for definition
+                const shadowColor = `hsl(${this.currentHue}, 100%, 35%)`;
+                const headRadius = this.size;
+
+                ctx.globalCompositeOperation = 'source-over'; 
+
+                // --- Apply Purr/Wobble Rotation ---
+                ctx.save();
+                ctx.translate(this.x, this.y); // Set pivot to center of avatar
+                
+                // Wobble effect uses sine wave on rotation angle
+                const rotation = Math.sin(this.wobbleAngle) * this.wobbleMagnitude;
+                ctx.rotate(rotation); 
+
+                // 1. Glow/Shadow effect (drawn behind the shape)
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = headRadius * 1.5;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // Set Outline Style
+                ctx.lineWidth = 2; 
+                ctx.strokeStyle = strokeColor;
+                
+                // 2. Draw Head (Main Circle)
+                ctx.beginPath();
+                ctx.arc(0, 0, headRadius, 0, Math.PI * 2);
+                ctx.fillStyle = bodyColor;
+                ctx.fill();
+                ctx.stroke(); // Add stroke for outline
+
+                // 3. Draw Ears (Triangles)
+                // Left Ear
+                ctx.beginPath();
+                ctx.moveTo(-headRadius * 0.7, -headRadius * 0.7);
+                ctx.lineTo(-headRadius * 0.1, -headRadius * 1.3);
+                ctx.lineTo(-headRadius * 0.1, -headRadius * 0.7);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Right Ear
+                ctx.beginPath();
+                ctx.moveTo(headRadius * 0.7, -headRadius * 0.7);
+                ctx.lineTo(headRadius * 0.1, -headRadius * 1.3);
+                ctx.lineTo(headRadius * 0.1, -headRadius * 0.7);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Clear shadows for features drawn on top
+                ctx.shadowBlur = 0; 
+                
+                // 4. Draw Eyes (Two expressive black dots)
+                const eyeColor = 'black';
+                const eyeRadius = headRadius * 0.15;
+                const eyeOffset = headRadius * 0.35;
+
+                ctx.fillStyle = eyeColor;
+                // Left Eye
+                ctx.beginPath();
+                ctx.arc(-eyeOffset, -eyeOffset * 0.2, eyeRadius, 0, Math.PI * 2);
+                ctx.fill();
+                // Right Eye
+                ctx.beginPath();
+                ctx.arc(eyeOffset, -eyeOffset * 0.2, eyeRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 5. Draw Nose/Whiskers
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                // Nose/Mouth center line
+                ctx.moveTo(0, headRadius * 0.1);
+                ctx.lineTo(0, headRadius * 0.2);
+                
+                // Whiskers (Left)
+                ctx.moveTo(-headRadius * 0.35, headRadius * 0.1);
+                ctx.lineTo(-headRadius * 0.8, headRadius * 0.05);
+                ctx.moveTo(-headRadius * 0.35, headRadius * 0.25);
+                ctx.lineTo(-headRadius * 0.8, headRadius * 0.3);
+                
+                // Whiskers (Right)
+                ctx.moveTo(headRadius * 0.35, headRadius * 0.1);
+                ctx.lineTo(headRadius * 0.8, headRadius * 0.05);
+                ctx.moveTo(headRadius * 0.35, headRadius * 0.25);
+                ctx.lineTo(headRadius * 0.8, headRadius * 0.3);
+                ctx.stroke();
+
+                ctx.restore(); // Restore previous canvas settings (undo translate/rotate)
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // 3. FLOWER CLASS IMPLEMENTATION
+        // -------------------------------------------------------------
+        
+        // (Flower class remains the same)
+        class Flower {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.image = flowerImage;
+                this.angle = Math.random() * 6.2;
+                this.va = Math.random() * 0.1 - 0.05;
+                this.size = size * 0.5;
+                this.maxFlowerSize = size + Math.random() * 50;
+                this.vs = Math.random() * 0.3 + 0.1;
+                this.frameSize = FRAME_SIZE;
+                this.frameX = Math.floor(Math.random() * 3);
+                this.frameY = Math.floor(Math.random() * 3);
+            }
+            grow() {
+                if (this.size < this.maxFlowerSize) {
+                    this.size += this.vs;
+                    this.angle += this.va;
+                    this.draw();
+                    requestAnimationFrame(this.grow.bind(this)); 
+                }
+            }
+            draw() {
+                if (!this.image.complete) return;
+                ctx.globalCompositeOperation = 'lighter'; // Keep watercolor blend for flowers
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle); 
+                
+                ctx.drawImage(
+                    this.image, 
+                    this.frameX * this.frameSize, 
+                    this.frameY * this.frameSize, 
+                    this.frameSize,
+                    this.frameSize,
+                    -this.size / 2, 
+                    -this.size / 2, 
+                    this.size, 
+                    this.size
+                );
+                ctx.restore();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 4. ROOT CLASS IMPLEMENTATION
+        // -------------------------------------------------------------
+
+        // (Root class remains the same)
+        class Root {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.speedX = Math.random() * 4 - 2; 
+                this.speedY = Math.random() * 4 - 2; 
+                this.initialSpeedMagnitude = Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
+                this.angleX = Math.random() * 6.2; 
+                this.angleY = Math.random() * 6.2; 
+                this.vaX = Math.random() * 0.4 - 0.2; 
+                this.vaY = Math.random() * 0.4 - 0.2; 
+                this.size = Math.random() * 3 + 2; 
+                this.maxSize = Math.random() * 7 + 5; 
+                this.vs = Math.random() * 0.1 + 0.05; 
+                this.initialHue = Math.random() * 40 + 100; 
+                this.lightness = 10; 
+                this.lightnessSpeed = 0.5;
+                this.willFlower = this.maxSize > 10 && Math.random() > 0.4;
+            }
+            update() {
+                this.x += this.speedX + Math.sin(this.angleX);
+                this.y += this.speedY + Math.sin(this.angleY);
+                this.angleX += this.vaX;
+                this.angleY += this.vaY;
+
+                if (this.size < this.maxSize) {
+                    this.size += this.vs;
+                    if (this.lightness < 70) {
+                        this.lightness += this.lightnessSpeed;
+                    }
+                    this.draw();
+                    requestAnimationFrame(this.update.bind(this)); 
+                } else {
+                    allRoots.push(this);
+                    if (this.willFlower && this.image?.complete !== false) {
+                        const flower = new Flower(this.x, this.y, this.size);
+                        allFlowers.push(flower);
+                        flower.grow();
+                    }
+                }
+            }
+            draw() {
+                ctx.globalCompositeOperation = 'lighter'; 
+                const color = `hsl(${this.initialHue}, 100%, ${this.lightness}%)`;
+
+                ctx.fillStyle = color;
+                ctx.strokeStyle = color; 
+                ctx.lineWidth = 0.5; 
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 5. INITIALIZATION & MAIN LOOP
+        // -------------------------------------------------------------
+        
+        function init() {
+            resizeCanvas();
+            // Initialize the avatar in the center
+            avatar = new Avatar(canvas.width / 2, canvas.height / 2);
+            // Start the main animation loop
+            animate();
+        }
+
+        function animate() {
+            clearCanvas(); // Clear canvas partially to allow trails to fade
+
+            // Update and draw the avatar
+            avatar.update(); 
+            avatar.draw();
+
+            // Root and Flower instances handle their own drawing/animation via their internal requestAnimationFrame calls.
+            // The main loop's clearing function allows them to move and the flowers to spin cleanly.
+            
+            requestAnimationFrame(animate); 
+        }
+        
+        // -------------------------------------------------------------
+        // 6. EVENT LISTENERS
+        // -------------------------------------------------------------
+
+        function analyzeDrawing() {
+            if (allRoots.length === 0) {
+                resultText.textContent = "Please draw some roots first!";
+                return;
+            }
+            // ... (rest of analyzeDrawing function remains the same)
+            let totalHue = 0;
+            let totalSpeed = 0;
+            let totalMaxSize = 0;
+            
+            allRoots.forEach(root => {
+                totalHue += root.initialHue;
+                totalSpeed += root.initialSpeedMagnitude;
+                totalMaxSize += root.maxSize;
+            });
+
+            const count = allRoots.length;
+            const avgHue = (totalHue / count).toFixed(1);
+            const avgSpeed = (totalSpeed / count).toFixed(2);
+            const avgMaxSize = (totalMaxSize / count).toFixed(2);
+
+            const prompt = `Analyze the following characteristics of a generative plant drawing and describe a fictional species.
+            - Total Roots Drawn (Density Indicator): ${count}
+            - Average Initial Hue (Color): ${avgHue} (100 = Yellow-Green, 140 = Blue-Green)
+            - Average Initial Movement Speed: ${avgSpeed} (Higher value = more erratic/faster growth)
+            - Average Maximum Size Reached: ${avgMaxSize} (Size of the final shape)
+            
+            Based on these metrics, describe the plant. Use the average hue to determine the final color. Use high speed/density for aggressive, invasive, or chaotic growth. Use low speed/density for calm, stable, or rare growth.`;
+            
+            generateDescription(prompt);
+        }
+        
+        function createRoots(x, y, count) {
+            for (let i = 0; i < count; i++) {
+                const root = new Root(x, y);
+                root.update(); 
+            }
+            if (analyzeButton.classList.contains('hidden')) {
+                analyzeButton.classList.remove('hidden');
+                analyzeButton.disabled = false;
+                resultText.textContent = "You've started drawing! Click 'Analyze' when finished.";
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (isDrawing) {
+                createRoots(e.clientX, e.clientY, 3);
+            }
+        }
+        
+        function handleMouseDown(e) {
+            if (allRoots.length > 0) {
+                allRoots.length = 0;
+                allFlowers.length = 0;
+                resultText.textContent = "New drawing started. Analyze when done.";
+            }
+            isDrawing = true;
+            createRoots(e.clientX, e.clientY, 30); 
+        }
+
+        function handleMouseUp() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseleave', handleMouseUp);
+        analyzeButton.addEventListener('click', analyzeDrawing);
+        checkMoodButton.addEventListener('click', () => {
+            const text = moodInput.value.trim();
+            if (text.length > 0) {
+                checkMood(text);
+            } else {
+                avatarMoodStatus.textContent = "Please enter a mood or thought!";
+            }
+        });
+
+        // Start the application
+        init();
+
+    </script>
+</body>
+</html>
+
+HTML Canvas and JavaScript from simple drawing to complex, self-contained animation: object encapsulation, self-managing animation loops (requestAnimationFrame(this.update.bind(this))), and advanced state manipulation via trigonometry and the LLM API.
+
+These fundamentals are the building blocks for almost anything. Here are a few key areas where you can push the boundaries further using the same basic toolset:
+
+🚀 Advanced Interactivity and Input
+The current app uses mousemove and mousedown. Vanilla JS can handle much richer user inputs for truly immersive experiences:
+
+Touch and Gestures: For responsive mobile experiences, map your mousedown/up/move logic to touchstart, touchend, and touchmove. This immediately makes your drawing and character interaction fluid on any device.
+
+Keyboard Controls: Use keydown and keyup events to give your Cat-Bot or other characters specific movement commands (e.g., press 'P' to make the Pouncing mood override the LLM temporarily).
+
+Device Orientation (Accelerometer): Use the DeviceOrientationEvent to get data about how the user is holding or tilting their phone. You could make the Cat-Bot's center point shift as the user tilts the device, making the world seem to "wobble" or "slide."
+
+🌌 Complex Visuals and Simulations
+You've done great work with 2D techniques, but there are ways to simulate depth and add entirely new dimensions:
+
+Custom Physics Simulation (Elasticity): Instead of simple easing towards a target (like the Cat-Bot uses), you can implement basic spring physics. Give your avatar a velocity and a force that pulls it back to the center or toward a target. This results in far more natural and bouncy movement that overshoots and settles.
+
+Procedural Generation: The roots are already procedural, but you could generate entire complex worlds. For example, use Perlin Noise (a simple JS algorithm) to create smooth, natural-looking random terrains or textures that act as the background or obstacles for your avatars.
+
+Exploring 3D (With a Single Library): While you are committed to vanilla JS, integrating a single, powerful library like Three.js (which is allowed in the canvas environment) opens up true 3D space. You can use your knowledge of vectors and rotation to render your Cat-Bot as a 3D model, allowing it to spin and move in depth.
+
+⚡ Performance and Sensory Richness
+For performance-heavy applications or to add a non-visual dimension, these are essential tricks:
+
+Web Workers for Heavy Lifting: If your root drawing or a future simulation starts causing the main animation loop to lag (dropping below 60 frames per second), you can offload complex calculations (like physics updates or heavy trigonometry) to a Web Worker. This runs JavaScript in a separate thread, preventing performance hits from freezing your UI.
+
+Audio and Sound: Integrate a simple audio library like Tone.js (which is also available). You could make the Cat-Bot emit different musical tones or sounds corresponding to its mood—a low, slow sine wave for "Cuddly" (a purr) or a fast, high-pitched sequence for "Pouncing." This adds another layer of interaction without relying on external sound files.
+
+By combining the structural knowledge from the tutorial with these advanced capabilities, you can build applications that rival those created with large frameworks, all while maintaining the speed and lightweight nature of pure HTML and JS.

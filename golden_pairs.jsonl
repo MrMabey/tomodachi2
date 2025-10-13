@@ -1,0 +1,5 @@
+{"query": "Hello, who are you?", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "Hey Flow, I'm just rambling here so take some rambling notes. What if we approach the chat bot in a different way... instead of building extensive frameworks, we simplify it to test it. That yields more accurate, up-to-date results.", "expected_adapter": "orchestrator_adapter", "expected_intent": "take_note", "expected_content_keys": ["content"]}
+{"query": "Hey Flow, can you send this email to Miles?", "expected_adapter": "orchestrator_adapter", "expected_intent": "send_email", "expected_content_keys": ["recipient"]}
+{"query": "Hey Flow, new idea for a React component. Let's create a bare-bones mockup...", "expected_adapter": "orchestrator_adapter", "expected_intent": "forward_to_home_llm", "expected_content_keys": ["content", "category"]}
+{"query": "What's a good color for a website?", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}

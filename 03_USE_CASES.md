@@ -1,0 +1,78 @@
+# Use Cases & User Stories
+
+**Version:** 2.0 (incorporating "Flow" persona and storyboard)
+
+This document defines the primary ways a user will interact with the Tamagotchi AI Companion, nicknamed "Flow".
+
+## Core Personas
+
+*   **The User:** The individual interacting with the AI companion.
+*   **Flow (The AI):** The Tamagotchi-like entity, which has an internal state and can execute tasks.
+
+---
+
+## Use Case 1: Ambient Presence
+
+Flow exists as an ambient companion, always having a default or current state that is physically represented to the user.
+
+*   **User Story:** As a user, I want to be able to glance at the device and understand Flow's current mood or state (e.g., idle, listening, thinking) through the art on its screen.
+
+*   **System Flow:**
+    1.  Flow is in a default state (e.g., "NEUTRAL").
+    2.  The Core Compute Module (Raspberry Pi) sends the corresponding state command to the I/O Peripheral (ESP32).
+    3.  The ESP32 displays the associated ASCII art (e.g., a neutral face `-_-`).
+
+---
+
+## Use Case 2: Voice-First Note Taking & Task Delegation
+
+The primary interaction is dictating notes and commands to Flow. Flow understands the user's intent and either takes a note or prepares to execute a task.
+
+*   **User Story:** As a user driving, I want to capture a fleeting idea by simply talking to Flow, knowing that it will be safely stored and categorized.
+
+*   **Dialogue Example:** "Hey Flow, I'm just rambling here so take some rambling notes. What if we approach the chat bot in a different way... instead of building extensive frameworks, we simplify it to test it. That yields more accurate, up-to-date results."
+
+*   **System Flow:**
+    1.  User initiates dialogue with "Hey Flow".
+    2.  The ESP32 detects the wake word, displays a "listening" state (e.g., `o.o`), and begins streaming audio to the Raspberry Pi.
+    3.  The Pi's Speech-to-Text (STT) engine transcribes the audio.
+    4.  The transcribed text is passed to the AI logic model (LLM).
+    5.  The LLM recognizes the intent as `take_note` and extracts the content.
+    6.  The Pi saves the note and sends a "success" command to the ESP32.
+    7.  The ESP32 displays a "note saved" confirmation (e.g., `^_^`) and vibrates briefly.
+
+---
+
+## Use Case 3: Executing Commands
+
+Flow can parse commands, identify necessary parameters (like a recipient's name), and trigger external actions via APIs.
+
+*   **User Story:** As a user, I want to delegate simple tasks to Flow, like sending a pre-formatted email to a known contact, without having to pull out my phone.
+
+*   **Dialogue Example:** "...and that's the idea. Hey Flow, can you send this email to Miles?"
+
+*   **System Flow:**
+    1.  Following a note-taking session, the user gives a command.
+    2.  The Pi's STT transcribes the command.
+    3.  The LLM processes the text. It identifies the intent as `send_email` and the entity `Miles`.
+    4.  The Pi's logic looks up "Miles" in its local contact data to find the email address.
+    5.  The Pi displays a "waiting for confirmation" state on the ESP32 (e.g., `?_?`). The user can confirm by tapping the knob.
+    6.  Upon confirmation, the Pi calls an external API (e.g., a mail service) to send the last captured note to the recipient.
+    7.  The ESP32 displays a "task complete" state (e.g., `>.<`).
+
+---
+
+## Use Case 4: Multi-Stage Processing (Advanced)
+
+Flow can act as a conduit to more powerful, specialized models running on a home computer or in the cloud.
+
+*   **User Story:** As a user, I want to dictate a technical idea and have Flow send it to my home computer to be fleshed out by a specialized coding model.
+
+*   **Dialogue Example:** "Hey Flow, new idea for a React component. Let's create a bare-bones mockup..."
+
+*   **System Flow:**
+    1.  User dictates a technical note.
+    2.  The LLM on the Pi identifies the intent as `forward_to_home_llm` and possibly categorizes the content as `react_code_idea`.
+    3.  The Pi sends the text payload to a service running on the user's home MacBook.
+    4.  The MacBook receives the text and feeds it to a larger, fine-tuned LLM (e.g., a local Llama 3 70B or a GPT-4 API) to generate the mockup code.
+    5.  The ESP32 displays a "sent to home" state (e.g., `->💻`).

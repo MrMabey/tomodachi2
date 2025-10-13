@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# OS-specific
+.DS_Store
+
+# Project specific
+/results/
+/fine_tuned_model/
+/orchestrator_adapter/checkpoint-*/
+/persona_adapter/checkpoint-*/
+
+# IDEs
+.vscode/
+.idea/
