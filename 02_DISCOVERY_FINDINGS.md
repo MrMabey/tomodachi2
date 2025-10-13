@@ -78,6 +78,47 @@ To solve this, we are pivoting to a more robust, yet still resource-efficient, a
 
 This approach avoids the "two full LLMs" memory problem while ensuring each task is handled by a specialized expert, maximizing reliability and performance. This is the new path forward for the project's core logic.
 
+### Final Architecture: The "Orchestrator as Router" Model
+
+After further iteration and clarification, we have finalized the core logic architecture for Tomo. This model moves away from a simple keyword-based router or a dedicated "persona router" to a more elegant, two-adapter system where the orchestrator itself acts as the intelligent entry point.
+
+**The Flow:**
+
+1.  **Orchestrator is the Entry Point**: Every user query is first processed by the `orchestrator_adapter`.
+
+2.  **The Orchestrator Decides**: This model is trained to perform a routing function. It analyzes the user's query and makes one of two decisions:
+    *   If it recognizes a **command** (e.g., "add milk to my list"), it will respond with the structured **JSON** for that command (e.g., `{"intent": "add_to_list", ...}`).
+    *   If it recognizes a **general conversation**, it will respond with a simple, specific signal: `{"action": "chat"}`.
+
+3.  **The Script Executes**: The application's Python script (`test_finetune.py`) inspects the output from the orchestrator:
+    *   If it receives command JSON, it proceeds to process that command.
+    *   If it receives the `{"action": "chat"}` signal, it then takes the user's original query and runs it through the separate `persona_adapter`.
+
+4.  **Persona Responds**: The `persona_adapter`, which is dedicated solely to personality and conversation, generates the final, natural language response, which must include one of the three ASCII emoticons (`(o_o)`, `(^-^)` or `(^_~)`).
+
+**Advantages of this Model:**
+
+*   **Modularity**: The `orchestrator_adapter` (for routing and commands) and the `persona_adapter` (for personality) are kept separate. They can be trained, evaluated, and improved independently without affecting each other.
+*   **Intelligence**: The routing is handled by a fine-tuned model, making it far more robust and nuanced than a simple keyword list.
+*   **Efficiency**: We are still only loading one adapter at a time for the final response generation, conserving memory on the Raspberry Pi.
+
+### Feasibility of Advanced Tasks on Raspberry Pi 5
+
+Following further analysis and user discussion, we've re-confirmed that running highly complex, multi-LLM tasks (such as those required for a "product manager" persona involving extensive context management, agenda processing, document drafting, and real-time messaging) directly on the Raspberry Pi 5 (even with 16GB RAM) is **not viable for achieving a fluid, low-latency, and consistent user experience.**
+
+**Reasons for this conclusion include:**
+*   **Computational Demands:** LLM inference, especially for multiple models or complex reasoning chains, significantly taxes the Pi's CPU/GPU, leading to slow response times.
+*   **Memory Constraints:** While 16GB is substantial for a Pi, loading multiple LLM adapters, maintaining large context windows (KV cache), and processing extensive data for document generation would quickly exhaust available memory, resulting in performance degradation due to swapping.
+*   **Latency Requirements:** For an interactive companion, real-time responsiveness is crucial. The Pi's hardware limitations would introduce unacceptable delays for sophisticated tasks.
+
+**Reinforcement of the Hybrid Approach:**
+This reinforces the necessity of our hybrid architecture. The Raspberry Pi 5 will serve as the intelligent edge device, handling:
+*   Speech-to-Text (STT) using optimized Whisper models
+*   Basic persona interactions
+*   The orchestrator's intent recognition and routing logic (e.g., `phone_home`).
+
+For computationally intensive or knowledge-heavy tasks (like drafting detailed product specs, analyzing complex documents, or generating code), the Pi will dispatch these requests to more powerful, external LLMs (e.g., cloud-based APIs like Claude/Gemini, or a larger home server) using the `phone_home` intent. This strategy ensures Tomo can offer advanced functionalities without compromising the core interactive experience on the Pi.
+
 ### Addendum: Agent Memory Architecture
 
 During our sessions, we discussed the internal memory architecture of the Gemini agent. This is a high-level, conceptual overview of how the agent prioritizes information, which is relevant to understanding its behavior and decision-making process.

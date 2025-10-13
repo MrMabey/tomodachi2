@@ -30,6 +30,7 @@ The system consists of three distinct modules communicating over a local Wi-Fi n
         *   **Technology:** A small, specialized **fine-tuned Large Language Model** (e.g., `tinyllama`) will serve as the system's "brain."
         *   **Function:** This model receives the raw text from Whisper. Because it has been specifically trained for this job, it does not engage in conversation. Instead, its only goal is to analyze the text and convert it into a structured, machine-readable **JSON command**. This process replaces the need for a complex, prompt-based "Model Context Protocol (MCP)".
         *   **Example:** The text `"I need to buy milk"` is transformed into the JSON object: `{"intent": "take_note", "content": "buy milk"}`. The main application can then reliably parse this command and trigger the correct action (e.g., saving the note).
+        *   **Offloading Complex Tasks:** For computationally intensive or complex reasoning tasks, the orchestrator can recognize a `phone_home` intent and dispatch the request to a more powerful external LLM (e.g., Claude API, Gemini, or a home server). This hybrid approach keeps the Raspberry Pi lightweight while enabling advanced capabilities.
 
     This two-stage approach makes the system modular, reliable, and easy to extend. New capabilities can be added by simply training the orchestrator model with new examples.
 

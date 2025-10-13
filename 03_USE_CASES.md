@@ -72,7 +72,8 @@ Flow can act as a conduit to more powerful, specialized models running on a home
 
 *   **System Flow:**
     1.  User dictates a technical note.
-    2.  The LLM on the Pi identifies the intent as `forward_to_home_llm` and possibly categorizes the content as `react_code_idea`.
-    3.  The Pi sends the text payload to a service running on the user's home MacBook.
-    4.  The MacBook receives the text and feeds it to a larger, fine-tuned LLM (e.g., a local Llama 3 70B or a GPT-4 API) to generate the mockup code.
-    5.  The ESP32 displays a "sent to home" state (e.g., `->💻`).
+    2.  Whisper STT on the Pi transcribes the audio.
+    3.  The orchestrator LLM on the Pi identifies the intent as `phone_home` and possibly categorizes the content as `react_code_idea`.
+    4.  The Pi sends the text payload to a service running on the user's home MacBook or external LLM API.
+    5.  The external system receives the text and feeds it to a larger, fine-tuned LLM (e.g., Claude API, Gemini, or a local Llama 3 70B) to generate the mockup code.
+    6.  The ESP32 displays a "sent to home" state (e.g., `->💻`).

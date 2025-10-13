@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomo Face Simulator V2 - Multi-Style</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f1621, #1a1a2e);
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .display-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #canvas {
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            background: #0f1621;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 320px;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .subtitle {
+            margin: 0 0 20px 0;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .section-title {
+            margin: 20px 0 10px 0;
+            font-size: 14px;
+            color: #A78BFA;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .style-btn, .mood-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .style-btn:hover, .mood-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .style-btn.active {
+            border-color: #A78BFA;
+            background: rgba(167, 139, 250, 0.3);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+        }
+
+        .mood-btn.active {
+            border-color: #4A90E2;
+            background: rgba(74, 144, 226, 0.3);
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            color: #888;
+        }
+
+        .stat-value {
+            color: #4A90E2;
+            font-weight: bold;
+        }
+
+        .emoji {
+            font-size: 20px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        .mood-grid .mood-btn {
+            font-size: 12px;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="display-container">
+            <canvas id="canvas" width="360" height="360"></canvas>
+            <div style="text-align: center;">
+                <div style="font-size: 18px; color: #4A90E2;">Waveshare ESP32-S3 Knob</div>
+                <div style="font-size: 12px; color: #666;">360x360 Multi-Style Simulator</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h1>🤖 Tomo Face V2</h1>
+            <div class="subtitle">Pick your style & mood</div>
+
+            <div class="section-title">🎨 Avatar Style</div>
+            <button class="style-btn active" data-style="0">
+                😊 Emoji Style
+            </button>
+            <button class="style-btn" data-style="1">
+                🕹️ Pixel Art (8-bit)
+            </button>
+            <button class="style-btn" data-style="2">
+                🔮 Abstract Shapes
+            </button>
+            <button class="style-btn" data-style="3">
+                ⚫ Minimalist Orbs
+            </button>
+
+            <div class="section-title">💭 Mood States</div>
+            <div class="mood-grid">
+                <button class="mood-btn active" data-mood="0">
+                    🔵 Focused
+                </button>
+                <button class="mood-btn" data-mood="1">
+                    🟣 Creative
+                </button>
+                <button class="mood-btn" data-mood="2">
+                    🟢 Helpful
+                </button>
+                <button class="mood-btn" data-mood="3">
+                    🔵 Listening
+                </button>
+                <button class="mood-btn" data-mood="4">
+                    🟡 Thinking
+                </button>
+                <button class="mood-btn" data-mood="5">
+                    🟢 Success
+                </button>
+                <button class="mood-btn" data-mood="6">
+                    🔴 Error
+                </button>
+                <button class="mood-btn" data-mood="7">
+                    ⚫ Sleeping
+                </button>
+                <button class="mood-btn" data-mood="8">
+                    🟣 Phone Home
+                </button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-row">
+                    <span class="stat-label">Style:</span>
+                    <span class="stat-value" id="currentStyle">Emoji</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Mood:</span>
+                    <span class="stat-value" id="currentMood">Focused</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Frame:</span>
+                    <span class="stat-value" id="frameCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">FPS:</span>
+                    <span class="stat-value" id="fps">60</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const SCREEN_WIDTH = 360;
+        const SCREEN_HEIGHT = 360;
+        const CENTER_X = SCREEN_WIDTH / 2;
+        const CENTER_Y = SCREEN_HEIGHT / 2;
+
+        // Mood colors
+        const MOOD_COLORS = [
+            '#4A90E2', '#A78BFA', '#10B981', '#06B6D4',
+            '#F59E0B', '#22C55E', '#EF4444', '#6B7280', '#EC4899'
+        ];
+
+        const MOOD_NAMES = [
+            'Focused', 'Creative', 'Helpful', 'Listening',
+            'Thinking', 'Success', 'Error', 'Sleeping', 'Phone Home'
+        ];
+
+        const STYLE_NAMES = ['Emoji', 'Pixel Art', 'Abstract', 'Minimalist'];
+
+        // Emoji faces for each mood
+        const EMOJI_FACES = [
+            { eyes: '◕ ◕', mouth: '‿', desc: 'o_o' },      // Focused
+            { eyes: '^ ^', mouth: '◡', desc: '^-^' },      // Creative
+            { eyes: '^ ~', mouth: '◡', desc: '^_~' },      // Helpful
+            { eyes: '◉ ◉', mouth: 'o', desc: '◉_◉' },      // Listening
+            { eyes: '° °', mouth: '~', desc: '°_°' },      // Thinking
+            { eyes: '^ ^', mouth: '▽', desc: '^_^' },      // Success
+            { eyes: '× ×', mouth: 'n', desc: '×_×' },      // Error
+            { eyes: '- -', mouth: '_', desc: '-_-' },      // Sleeping
+            { eyes: '→ →', mouth: 'o', desc: '→_→' }       // Phone Home
+        ];
+
+        // State
+        let state = {
+            currentStyle: 0,
+            currentMood: 0,
+            color: MOOD_COLORS[0],
+            frameCount: 0,
+            time: 0,
+            pulsePhase: 0
+        };
+
+        let lastFrameTime = Date.now();
+        let fps = 60;
+
+        // ========================================
+        // STYLE 1: EMOJI STYLE
+        // ========================================
+        function drawEmojiStyle() {
+            const face = EMOJI_FACES[state.currentMood];
+            const baseY = CENTER_Y - 20;
+
+            // Background glow
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 50, CENTER_X, CENTER_Y, 150);
+            gradient.addColorStop(0, state.color + '40');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            // Draw eyes
+            ctx.font = 'bold 60px Arial';
+            ctx.fillStyle = state.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const [leftEye, rightEye] = face.eyes.split(' ');
+            ctx.fillText(leftEye, CENTER_X - 50, baseY);
+            ctx.fillText(rightEye, CENTER_X + 50, baseY);
+
+            // Draw mouth
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText(face.mouth, CENTER_X, baseY + 60);
+
+            // Add descriptor text
+            ctx.font = '20px Monaco';
+            ctx.fillStyle = state.color + '80';
+            ctx.fillText(face.desc, CENTER_X, CENTER_Y + 120);
+
+            // Thinking dots
+            if (state.currentMood === 4) {
+                drawThinkingDots();
+            }
+        }
+
+        function drawThinkingDots() {
+            ctx.fillStyle = state.color;
+            for (let i = 0; i < 3; i++) {
+                const angle = state.time * 2 + (i * Math.PI * 2 / 3);
+                const x = CENTER_X + Math.cos(angle) * 40;
+                const y = CENTER_Y - 100 + Math.sin(angle) * 10;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ========================================
+        // STYLE 2: PIXEL ART (8-BIT)
+        // ========================================
+        function drawPixelArtStyle() {
+            const pixelSize = 12;
+
+            // Background pulse
+            const pulse = Math.sin(state.time * 2) * 20;
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 50 + pulse, CENTER_X, CENTER_Y, 150);
+            gradient.addColorStop(0, state.color + '30');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            // Pixel grid helper
+            function drawPixel(gridX, gridY, color) {
+                const x = CENTER_X - 60 + (gridX * pixelSize);
+                const y = CENTER_Y - 60 + (gridY * pixelSize);
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, pixelSize - 1, pixelSize - 1);
+            }
+
+            // Head (10x10 grid)
+            const headColor = state.color;
+            const darkColor = '#1a1a2e';
+
+            // Draw head outline
+            for (let y = 1; y < 9; y++) {
+                for (let x = 1; x < 9; x++) {
+                    drawPixel(x, y, headColor + '30');
+                }
+            }
+
+            // Eyes based on mood
+            const eyePositions = getPixelEyePattern(state.currentMood);
+            eyePositions.forEach(([x, y]) => drawPixel(x, y, headColor));
+
+            // Mouth
+            const mouthPositions = getPixelMouthPattern(state.currentMood);
+            mouthPositions.forEach(([x, y]) => drawPixel(x, y, headColor));
+        }
+
+        function getPixelEyePattern(mood) {
+            const patterns = {
+                0: [[2, 3], [3, 3], [6, 3], [7, 3]], // Focused - wide
+                1: [[2, 3], [6, 3]], // Creative - dots
+                2: [[2, 3], [7, 3]], // Helpful - asymmetric
+                3: [[2, 2], [3, 2], [2, 3], [3, 3], [6, 2], [7, 2], [6, 3], [7, 3]], // Listening - huge
+                4: [[3, 2], [7, 2]], // Thinking - up
+                5: [[2, 3], [6, 3]], // Success - happy
+                6: [[2, 3], [3, 4], [6, 3], [7, 4]], // Error - X
+                7: [[2, 3], [3, 3], [6, 3], [7, 3]], // Sleeping - closed
+                8: [[4, 3], [5, 3], [7, 3], [8, 3]] // Phone home - right
+            };
+            return patterns[mood] || patterns[0];
+        }
+
+        function getPixelMouthPattern(mood) {
+            const patterns = {
+                0: [[3, 6], [4, 6], [5, 6]], // Line
+                1: [[3, 6], [4, 7], [5, 6]], // Smile
+                5: [[2, 6], [3, 7], [4, 7], [5, 7], [6, 6]], // Big smile
+                6: [[3, 7], [4, 6], [5, 7]], // Frown
+                7: [[3, 6], [4, 6], [5, 6]], // Line
+                default: [[3, 6], [4, 6], [5, 6]]
+            };
+            return patterns[mood] || patterns.default;
+        }
+
+        // ========================================
+        // STYLE 3: ABSTRACT SHAPES
+        // ========================================
+        function drawAbstractStyle() {
+            const time = state.time;
+            const pulse = Math.sin(time * 2) * 0.2 + 1;
+
+            // Multiple rotating shapes
+            for (let i = 0; i < 5; i++) {
+                const angle = time + (i * Math.PI * 2 / 5);
+                const distance = 80 + Math.sin(time * 3 + i) * 20;
+                const x = CENTER_X + Math.cos(angle) * distance;
+                const y = CENTER_Y + Math.sin(angle) * distance;
+                const size = 30 + Math.sin(time * 2 + i) * 10;
+
+                // Color variation
+                const hue = (parseInt(state.color.slice(1), 16) + i * 30) % 360;
+                const alpha = 0.6 + Math.sin(time * 2 + i) * 0.3;
+
+                ctx.fillStyle = state.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+
+                // Different shapes per mood
+                if (state.currentMood === 0 || state.currentMood === 3) {
+                    // Circles
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (state.currentMood === 1 || state.currentMood === 4) {
+                    // Triangles
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - size);
+                    ctx.lineTo(x - size, y + size);
+                    ctx.lineTo(x + size, y + size);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    // Squares
+                    ctx.fillRect(x - size/2, y - size/2, size, size);
+                }
+            }
+
+            // Center core
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 0, CENTER_X, CENTER_Y, 50 * pulse);
+            gradient.addColorStop(0, state.color);
+            gradient.addColorStop(1, state.color + '00');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 50 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========================================
+        // STYLE 4: MINIMALIST ORBS
+        // ========================================
+        function drawMinimalistStyle() {
+            const pulse = Math.sin(state.time * 3) * 0.15 + 1;
+            const breathe = Math.sin(state.time) * 10;
+
+            // Main orb
+            const mainSize = 80 * pulse;
+            const gradient = ctx.createRadialGradient(
+                CENTER_X, CENTER_Y - breathe, mainSize * 0.3,
+                CENTER_X, CENTER_Y - breathe, mainSize
+            );
+            gradient.addColorStop(0, state.color);
+            gradient.addColorStop(0.7, state.color + 'aa');
+            gradient.addColorStop(1, state.color + '00');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y - breathe, mainSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Accent orbs based on mood
+            const numOrbs = state.currentMood === 4 ? 3 : (state.currentMood === 8 ? 4 : 2);
+            for (let i = 0; i < numOrbs; i++) {
+                const angle = (state.time * 1.5) + (i * Math.PI * 2 / numOrbs);
+                const distance = 100;
+                const x = CENTER_X + Math.cos(angle) * distance;
+                const y = CENTER_Y + Math.sin(angle) * distance;
+                const size = 15 + Math.sin(state.time * 2 + i) * 5;
+
+                const orbGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+                orbGradient.addColorStop(0, state.color);
+                orbGradient.addColorStop(1, state.color + '00');
+
+                ctx.fillStyle = orbGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Outer ring pulse
+            ctx.strokeStyle = state.color + '40';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 120 + pulse * 10, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // ========================================
+        // MAIN RENDERING
+        // ========================================
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#0f1621';
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            // Draw based on style
+            switch(state.currentStyle) {
+                case 0: drawEmojiStyle(); break;
+                case 1: drawPixelArtStyle(); break;
+                case 2: drawAbstractStyle(); break;
+                case 3: drawMinimalistStyle(); break;
+            }
+        }
+
+        function animate() {
+            state.time = state.frameCount * 0.05;
+            draw();
+            state.frameCount++;
+
+            // Update stats
+            document.getElementById('frameCount').textContent = state.frameCount;
+
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            fps = Math.round(1000 / delta);
+            document.getElementById('fps').textContent = fps;
+            lastFrameTime = now;
+
+            requestAnimationFrame(animate);
+        }
+
+        // ========================================
+        // UI CONTROLS
+        // ========================================
+        function setStyle(styleIndex) {
+            state.currentStyle = styleIndex;
+            document.getElementById('currentStyle').textContent = STYLE_NAMES[styleIndex];
+            document.querySelectorAll('.style-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === styleIndex);
+            });
+        }
+
+        function setMood(moodIndex) {
+            state.currentMood = moodIndex;
+            state.color = MOOD_COLORS[moodIndex];
+            document.getElementById('currentMood').textContent = MOOD_NAMES[moodIndex];
+            document.querySelectorAll('.mood-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === moodIndex);
+            });
+        }
+
+        // Event listeners
+        document.querySelectorAll('.style-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => setStyle(index));
+        });
+
+        document.querySelectorAll('.mood-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => setMood(index));
+        });
+
+        // Start
+        animate();
+    </script>
+</body>
+</html>

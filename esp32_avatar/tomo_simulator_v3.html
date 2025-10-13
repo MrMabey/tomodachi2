@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomo Face Simulator V3 - Extended Styles</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f1621, #1a1a2e);
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .display-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #canvas {
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            background: #0f1621;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 320px;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .subtitle {
+            margin: 0 0 20px 0;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .section-title {
+            margin: 20px 0 10px 0;
+            font-size: 14px;
+            color: #A78BFA;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .style-btn, .mood-btn {
+            width: 100%;
+            padding: 10px;
+            margin: 4px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .style-btn:hover, .mood-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .style-btn.active {
+            border-color: #A78BFA;
+            background: rgba(167, 139, 250, 0.3);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+        }
+
+        .mood-btn.active {
+            border-color: #4A90E2;
+            background: rgba(74, 144, 226, 0.3);
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            color: #888;
+        }
+
+        .stat-value {
+            color: #4A90E2;
+            font-weight: bold;
+        }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        .mood-grid .mood-btn {
+            font-size: 11px;
+            padding: 8px;
+        }
+
+        .styles-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .styles-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .styles-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .styles-container::-webkit-scrollbar-thumb {
+            background: rgba(167, 139, 250, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="display-container">
+            <canvas id="canvas" width="360" height="360"></canvas>
+            <div style="text-align: center;">
+                <div style="font-size: 18px; color: #4A90E2;">Waveshare ESP32-S3 Knob</div>
+                <div style="font-size: 12px; color: #666;">360x360 Extended Styles</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h1>🤖 Tomo Face V3</h1>
+            <div class="subtitle">10 unique avatar styles!</div>
+
+            <div class="section-title">🎨 Avatar Style</div>
+            <div class="styles-container">
+                <button class="style-btn active" data-style="0">😊 Emoji Style</button>
+                <button class="style-btn" data-style="1">🕹️ Pixel Art (8-bit)</button>
+                <button class="style-btn" data-style="2">🔮 Abstract Shapes</button>
+                <button class="style-btn" data-style="3">⚫ Minimalist Orbs</button>
+                <button class="style-btn" data-style="4">🌊 Wave Patterns</button>
+                <button class="style-btn" data-style="5">🎵 Audio Visualizer</button>
+                <button class="style-btn" data-style="6">⭐ Particle System</button>
+                <button class="style-btn" data-style="7">🌀 Spiral Mandala</button>
+                <button class="style-btn" data-style="8">📊 Data Bars</button>
+                <button class="style-btn" data-style="9">🧬 DNA Helix</button>
+            </div>
+
+            <div class="section-title">💭 Mood States</div>
+            <div class="mood-grid">
+                <button class="mood-btn active" data-mood="0">🔵 Focus</button>
+                <button class="mood-btn" data-mood="1">🟣 Create</button>
+                <button class="mood-btn" data-mood="2">🟢 Help</button>
+                <button class="mood-btn" data-mood="3">🔵 Listen</button>
+                <button class="mood-btn" data-mood="4">🟡 Think</button>
+                <button class="mood-btn" data-mood="5">🟢 Success</button>
+                <button class="mood-btn" data-mood="6">🔴 Error</button>
+                <button class="mood-btn" data-mood="7">⚫ Sleep</button>
+                <button class="mood-btn" data-mood="8">🟣 Phone</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-row">
+                    <span class="stat-label">Style:</span>
+                    <span class="stat-value" id="currentStyle">Emoji</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Mood:</span>
+                    <span class="stat-value" id="currentMood">Focused</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Frame:</span>
+                    <span class="stat-value" id="frameCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">FPS:</span>
+                    <span class="stat-value" id="fps">60</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const SCREEN_WIDTH = 360;
+        const SCREEN_HEIGHT = 360;
+        const CENTER_X = SCREEN_WIDTH / 2;
+        const CENTER_Y = SCREEN_HEIGHT / 2;
+
+        const MOOD_COLORS = [
+            '#4A90E2', '#A78BFA', '#10B981', '#06B6D4',
+            '#F59E0B', '#22C55E', '#EF4444', '#6B7280', '#EC4899'
+        ];
+
+        const MOOD_NAMES = [
+            'Focused', 'Creative', 'Helpful', 'Listening',
+            'Thinking', 'Success', 'Error', 'Sleeping', 'Phone Home'
+        ];
+
+        const STYLE_NAMES = [
+            'Emoji', 'Pixel Art', 'Abstract', 'Minimalist',
+            'Wave', 'Audio Viz', 'Particles', 'Mandala', 'Data Bars', 'DNA Helix'
+        ];
+
+        const EMOJI_FACES = [
+            { eyes: '◕ ◕', mouth: '‿', desc: 'o_o' },
+            { eyes: '^ ^', mouth: '◡', desc: '^-^' },
+            { eyes: '^ ~', mouth: '◡', desc: '^_~' },
+            { eyes: '◉ ◉', mouth: 'o', desc: '◉_◉' },
+            { eyes: '° °', mouth: '~', desc: '°_°' },
+            { eyes: '^ ^', mouth: '▽', desc: '^_^' },
+            { eyes: '× ×', mouth: 'n', desc: '×_×' },
+            { eyes: '- -', mouth: '_', desc: '-_-' },
+            { eyes: '→ →', mouth: 'o', desc: '→_→' }
+        ];
+
+        let state = {
+            currentStyle: 0,
+            currentMood: 0,
+            color: MOOD_COLORS[0],
+            frameCount: 0,
+            time: 0,
+            particles: []
+        };
+
+        let lastFrameTime = Date.now();
+        let fps = 60;
+
+        // Initialize particles for particle system
+        function initParticles() {
+            state.particles = [];
+            for (let i = 0; i < 50; i++) {
+                state.particles.push({
+                    x: CENTER_X + (Math.random() - 0.5) * 200,
+                    y: CENTER_Y + (Math.random() - 0.5) * 200,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    size: Math.random() * 4 + 2,
+                    life: Math.random()
+                });
+            }
+        }
+        initParticles();
+
+        // ========================================
+        // STYLE 0: EMOJI STYLE
+        // ========================================
+        function drawEmojiStyle() {
+            const face = EMOJI_FACES[state.currentMood];
+            const baseY = CENTER_Y - 20;
+
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 50, CENTER_X, CENTER_Y, 150);
+            gradient.addColorStop(0, state.color + '40');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            ctx.font = 'bold 60px Arial';
+            ctx.fillStyle = state.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const [leftEye, rightEye] = face.eyes.split(' ');
+            ctx.fillText(leftEye, CENTER_X - 50, baseY);
+            ctx.fillText(rightEye, CENTER_X + 50, baseY);
+
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText(face.mouth, CENTER_X, baseY + 60);
+
+            ctx.font = '20px Monaco';
+            ctx.fillStyle = state.color + '80';
+            ctx.fillText(face.desc, CENTER_X, CENTER_Y + 120);
+
+            if (state.currentMood === 4) drawThinkingDots();
+        }
+
+        function drawThinkingDots() {
+            ctx.fillStyle = state.color;
+            for (let i = 0; i < 3; i++) {
+                const angle = state.time * 2 + (i * Math.PI * 2 / 3);
+                const x = CENTER_X + Math.cos(angle) * 40;
+                const y = CENTER_Y - 100 + Math.sin(angle) * 10;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ========================================
+        // STYLE 1: PIXEL ART
+        // ========================================
+        function drawPixelArtStyle() {
+            const pixelSize = 12;
+            const pulse = Math.sin(state.time * 2) * 20;
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 50 + pulse, CENTER_X, CENTER_Y, 150);
+            gradient.addColorStop(0, state.color + '30');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            function drawPixel(gridX, gridY, color) {
+                const x = CENTER_X - 60 + (gridX * pixelSize);
+                const y = CENTER_Y - 60 + (gridY * pixelSize);
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, pixelSize - 1, pixelSize - 1);
+            }
+
+            for (let y = 1; y < 9; y++) {
+                for (let x = 1; x < 9; x++) {
+                    drawPixel(x, y, state.color + '30');
+                }
+            }
+
+            const eyePositions = getPixelEyePattern(state.currentMood);
+            eyePositions.forEach(([x, y]) => drawPixel(x, y, state.color));
+
+            const mouthPositions = getPixelMouthPattern(state.currentMood);
+            mouthPositions.forEach(([x, y]) => drawPixel(x, y, state.color));
+        }
+
+        function getPixelEyePattern(mood) {
+            const patterns = [
+                [[2, 3], [3, 3], [6, 3], [7, 3]],
+                [[2, 3], [6, 3]],
+                [[2, 3], [7, 3]],
+                [[2, 2], [3, 2], [2, 3], [3, 3], [6, 2], [7, 2], [6, 3], [7, 3]],
+                [[3, 2], [7, 2]],
+                [[2, 3], [6, 3]],
+                [[2, 3], [3, 4], [6, 3], [7, 4]],
+                [[2, 3], [3, 3], [6, 3], [7, 3]],
+                [[4, 3], [5, 3], [7, 3], [8, 3]]
+            ];
+            return patterns[mood];
+        }
+
+        function getPixelMouthPattern(mood) {
+            const patterns = [
+                [[3, 6], [4, 6], [5, 6]],
+                [[3, 6], [4, 7], [5, 6]],
+                [[3, 6], [4, 6], [5, 6]],
+                [[4, 6]],
+                [[3, 6], [4, 6], [5, 6]],
+                [[2, 6], [3, 7], [4, 7], [5, 7], [6, 6]],
+                [[3, 7], [4, 6], [5, 7]],
+                [[3, 6], [4, 6], [5, 6]],
+                [[4, 6]]
+            ];
+            return patterns[mood];
+        }
+
+        // ========================================
+        // STYLE 2: ABSTRACT SHAPES
+        // ========================================
+        function drawAbstractStyle() {
+            const pulse = Math.sin(state.time * 2) * 0.2 + 1;
+            for (let i = 0; i < 5; i++) {
+                const angle = state.time + (i * Math.PI * 2 / 5);
+                const distance = 80 + Math.sin(state.time * 3 + i) * 20;
+                const x = CENTER_X + Math.cos(angle) * distance;
+                const y = CENTER_Y + Math.sin(angle) * distance;
+                const size = 30 + Math.sin(state.time * 2 + i) * 10;
+                const alpha = 0.6 + Math.sin(state.time * 2 + i) * 0.3;
+
+                ctx.fillStyle = state.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+
+                if (state.currentMood === 0 || state.currentMood === 3) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (state.currentMood === 1 || state.currentMood === 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - size);
+                    ctx.lineTo(x - size, y + size);
+                    ctx.lineTo(x + size, y + size);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(x - size/2, y - size/2, size, size);
+                }
+            }
+
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 0, CENTER_X, CENTER_Y, 50 * pulse);
+            gradient.addColorStop(0, state.color);
+            gradient.addColorStop(1, state.color + '00');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 50 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========================================
+        // STYLE 3: MINIMALIST ORBS
+        // ========================================
+        function drawMinimalistStyle() {
+            const pulse = Math.sin(state.time * 3) * 0.15 + 1;
+            const breathe = Math.sin(state.time) * 10;
+
+            const mainSize = 80 * pulse;
+            const gradient = ctx.createRadialGradient(
+                CENTER_X, CENTER_Y - breathe, mainSize * 0.3,
+                CENTER_X, CENTER_Y - breathe, mainSize
+            );
+            gradient.addColorStop(0, state.color);
+            gradient.addColorStop(0.7, state.color + 'aa');
+            gradient.addColorStop(1, state.color + '00');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y - breathe, mainSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            const numOrbs = state.currentMood === 4 ? 3 : (state.currentMood === 8 ? 4 : 2);
+            for (let i = 0; i < numOrbs; i++) {
+                const angle = (state.time * 1.5) + (i * Math.PI * 2 / numOrbs);
+                const distance = 100;
+                const x = CENTER_X + Math.cos(angle) * distance;
+                const y = CENTER_Y + Math.sin(angle) * distance;
+                const size = 15 + Math.sin(state.time * 2 + i) * 5;
+
+                const orbGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+                orbGradient.addColorStop(0, state.color);
+                orbGradient.addColorStop(1, state.color + '00');
+
+                ctx.fillStyle = orbGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = state.color + '40';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 120 + pulse * 10, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // ========================================
+        // STYLE 4: WAVE PATTERNS
+        // ========================================
+        function drawWaveStyle() {
+            const numWaves = 8;
+            const waveIntensity = state.currentMood === 3 ? 1.5 : (state.currentMood === 7 ? 0.3 : 1.0);
+
+            for (let w = 0; w < numWaves; w++) {
+                ctx.beginPath();
+                const phase = state.time * 2 + (w * 0.5);
+                const amplitude = 30 * waveIntensity;
+                const frequency = 0.02 + (state.currentMood * 0.002);
+
+                for (let x = 0; x < SCREEN_WIDTH; x += 5) {
+                    const y = CENTER_Y + Math.sin(x * frequency + phase) * amplitude + (w - numWaves/2) * 20;
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                const alpha = (1 - w / numWaves) * 0.5;
+                ctx.strokeStyle = state.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Center pulse
+            const pulse = Math.sin(state.time * 3) * 20 + 40;
+            const gradient = ctx.createRadialGradient(CENTER_X, CENTER_Y, 0, CENTER_X, CENTER_Y, pulse);
+            gradient.addColorStop(0, state.color);
+            gradient.addColorStop(1, state.color + '00');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, pulse, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========================================
+        // STYLE 5: AUDIO VISUALIZER
+        // ========================================
+        function drawAudioVisualizerStyle() {
+            const numBars = 32;
+            const barWidth = (Math.PI * 2) / numBars;
+            const radius = 80;
+            const intensity = state.currentMood === 3 ? 1.5 : (state.currentMood === 7 ? 0.3 : 1.0);
+
+            for (let i = 0; i < numBars; i++) {
+                const angle = (i * barWidth) + state.time * 0.5;
+                const height = (Math.sin(state.time * 3 + i * 0.5) * 0.5 + 0.5) * 60 * intensity;
+
+                const x1 = CENTER_X + Math.cos(angle) * radius;
+                const y1 = CENTER_Y + Math.sin(angle) * radius;
+                const x2 = CENTER_X + Math.cos(angle) * (radius + height);
+                const y2 = CENTER_Y + Math.sin(angle) * (radius + height);
+
+                const alpha = 0.6 + (height / 80) * 0.4;
+                ctx.strokeStyle = state.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
+            // Center core
+            ctx.fillStyle = state.color;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 30, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========================================
+        // STYLE 6: PARTICLE SYSTEM
+        // ========================================
+        function drawParticleStyle() {
+            // Update particles
+            state.particles.forEach(p => {
+                // Move based on mood
+                if (state.currentMood === 6) {
+                    // Error - explode outward
+                    const dx = p.x - CENTER_X;
+                    const dy = p.y - CENTER_Y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    p.vx += (dx / dist) * 0.5;
+                    p.vy += (dy / dist) * 0.5;
+                } else if (state.currentMood === 7) {
+                    // Sleeping - float down slowly
+                    p.vy += 0.1;
+                    p.vx *= 0.98;
+                } else {
+                    // Normal - orbit
+                    const dx = p.x - CENTER_X;
+                    const dy = p.y - CENTER_Y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    p.vx += -dy * 0.001;
+                    p.vy += dx * 0.001;
+                }
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Bounds check - wrap around
+                if (p.x < 0) p.x = SCREEN_WIDTH;
+                if (p.x > SCREEN_WIDTH) p.x = 0;
+                if (p.y < 0) p.y = SCREEN_HEIGHT;
+                if (p.y > SCREEN_HEIGHT) p.y = 0;
+
+                // Draw particle
+                const alpha = 0.8;
+                ctx.fillStyle = state.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw connections to nearby particles
+                state.particles.forEach(p2 => {
+                    const dx = p2.x - p.x;
+                    const dy = p2.y - p.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 80 && dist > 0) {
+                        const lineAlpha = (1 - dist/80) * 0.3;
+                        ctx.strokeStyle = state.color + Math.floor(lineAlpha * 255).toString(16).padStart(2, '0');
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+        }
+
+        // ========================================
+        // STYLE 7: SPIRAL MANDALA
+        // ========================================
+        function drawSpiralMandalaStyle() {
+            const numArms = state.currentMood === 4 ? 3 : (state.currentMood === 5 ? 8 : 5);
+            const rotationSpeed = state.currentMood === 7 ? 0.2 : 1.0;
+
+            for (let arm = 0; arm < numArms; arm++) {
+                ctx.beginPath();
+                const armAngle = (arm / numArms) * Math.PI * 2;
+
+                for (let i = 0; i < 100; i++) {
+                    const t = i / 100;
+                    const angle = armAngle + (state.time * rotationSpeed) + (t * Math.PI * 4);
+                    const radius = t * 120;
+                    const x = CENTER_X + Math.cos(angle) * radius;
+                    const y = CENTER_Y + Math.sin(angle) * radius;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                const gradient = ctx.createLinearGradient(CENTER_X, CENTER_Y, CENTER_X + 120, CENTER_Y + 120);
+                gradient.addColorStop(0, state.color);
+                gradient.addColorStop(1, state.color + '00');
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Center dot
+            ctx.fillStyle = state.color;
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ========================================
+        // STYLE 8: DATA BARS (HUD STYLE)
+        // ========================================
+        function drawDataBarsStyle() {
+            const numBars = 12;
+            const barHeight = 20;
+            const spacing = 8;
+            const startY = CENTER_Y - ((numBars * (barHeight + spacing)) / 2);
+
+            for (let i = 0; i < numBars; i++) {
+                const y = startY + (i * (barHeight + spacing));
+                const value = (Math.sin(state.time * 2 + i * 0.5) * 0.5 + 0.5);
+                const width = value * 200;
+
+                // Background bar
+                ctx.fillStyle = state.color + '20';
+                ctx.fillRect(CENTER_X - 100, y, 200, barHeight);
+
+                // Active bar
+                const gradient = ctx.createLinearGradient(CENTER_X - 100, y, CENTER_X - 100 + width, y);
+                gradient.addColorStop(0, state.color);
+                gradient.addColorStop(1, state.color + 'aa');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(CENTER_X - 100, y, width, barHeight);
+
+                // Border
+                ctx.strokeStyle = state.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(CENTER_X - 100, y, 200, barHeight);
+            }
+
+            // Center label
+            ctx.font = 'bold 24px Monaco';
+            ctx.fillStyle = state.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(MOOD_NAMES[state.currentMood].toUpperCase(), CENTER_X, CENTER_Y + 140);
+        }
+
+        // ========================================
+        // STYLE 9: DNA HELIX
+        // ========================================
+        function drawDNAHelixStyle() {
+            const numPairs = 20;
+            const helixWidth = 80;
+            const helixHeight = 300;
+            const startY = CENTER_Y - helixHeight / 2;
+            const twist = state.time * 2;
+
+            for (let i = 0; i < numPairs; i++) {
+                const t = i / numPairs;
+                const y = startY + (t * helixHeight);
+                const angle1 = twist + (t * Math.PI * 4);
+                const angle2 = angle1 + Math.PI;
+
+                const x1 = CENTER_X + Math.cos(angle1) * helixWidth;
+                const x2 = CENTER_X + Math.cos(angle2) * helixWidth;
+
+                // Draw strand dots
+                const size = 6;
+                ctx.fillStyle = state.color;
+                ctx.beginPath();
+                ctx.arc(x1, y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(x2, y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw connecting line
+                ctx.strokeStyle = state.color + '60';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
+
+                // Connect to next pair
+                if (i < numPairs - 1) {
+                    const nextT = (i + 1) / numPairs;
+                    const nextY = startY + (nextT * helixHeight);
+                    const nextAngle1 = twist + (nextT * Math.PI * 4);
+                    const nextX1 = CENTER_X + Math.cos(nextAngle1) * helixWidth;
+
+                    ctx.strokeStyle = state.color + '80';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y);
+                    ctx.lineTo(nextX1, nextY);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // ========================================
+        // MAIN RENDERING
+        // ========================================
+        function draw() {
+            ctx.fillStyle = '#0f1621';
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+            switch(state.currentStyle) {
+                case 0: drawEmojiStyle(); break;
+                case 1: drawPixelArtStyle(); break;
+                case 2: drawAbstractStyle(); break;
+                case 3: drawMinimalistStyle(); break;
+                case 4: drawWaveStyle(); break;
+                case 5: drawAudioVisualizerStyle(); break;
+                case 6: drawParticleStyle(); break;
+                case 7: drawSpiralMandalaStyle(); break;
+                case 8: drawDataBarsStyle(); break;
+                case 9: drawDNAHelixStyle(); break;
+            }
+        }
+
+        function animate() {
+            state.time = state.frameCount * 0.05;
+            draw();
+            state.frameCount++;
+
+            document.getElementById('frameCount').textContent = state.frameCount;
+
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            fps = Math.round(1000 / delta);
+            document.getElementById('fps').textContent = fps;
+            lastFrameTime = now;
+
+            requestAnimationFrame(animate);
+        }
+
+        function setStyle(styleIndex) {
+            state.currentStyle = styleIndex;
+            document.getElementById('currentStyle').textContent = STYLE_NAMES[styleIndex];
+            document.querySelectorAll('.style-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === styleIndex);
+            });
+        }
+
+        function setMood(moodIndex) {
+            state.currentMood = moodIndex;
+            state.color = MOOD_COLORS[moodIndex];
+            document.getElementById('currentMood').textContent = MOOD_NAMES[moodIndex];
+            document.querySelectorAll('.mood-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === moodIndex);
+            });
+        }
+
+        document.querySelectorAll('.style-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => setStyle(index));
+        });
+
+        document.querySelectorAll('.mood-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => setMood(index));
+        });
+
+        animate();
+    </script>
+</body>
+</html>

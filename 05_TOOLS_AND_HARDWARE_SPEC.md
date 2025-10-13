@@ -1,20 +1,35 @@
-# Tools & Hardware Specification
+# Tools and Hardware Specification
 
-**Version:** 1.0
+This document outlines the tools and hardware components used in the Tamai project.
 
-This document outlines the key hardware requirements and software dependencies for the Tamai project.
+## Hardware
 
-## Hardware Requirements
+*   **Raspberry Pi 5:** Core processing unit for the AI companion.
+*   **ESP32 Smart Knob:** Physical interface for user interaction (input/output).
+*   **MacBook:** Used for development, UI dashboard (Chrome Extension), and potentially for offloading some processing during development/testing.
 
-### Core Compute Module (e.g., Raspberry Pi 5)
+## Software/Frameworks
 
-#### LLM RAM Usage
+*   **whisper.cpp:** Speech-to-text engine.
+*   **Ollama:** Local LLM server for running custom fine-tuned models.
+*   **Go:** Programming language used for certain components (e.g., Ollama server).
+*   **Python:** Likely used for fine-tuning models, scripting, and other AI-related tasks.
+*   **Chrome Extension:** For the UI dashboard on the MacBook.
+*   **LoRA (Low-Rank Adaptation):** Technique used for fine-tuning the TinyLlama model.
+*   **TinyLlama-1.1B-Chat-v1.0:** Base LLM model being fine-tuned.
 
--   **Model:** `TinyLlama-1.1B-Chat-v1.0`
--   **Baseline Weight Size:** The model weights require approximately **2.2 GB** of RAM.
--   **Inference Overhead:** Additional memory is required for the KV cache (the model's conversational memory) and framework overhead (PyTorch, etc.).
--   **Recommended RAM:** To run the 1.1B model comfortably, the device should have at least **4 GB of free RAM** available. This provides a safe buffer for the KV cache and system processes.
+## Gemini CLI Tools (Potential Approach for Tomo)
 
-## Software & Libraries
+These are the tools available to the Gemini CLI, which could serve as inspiration or a direct approach for Tomo's capabilities:
 
-*(This section will be populated with key software dependencies, library versions, and setup notes as they are finalized.)*
+*   Edit
+*   FindFiles
+*   GoogleSearch
+*   ReadFile
+*   ReadFolder
+*   ReadManyFiles
+*   Save Memory
+*   SearchText
+*   Shell
+*   WebFetch
+*   WriteFile
