@@ -48,7 +48,7 @@
 
 ```bash
 # Install dependencies
-pip install -r requirements_gui.txt
+pip install -r server/requirements.txt
 
 # Start the GUI
 ./start_tomo_gui.sh
@@ -75,25 +75,28 @@ User Input → Orchestrator (routing) → Persona (mood-based) → Response
 
 ```
 tomodachi/
+├── server/                  # Flask backend
+│   ├── tomo_api.py          # API server
+│   └── requirements.txt     # Dependencies
+├── tomo_gui/                # Web UI (HTML/JS)
 ├── orchestrator_adapter/    # Routing LoRA
 ├── persona_adapter/         # Personality LoRA
-├── tomo_gui/                # Web UI (HTML/JS)
+├── smartKnob/               # Hardware integration
+├── database/                # Conversation storage
+├── docs/                    # Documentation
+├── scripts/                 # Training scripts
 ├── training_data/           # Training datasets
-├── tomo_api.py              # Flask backend
 └── start_tomo_gui.sh        # Quick start script
 ```
-
-**Important:** Adapter directories must stay at project root
 
 ---
 
 ## 📚 Docs
 
 Want more detail? Check the `/docs` folder:
-- `01_ROADMAP.md` — What's next
-- `WHATS_NEW.md` — Latest features
-- `TOMO_GUI_README.md` — GUI deep dive
-- `mood_system/` — Everything about moods
+- `project_docs/` — Project specs, roadmap, architecture
+- `mood_system/MOOD_SYSTEM.md` — Complete mood guide
+- `sessions/` — Development notes and session logs
 
 ---
 
@@ -104,7 +107,7 @@ Want more detail? Check the `/docs` folder:
 - ✅ Web GUI with live tuning
 - ⚠️ Command execution (detection only)
 - 🔜 Voice input (Whisper)
-- 🔜 Hardware integration (ESP32)
+- 🔜 Hardware integration (Smart Knob)
 
 ---
 

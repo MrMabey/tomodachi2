@@ -17,7 +17,7 @@ source venv/bin/activate
 
 # Install dependencies if needed
 echo "Checking dependencies..."
-pip install -q -r requirements_gui.txt
+pip install -q -r server/requirements.txt
 
 echo ""
 echo "Starting Flask server..."
@@ -28,4 +28,4 @@ echo "=========================================="
 echo ""
 
 # Start the server
-python3 tomo_api.py
+python3 server/tomo_api.py
