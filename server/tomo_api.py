@@ -18,7 +18,7 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder='tomo_gui', static_url_path='')
+app = Flask(__name__, static_folder='../gui', static_url_path='')
 CORS(app)
 
 # Mood configuration - each mood has unique parameters and system prompt
@@ -125,8 +125,8 @@ class TomoState:
         self.conversation_history = []
         self.model_config = {
             "base_model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-            "orchestrator_adapter_dir": "./orchestrator_adapter",
-            "persona_adapter_dir": "./persona_adapter",
+            "orchestrator_adapter_dir": "./ai/orchestrator_adapter",
+            "persona_adapter_dir": "./ai/persona_adapter",
         }
         self.base_inference_params = {
             "max_new_tokens": 150,
@@ -259,7 +259,7 @@ def process_chat_response(user_input):
 @app.route('/')
 def index():
     """Serve the main GUI page"""
-    return send_from_directory('tomo_gui', 'index.html')
+    return send_from_directory('../gui', 'index.html')
 
 @app.route('/api/inference', methods=['POST'])
 def inference():

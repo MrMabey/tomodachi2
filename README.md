@@ -42,19 +42,28 @@
 
 ---
 
-## 🚀 Setup
+## 🚀 Quick Start
 
 **Requirements:** Python 3.8+, ~4GB RAM
 
 ```bash
-# Install dependencies
-pip install -r server/requirements.txt
+# Clone the repo
+git clone https://github.com/turtletuber/tomodachi.git
+cd tomodachi
 
-# Start the GUI
+# Start the GUI (auto-creates venv and installs dependencies)
 ./start_tomo_gui.sh
 ```
 
-Then open **http://localhost:5000**
+Then open **http://localhost:5000** in your browser.
+
+The startup script will:
+1. Create a virtual environment (if needed)
+2. Install all dependencies from `server/requirements.txt`
+3. Start the Flask server with both adapters loaded
+4. Serve the GUI at http://localhost:5000
+
+**First run takes ~2 minutes** to download TinyLlama model (~2GB).
 
 ---
 
@@ -75,17 +84,18 @@ User Input → Orchestrator (routing) → Persona (mood-based) → Response
 
 ```
 tomodachi/
+├── ai/                      # AI models & training
+│   ├── orchestrator_adapter/ # Routing LoRA
+│   ├── persona_adapter/     # Personality LoRA
+│   ├── scripts/             # Training scripts
+│   └── training_data/       # Training datasets
 ├── server/                  # Flask backend
 │   ├── tomo_api.py          # API server
 │   └── requirements.txt     # Dependencies
-├── tomo_gui/                # Web UI (HTML/JS)
-├── orchestrator_adapter/    # Routing LoRA
-├── persona_adapter/         # Personality LoRA
+├── gui/                     # Web UI (HTML/JS)
 ├── smartKnob/               # Hardware integration
 ├── database/                # Conversation storage
 ├── docs/                    # Documentation
-├── scripts/                 # Training scripts
-├── training_data/           # Training datasets
 └── start_tomo_gui.sh        # Quick start script
 ```
 
