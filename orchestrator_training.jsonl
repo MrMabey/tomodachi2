@@ -1,8 +1,0 @@
-{"text": "<|im_start|>user\nHey Tomo, I'm just rambling here so take some rambling notes. What if we approach the chat bot in a different way.<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"take_note\", \"content\": \"What if we approach the chat bot in a different way.\"}<|im_end|>"}
-{"text": "<|im_start|>user\ncan you add coffee to a list for me<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"add_to_list\", \"item\": \"coffee\"}<|im_end|>"}
-{"text": "<|im_start|>user\nadd milk to my shopping list<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"add_to_list\", \"item\": \"milk\", \"list_name\": \"shopping\"}<|im_end|>"}
-{"text": "<|im_start|>user\ncan you send this email to Miles?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"send_email\", \"recipient\": \"Miles\"}<|im_end|>"}
-{"text": "<|im_start|>user\nnew idea for a React component. Let's create a bare-bones mockup...<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"forward_to_home_llm\", \"content\": \"new idea for a React component. Let's create a bare-bones mockup...\"}<|im_end|>"}
-{"text": "<|im_start|>user\nremind me to buy milk tomorrow<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"set_reminder\", \"content\": \"buy milk\", \"time\": \"tomorrow\"}<|im_end|>"}
-{"text": "<|im_start|>user\nwhat is on my to-do list?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"get_todos\", \"content\": null}<|im_end|>"}
-{"text": "<|im_start|>user\nJot down that I need to call the dentist<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"take_note\", \"content\": \"Call the dentist\"}<|im_end|>"}

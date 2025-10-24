@@ -1,0 +1,15 @@
+{"text": "<|im_start|>user\nHelp me brainstorm ideas for a new song.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"creative\"}<|im_end|>"}
+{"text": "<|im_start|>user\nWhat's a creative way to announce our project launch?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"creative\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI need a new idea for a story.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"creative\"}<|im_end|>"}
+{"text": "<|im_start|>user\nLet's think outside the box for a minute.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"creative\"}<|im_end|>"}
+{"text": "<|im_start|>user\nGenerate some plot twists for a fantasy novel.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"creative\"}<|im_end|>"}
+{"text": "<|im_start|>user\nSummarize the main points of this document.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"focused\"}<|im_end|>"}
+{"text": "<|im_start|>user\nWhat are the action items from our last meeting?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"focused\"}<|im_end|>"}
+{"text": "<|im_start|>user\nExtract the key statistics from this report.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"focused\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI need to concentrate. Can you help me block out distractions?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"focused\"}<|im_end|>"}
+{"text": "<|im_start|>user\nLet's break down this problem into smaller steps.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"focused\"}<|im_end|>"}
+{"text": "<|im_start|>user\nHow do I set up a new project in VS Code?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"helpful\"}<|im_end|>"}
+{"text": "<|im_start|>user\nCan you explain what a 'closure' is in JavaScript?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"helpful\"}<|im_end|>"}
+{"text": "<|im_start|>user\nWhat's the best way to learn Python?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"helpful\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI'm stuck on this bug, can you help me debug it?<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"helpful\"}<|im_end|>"}
+{"text": "<|im_start|>user\nFind a tutorial on how to use Docker.<|im_end|>\n<|im_start|>assistant\n{\"persona\": \"helpful\"}<|im_end|>"}

@@ -1,0 +1,14 @@
+{"query": "Hello, who are you?", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "Hey Tomo, I'm just rambling here so take some rambling notes. What if we approach the chat bot in a different way... instead of building extensive frameworks, we simplify it to test it. That yields more accurate, up-to-date results.", "expected_adapter": "orchestrator_adapter", "expected_intent": "take_note", "expected_content_keys": ["content"]}
+{"query": "Hey Tomo, can you send this email to Miles?", "expected_adapter": "orchestrator_adapter", "expected_intent": "send_email", "expected_content_keys": ["recipient"]}
+{"query": "Hey Tomo, new idea for a React component. Let's create a bare-bones mockup...", "expected_adapter": "orchestrator_adapter", "expected_intent": "phone_home", "expected_content_keys": ["content"]}
+{"query": "What's a good color for a website?", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "add coffee to a list for me", "expected_adapter": "orchestrator_adapter", "expected_intent": "add_to_list", "expected_content_keys": ["item"]}
+{"query": "add milk to my shopping list", "expected_adapter": "orchestrator_adapter", "expected_intent": "add_to_list", "expected_content_keys": ["item"]}
+{"query": "remind me to buy milk tomorrow", "expected_adapter": "orchestrator_adapter", "expected_intent": "set_reminder", "expected_content_keys": ["content", "time"]}
+{"query": "what is on my to-do list?", "expected_adapter": "orchestrator_adapter", "expected_intent": "get_todos", "expected_content_keys": null}
+{"query": "Jot down that I need to call the dentist", "expected_adapter": "orchestrator_adapter", "expected_intent": "take_note", "expected_content_keys": ["content"]}
+{"query": "hi!", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "how are you", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "Thanks!", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
+{"query": "goodbye", "expected_adapter": "persona_adapter", "expected_intent": null, "expected_content_keys": null}
