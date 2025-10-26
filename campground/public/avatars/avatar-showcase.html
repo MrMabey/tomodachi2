@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Avatar Showcase</title>
+    <link rel="stylesheet" href="FloAvatar.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .showcase-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .showcase-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .showcase-header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #FFB6C1, #98FB98, #87CEEB, #DDA0DD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .showcase-header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .avatar-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .avatar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .avatar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        
+        .avatar-card:hover::before {
+            left: 100%;
+        }
+        
+        .avatar-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .avatar-canvas {
+            border-radius: 50%;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+            transition: all 0.3s ease;
+        }
+        
+        .avatar-card:hover .avatar-canvas {
+            transform: scale(1.1);
+            filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4));
+        }
+        
+        .avatar-info {
+            text-align: center;
+        }
+        
+        .avatar-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+            color: #FFD700;
+        }
+        
+        .avatar-info p {
+            margin: 0 0 15px 0;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .avatar-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .main-controls {
+            text-align: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .main-btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .main-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature h4 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 182, 193, 0.95);
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 20px rgba(255, 182, 193, 0.3);
+        }
+        
+        .feedback.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .avatar-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .showcase-header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="showcase-container">
+        <div class="showcase-header">
+            <h1>🎨 Canvas Avatar Showcase</h1>
+            <p>Explore our collection of animated canvas avatars with unique themes and personalities</p>
+        </div>
+        
+        <div class="main-controls">
+            <h3>🎭 Experience All Avatars</h3>
+            <button class="main-btn" onclick="launchAllAvatars()">Launch All Avatars</button>
+            <button class="main-btn" onclick="removeAllAvatars()">Clear All</button>
+            <button class="main-btn" onclick="randomMoodParty()">Random Mood Party</button>
+        </div>
+        
+        <div class="avatar-grid">
+            <!-- Original Cat Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="cat-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>🐱 Kawaii Cat</h3>
+                    <p>The original cute cat with soft pastel colors, blinking eyes, and gentle breathing animations.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setCatMood('happy')">Happy</button>
+                        <button class="control-btn" onclick="setCatMood('curious')">Curious</button>
+                        <button class="control-btn" onclick="setCatMood('sleepy')">Sleepy</button>
+                        <button class="control-btn" onclick="catAvatar.doHappyDance()">Dance</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dragon Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="dragon-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>🐲 Fire Dragon</h3>
+                    <p>Fierce dragon with fire effects, wing flapping, and roaring animations with particle effects.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setDragonMood('happy')">Happy</button>
+                        <button class="control-btn" onclick="setDragonMood('roaring')">Roar</button>
+                        <button class="control-btn" onclick="setDragonMood('angry')">Angry</button>
+                        <button class="control-btn" onclick="dragonAvatar.breatheFire()">Breathe Fire</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Robot Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="robot-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>🤖 Cyber Robot</h3>
+                    <p>Futuristic robot with digital effects, LED indicators, and processing animations.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setRobotMood('happy')">Happy</button>
+                        <button class="control-btn" onclick="setRobotMood('processing')">Process</button>
+                        <button class="control-btn" onclick="setRobotMood('error')">Error</button>
+                        <button class="control-btn" onclick="robotAvatar.startProcessing()">Analyze</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ghost Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="ghost-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>👻 Ethereal Ghost</h3>
+                    <p>Mystical spirit with ethereal effects, floating wisps, and translucent animations.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setGhostMood('peaceful')">Peaceful</button>
+                        <button class="control-btn" onclick="setGhostMood('playful')">Playful</button>
+                        <button class="control-btn" onclick="setGhostMood('mysterious')">Mystery</button>
+                        <button class="control-btn" onclick="ghostAvatar.startPhasing()">Phase</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alien Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="alien-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>👽 Cosmic Alien</h3>
+                    <p>Extraterrestrial being with cosmic effects, telepathic waves, and space backgrounds.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setAlienMood('observing')">Observe</button>
+                        <button class="control-btn" onclick="setAlienMood('analyzing')">Analyze</button>
+                        <button class="control-btn" onclick="setAlienMood('peaceful')">Peace</button>
+                        <button class="control-btn" onclick="alienAvatar.communicate()">Telepathy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panda Avatar -->
+            <div class="avatar-card">
+                <div class="avatar-display">
+                    <canvas id="panda-canvas" width="120" height="120" class="avatar-canvas"></canvas>
+                </div>
+                <div class="avatar-info">
+                    <h3>🐼 Zen Panda</h3>
+                    <p>Peaceful panda with bamboo theme, sakura petals, and meditative zen effects.</p>
+                    <div class="avatar-controls">
+                        <button class="control-btn" onclick="setPandaMood('content')">Content</button>
+                        <button class="control-btn" onclick="setPandaMood('playful')">Playful</button>
+                        <button class="control-btn" onclick="setPandaMood('sleepy')">Sleepy</button>
+                        <button class="control-btn" onclick="pandaAvatar.startEating()">Eat Bamboo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h4>🎨 Unique Themes</h4>
+                <p>Each avatar has its own color palette and visual style</p>
+            </div>
+            <div class="feature">
+                <h4>✨ Special Effects</h4>
+                <p>Fire particles, digital effects, ethereal wisps, and more</p>
+            </div>
+            <div class="feature">
+                <h4>🎭 Mood System</h4>
+                <p>Dynamic expressions and behaviors for each character</p>
+            </div>
+            <div class="feature">
+                <h4>🔄 Smooth Animation</h4>
+                <p>60fps canvas rendering with smooth transitions</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="feedback" class="feedback"></div>
+
+    <!-- React and ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Load all avatar renderers -->
+    <script src="avatar-renderer.js"></script>
+    <script src="dragon-avatar.js"></script>
+    <script src="robot-avatar.js"></script>
+    <script src="ghost-avatar.js"></script>
+    <script src="alien-avatar.js"></script>
+    <script src="panda-avatar.js"></script>
+    <script src="avatar-manager.js"></script>
+    <script src="FloAvatar.js"></script>
+
+    <script>
+        // Avatar instances
+        let catAvatar = null;
+        let dragonAvatar = null;
+        let robotAvatar = null;
+        let ghostAvatar = null;
+        let alienAvatar = null;
+        let pandaAvatar = null;
+        let floatingAvatars = [];
+
+        function showFeedback(message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+
+        function initializeShowcaseAvatars() {
+            // Initialize all avatars in their display canvases
+            catAvatar = new AvatarRenderer(120);
+            document.getElementById('cat-canvas').replaceWith(catAvatar.getCanvas());
+            catAvatar.getCanvas().id = 'cat-canvas';
+            catAvatar.getCanvas().className = 'avatar-canvas';
+
+            dragonAvatar = new DragonAvatar(120);
+            document.getElementById('dragon-canvas').replaceWith(dragonAvatar.getCanvas());
+            dragonAvatar.getCanvas().id = 'dragon-canvas';
+            dragonAvatar.getCanvas().className = 'avatar-canvas';
+
+            robotAvatar = new RobotAvatar(120);
+            document.getElementById('robot-canvas').replaceWith(robotAvatar.getCanvas());
+            robotAvatar.getCanvas().id = 'robot-canvas';
+            robotAvatar.getCanvas().className = 'avatar-canvas';
+
+            ghostAvatar = new GhostAvatar(120);
+            document.getElementById('ghost-canvas').replaceWith(ghostAvatar.getCanvas());
+            ghostAvatar.getCanvas().id = 'ghost-canvas';
+            ghostAvatar.getCanvas().className = 'avatar-canvas';
+
+            alienAvatar = new AlienAvatar(120);
+            document.getElementById('alien-canvas').replaceWith(alienAvatar.getCanvas());
+            alienAvatar.getCanvas().id = 'alien-canvas';
+            alienAvatar.getCanvas().className = 'avatar-canvas';
+
+            pandaAvatar = new PandaAvatar(120);
+            document.getElementById('panda-canvas').replaceWith(pandaAvatar.getCanvas());
+            pandaAvatar.getCanvas().id = 'panda-canvas';
+            pandaAvatar.getCanvas().className = 'avatar-canvas';
+
+            showFeedback('🎨 All avatars initialized!');
+        }
+
+        // Mood control functions
+        function setCatMood(mood) {
+            catAvatar.setMood(mood);
+            showFeedback(`🐱 Cat is now ${mood}!`);
+        }
+
+        function setDragonMood(mood) {
+            dragonAvatar.setMood(mood);
+            showFeedback(`🐲 Dragon is now ${mood}!`);
+        }
+
+        function setRobotMood(mood) {
+            robotAvatar.setMood(mood);
+            showFeedback(`🤖 Robot is now ${mood}!`);
+        }
+
+        function setGhostMood(mood) {
+            ghostAvatar.setMood(mood);
+            showFeedback(`👻 Ghost is now ${mood}!`);
+        }
+
+        function setAlienMood(mood) {
+            alienAvatar.setMood(mood);
+            showFeedback(`👽 Alien is now ${mood}!`);
+        }
+
+        function setPandaMood(mood) {
+            pandaAvatar.setMood(mood);
+            showFeedback(`🐼 Panda is now ${mood}!`);
+        }
+
+        function launchAllAvatars() {
+            removeAllAvatars();
+            
+            const avatarTypes = [
+                { class: AvatarRenderer, name: '🐱 Cat', x: 20, y: 20 },
+                { class: DragonAvatar, name: '🐲 Dragon', x: 80, y: 30 },
+                { class: RobotAvatar, name: '🤖 Robot', x: 15, y: 70 },
+                { class: GhostAvatar, name: '👻 Ghost', x: 70, y: 80 },
+                { class: AlienAvatar, name: '👽 Alien', x: 40, y: 15 },
+                { class: PandaAvatar, name: '🐼 Panda', x: 60, y: 60 }
+            ];
+
+            avatarTypes.forEach((avatarType, index) => {
+                setTimeout(() => {
+                    const avatar = new avatarType.class(80);
+                    const container = document.createElement('div');
+                    container.className = 'floating-avatar';
+                    container.style.cssText = `
+                        position: fixed;
+                        left: ${avatarType.x}%;
+                        top: ${avatarType.y}%;
+                        z-index: 9999;
+                        cursor: pointer;
+                        border-radius: 50%;
+                        filter: drop-shadow(0 4px 20px rgba(255, 182, 193, 0.6));
+                        transition: all 0.3s ease;
+                        pointer-events: auto;
+                    `;
+                    
+                    container.appendChild(avatar.getCanvas());
+                    document.body.appendChild(container);
+                    
+                    // Add hover and click effects
+                    container.addEventListener('mouseenter', () => {
+                        container.style.transform = 'scale(1.2)';
+                        container.style.filter = 'drop-shadow(0 6px 25px rgba(255, 182, 193, 0.8))';
+                        if (avatar.setHovered) avatar.setHovered(true);
+                    });
+                    
+                    container.addEventListener('mouseleave', () => {
+                        container.style.transform = 'scale(1)';
+                        container.style.filter = 'drop-shadow(0 4px 20px rgba(255, 182, 193, 0.6))';
+                        if (avatar.setHovered) avatar.setHovered(false);
+                    });
+                    
+                    container.addEventListener('click', () => {
+                        // Trigger special abilities
+                        if (avatar.doHappyDance) avatar.doHappyDance();
+                        else if (avatar.breatheFire) avatar.breatheFire();
+                        else if (avatar.startProcessing) avatar.startProcessing();
+                        else if (avatar.startPhasing) avatar.startPhasing();
+                        else if (avatar.communicate) avatar.communicate();
+                        else if (avatar.startEating) avatar.startEating();
+                        
+                        showFeedback(`${avatarType.name} activated!`);
+                    });
+                    
+                    floatingAvatars.push({ container, avatar });
+                    showFeedback(`${avatarType.name} launched!`);
+                }, index * 500);
+            });
+        }
+
+        function removeAllAvatars() {
+            floatingAvatars.forEach(({ container, avatar }) => {
+                if (avatar.destroy) avatar.destroy();
+                container.remove();
+            });
+            floatingAvatars = [];
+            showFeedback('🗑️ All floating avatars removed!');
+        }
+
+        function randomMoodParty() {
+            const moods = {
+                cat: ['happy', 'curious', 'sleepy', 'excited', 'focused'],
+                dragon: ['happy', 'roaring', 'angry', 'sleeping', 'neutral'],
+                robot: ['happy', 'processing', 'error', 'sleeping', 'idle'],
+                ghost: ['peaceful', 'surprised', 'playful', 'mysterious', 'phasing'],
+                alien: ['observing', 'communicating', 'analyzing', 'peaceful', 'teleporting'],
+                panda: ['content', 'eating', 'playful', 'sleepy', 'excited']
+            };
+
+            // Set random moods for showcase avatars
+            if (catAvatar) {
+                const mood = moods.cat[Math.floor(Math.random() * moods.cat.length)];
+                catAvatar.setMood(mood);
+            }
+            if (dragonAvatar) {
+                const mood = moods.dragon[Math.floor(Math.random() * moods.dragon.length)];
+                dragonAvatar.setMood(mood);
+            }
+            if (robotAvatar) {
+                const mood = moods.robot[Math.floor(Math.random() * moods.robot.length)];
+                robotAvatar.setMood(mood);
+            }
+            if (ghostAvatar) {
+                const mood = moods.ghost[Math.floor(Math.random() * moods.ghost.length)];
+                ghostAvatar.setMood(mood);
+            }
+            if (alienAvatar) {
+                const mood = moods.alien[Math.floor(Math.random() * moods.alien.length)];
+                alienAvatar.setMood(mood);
+            }
+            if (pandaAvatar) {
+                const mood = moods.panda[Math.floor(Math.random() * moods.panda.length)];
+                pandaAvatar.setMood(mood);
+            }
+
+            // Set random moods for floating avatars too
+            floatingAvatars.forEach(({ avatar }, index) => {
+                const avatarTypes = Object.keys(moods);
+                const randomType = avatarTypes[index % avatarTypes.length];
+                const randomMood = moods[randomType][Math.floor(Math.random() * moods[randomType].length)];
+                if (avatar.setMood) avatar.setMood(randomMood);
+            });
+
+            showFeedback('🎉 Random mood party activated!');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                initializeShowcaseAvatars();
+            }, 500);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                randomMoodParty();
+            }
+        });
+    </script>
+</body>
+</html>

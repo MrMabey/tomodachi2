@@ -475,6 +475,8 @@ def unload_model():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+
     print("=" * 60)
     print("🤖 TOMO API Server Starting...")
     print("=" * 60)
@@ -482,7 +484,7 @@ if __name__ == '__main__':
     print(f"Orchestrator: {state.model_config['orchestrator_adapter_dir']}")
     print(f"Persona: {state.model_config['persona_adapter_dir']}")
     print("=" * 60)
-    print("GUI will be available at: http://localhost:5000")
+    print(f"GUI will be available at: http://localhost:{port}")
     print("=" * 60)
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=port)

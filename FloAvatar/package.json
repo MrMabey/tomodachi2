@@ -1,0 +1,23 @@
+{
+  "name": "floavatar-extension",
+  "version": "1.0.0",
+  "description": "Virtual pet companion browser extension with token collection system",
+  "type": "module",
+  "scripts": {
+    "build": "wxt build",
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "postinstall": "wxt prepare",
+    "zip": "wxt zip"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "@vueuse/core": "^10.7.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.258",
+    "@wxt-dev/module-vue": "^1.0.0",
+    "typescript": "^5.3.0",
+    "wxt": "^0.19.16"
+  }
+}

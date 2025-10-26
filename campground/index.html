@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base Camp</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+      }
+
+      #app {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      /* Performance HUD */
+      .perf-hud {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        padding: 12px 18px;
+        border-radius: 4px;
+        z-index: 1100;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      }
+
+      .perf-hud-label {
+        color: #888;
+        margin-right: 8px;
+        font-size: 16px;
+      }
+
+      .perf-hud-value {
+        color: #0f0;
+        font-weight: bold;
+        font-size: 20px;
+      }
+
+      /* Side Panels */
+      .side-panel {
+        position: fixed;
+        left: -400px;
+        top: 0;
+        width: 400px;
+        height: 100vh;
+        background: #2d2d2d;
+        color: white;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
+      }
+
+      .side-panel.active {
+        left: 0;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 2px solid #667eea;
+        background: #222;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        color: white;
+        font-size: 1.3em;
+      }
+
+      .close-panel {
+        background: none;
+        border: none;
+        font-size: 2em;
+        cursor: pointer;
+        color: white;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+      }
+
+      .close-panel:hover {
+        background: rgba(255,255,255,0.1);
+      }
+
+      .panel-content {
+        padding: 20px;
+      }
+
+      .panel-content h3 {
+        margin-bottom: 15px;
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .new-chat-btn {
+        width: 100%;
+        padding: 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-bottom: 20px;
+        transition: background 0.3s;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .new-chat-btn:hover {
+        background: #5568d3;
+      }
+
+      .sidebar-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.2);
+        margin: 15px 0;
+      }
+
+      .chat-conversation {
+        margin-top: 20px;
+      }
+
+      .chat-bubble {
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.9em;
+        word-wrap: break-word;
+        animation: fadeIn 0.3s;
+      }
+
+      .chat-bubble.user {
+        background: #667eea;
+        color: white;
+        margin-left: 20px;
+        border-bottom-right-radius: 4px;
+      }
+
+      .chat-bubble.assistant {
+        background: rgba(255,255,255,0.15);
+        color: white;
+        margin-right: 20px;
+        border-bottom-left-radius: 4px;
+      }
+
+      .bubble-time {
+        font-size: 0.75em;
+        opacity: 0.7;
+        margin-top: 4px;
+      }
+
+      /* Floating Input */
+      .floating-input-container {
+        position: fixed;
+        bottom: 10vh;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        max-width: 800px;
+        width: calc(100% - 100px);
+      }
+
+      .pill-input {
+        width: 100%;
+        padding: 18px 30px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1em;
+        background: white;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+      }
+
+      .pill-input:focus {
+        outline: none;
+        box-shadow: 0 6px 30px rgba(102, 126, 234, 0.4);
+      }
+
+      /* Toolbox */
+      .toolbox {
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 1100;
+      }
+
+      .toolbox-button {
+        width: 60px;
+        height: 60px;
+        background: #333;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8em;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .toolbox:hover .toolbox-button {
+        transform: scale(1.05);
+        box-shadow: 0 6px 30px rgba(102, 126, 234, 0.4);
+      }
+
+      .toolbox-options {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        pointer-events: none;
+        transform: rotate(30deg);
+        transform-origin: bottom right;
+      }
+
+      .toolbox-option {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4em;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        cursor: pointer;
+        opacity: 0;
+        transform: translate(0, 0) rotate(-30deg);
+        transition: opacity 0.3s, transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        pointer-events: none;
+      }
+
+      /* Arc positions around top-left quadrant */
+      .toolbox:hover .toolbox-option {
+        opacity: 1;
+      }
+
+      /* Delay pointer events until animation completes */
+      @keyframes enablePointer {
+        from { pointer-events: none; }
+        to { pointer-events: all; }
+      }
+
+      .toolbox:hover .toolbox-option {
+        animation: enablePointer 0s 0.35s forwards;
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(1) {
+        transform: translate(-80px, -80px) rotate(-30deg);
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(2) {
+        transform: translate(-110px, -40px) rotate(-30deg);
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(3) {
+        transform: translate(-110px, 10px) rotate(-30deg);
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(4) {
+        transform: translate(-80px, 50px) rotate(-30deg);
+      }
+
+      .toolbox-option:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .toolbox-option.active {
+        background: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Parameter Controls */
+      .param-group {
+        margin-bottom: 20px;
+      }
+
+      .param-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .param-group input[type="range"] {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+
+      .param-value {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        cursor: pointer;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+
+      .btn-secondary {
+        background: #f44336;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #da190b;
+      }
+
+      /* Mood Panel */
+      .mood-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .mood-btn {
+        padding: 15px 10px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .mood-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+
+      .mood-btn.active {
+        border-color: #000;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+      }
+
+      .mood-btn-name {
+        display: block;
+        font-size: 0.9em;
+        margin-bottom: 3px;
+      }
+
+      .mood-btn-emoji {
+        display: block;
+        font-size: 1.1em;
+        margin-bottom: 3px;
+      }
+
+      .mood-btn-temp {
+        display: block;
+        font-size: 0.7em;
+        opacity: 0.8;
+        margin-top: 3px;
+      }
+
+      .mood-FOCUSED { background: #2196f3; color: white; }
+      .mood-CREATIVE { background: #9c27b0; color: white; }
+      .mood-HELPFUL { background: #4caf50; color: white; }
+      .mood-LISTENING { background: #00bcd4; color: white; }
+      .mood-THINKING { background: #ff9800; color: white; }
+      .mood-SUCCESS { background: #8bc34a; color: white; }
+      .mood-ERROR { background: #f44336; color: white; }
+      .mood-SLEEPING { background: #607d8b; color: white; }
+      .mood-PHONE_HOME { background: #e91e63; color: white; }
+
+      .current-mood-display {
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+        font-weight: bold;
+        color: white;
+      }
+
+      /* Status Panel */
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #f5f5f5;
+        border-radius: 6px;
+      }
+
+      .status-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .status-value {
+        color: #667eea;
+        font-family: monospace;
+      }
+
+      .indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .indicator.online {
+        background: #4caf50;
+        box-shadow: 0 0 8px #4caf50;
+      }
+
+      .indicator.offline {
+        background: #f44336;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Performance HUD -->
+    <div class="perf-hud">
+      <span class="perf-hud-label">⚡</span>
+      <span class="perf-hud-value" id="hudLatency">-</span>
+      <span class="perf-hud-label">s</span>
+    </div>
+
+    <!-- Left Side Panels -->
+    <div class="side-panel" id="chatPanel" data-panel="chat">
+      <div class="panel-header">
+        <h2>💬 Chat</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content">
+        <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+        <h3>Current Conversation</h3>
+        <div class="sidebar-divider"></div>
+        <div id="sidebarConversation" class="chat-conversation">
+          <!-- Messages will appear here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Scene Container -->
+    <div id="app"></div>
+
+    <!-- Floating Chat Input -->
+    <div class="floating-input-container">
+      <input
+        type="text"
+        id="userInput"
+        class="pill-input"
+        placeholder="Ask Tomo anything..."
+        onkeypress="if(event.key==='Enter') sendMessage()"
+      >
+    </div>
+
+    <!-- Toolbox -->
+    <div class="toolbox" id="toolbox">
+      <div class="toolbox-button">🧰</div>
+      <div class="toolbox-options">
+        <div class="toolbox-option" data-panel="chat">💬</div>
+        <div class="toolbox-option" data-panel="inference">🎛️</div>
+        <div class="toolbox-option" data-panel="mood">🎭</div>
+        <div class="toolbox-option" data-panel="status">📊</div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="inferencePanel" data-panel="inference">
+      <div class="panel-header">
+        <h2>🎛️ Inference Parameters</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="param-group">
+          <label>Temperature: <span class="param-value" id="tempValue">0.7</span></label>
+          <input
+            type="range"
+            id="temperature"
+            min="0"
+            max="2"
+            step="0.1"
+            value="0.7"
+            oninput="updateParam('temperature', this.value)"
+          >
+        </div>
+
+        <div class="param-group">
+          <label>Max Tokens: <span class="param-value" id="tokensValue">150</span></label>
+          <input
+            type="range"
+            id="maxTokens"
+            min="10"
+            max="500"
+            step="10"
+            value="150"
+            oninput="updateParam('max_new_tokens', this.value)"
+          >
+        </div>
+
+        <div class="param-group">
+          <label>Top-K: <span class="param-value" id="topkValue">50</span></label>
+          <input
+            type="range"
+            id="topK"
+            min="1"
+            max="100"
+            step="1"
+            value="50"
+            oninput="updateParam('top_k', this.value)"
+          >
+        </div>
+
+        <div class="param-group">
+          <label>Top-P: <span class="param-value" id="toppValue">0.95</span></label>
+          <input
+            type="range"
+            id="topP"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.95"
+            oninput="updateParam('top_p', this.value)"
+          >
+        </div>
+
+        <div class="checkbox-group">
+          <input
+            type="checkbox"
+            id="doSample"
+            checked
+            onchange="updateParam('do_sample', this.checked)"
+          >
+          <label for="doSample">Enable Sampling</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input
+            type="checkbox"
+            id="moodMode"
+            checked
+            onchange="toggleMoodMode(this.checked)"
+          >
+          <label for="moodMode">Mood Controls Parameters</label>
+        </div>
+
+        <button class="btn btn-primary" onclick="applyParameters()" style="width: 100%;">
+          Apply Parameters
+        </button>
+      </div>
+    </div>
+
+    <div class="side-panel" id="moodPanel" data-panel="mood">
+      <div class="panel-header">
+        <h2>🎭 Mood Control</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="current-mood-display mood-LISTENING" id="currentMoodDisplay">
+          LISTENING
+        </div>
+
+        <div class="mood-grid">
+          <div class="mood-btn mood-FOCUSED" onclick="setMood('FOCUSED')">
+            <span class="mood-btn-name">FOCUSED</span>
+            <span class="mood-btn-emoji">(o_o)</span>
+            <span class="mood-btn-temp">T=0.3</span>
+          </div>
+          <div class="mood-btn mood-CREATIVE" onclick="setMood('CREATIVE')">
+            <span class="mood-btn-name">CREATIVE</span>
+            <span class="mood-btn-emoji">(^-^)</span>
+            <span class="mood-btn-temp">T=1.2</span>
+          </div>
+          <div class="mood-btn mood-HELPFUL" onclick="setMood('HELPFUL')">
+            <span class="mood-btn-name">HELPFUL</span>
+            <span class="mood-btn-emoji">(^_~)</span>
+            <span class="mood-btn-temp">T=0.7</span>
+          </div>
+          <div class="mood-btn mood-LISTENING active" onclick="setMood('LISTENING')">
+            <span class="mood-btn-name">LISTENING</span>
+            <span class="mood-btn-emoji">(•_•)</span>
+            <span class="mood-btn-temp">T=0.5</span>
+          </div>
+          <div class="mood-btn mood-THINKING" onclick="setMood('THINKING')">
+            <span class="mood-btn-name">THINKING</span>
+            <span class="mood-btn-emoji">(◉_◉)</span>
+            <span class="mood-btn-temp">T=0.6</span>
+          </div>
+          <div class="mood-btn mood-SUCCESS" onclick="setMood('SUCCESS')">
+            <span class="mood-btn-name">SUCCESS</span>
+            <span class="mood-btn-emoji">(^o^)</span>
+            <span class="mood-btn-temp">T=0.8</span>
+          </div>
+          <div class="mood-btn mood-ERROR" onclick="setMood('ERROR')">
+            <span class="mood-btn-name">ERROR</span>
+            <span class="mood-btn-emoji">(x_x)</span>
+            <span class="mood-btn-temp">T=0.4</span>
+          </div>
+          <div class="mood-btn mood-SLEEPING" onclick="setMood('SLEEPING')">
+            <span class="mood-btn-name">SLEEPING</span>
+            <span class="mood-btn-emoji">(-_-)</span>
+            <span class="mood-btn-temp">T=0.2</span>
+          </div>
+          <div class="mood-btn mood-PHONE_HOME" onclick="setMood('PHONE_HOME')">
+            <span class="mood-btn-name">PHONE HOME</span>
+            <span class="mood-btn-emoji">(⊙_⊙)</span>
+            <span class="mood-btn-temp">T=0.9</span>
+          </div>
+        </div>
+
+        <div id="moodDescription" style="padding: 10px; background: #f5f5f5; border-radius: 6px; font-size: 0.9em; margin-top: 10px;">
+          Click a mood to see its description and parameters
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="statusPanel" data-panel="status">
+      <div class="panel-header">
+        <h2>📊 System Status</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="status-item">
+          <span class="status-label">Architecture</span>
+          <span class="status-value">Orchestrator-as-Router</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">
+            <span class="indicator online" id="statusIndicator"></span>
+            API Status
+          </span>
+          <span class="status-value" id="apiStatus">Checking...</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Model Loaded</span>
+          <span class="status-value" id="modelStatus">Unknown</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Current Adapter</span>
+          <span class="status-value" id="adapterStatus">None</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Messages</span>
+          <span class="status-value" id="messageCount">0</span>
+        </div>
+
+        <button class="btn btn-secondary" onclick="unloadModel()" style="width: 100%; margin-top: 10px;">
+          Unload Model
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+    <script src="/ui.js"></script>
+  </body>
+</html>

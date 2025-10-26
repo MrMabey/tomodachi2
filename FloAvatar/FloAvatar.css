@@ -1,0 +1,138 @@
+.flo-avatar {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  z-index: 999998;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.flo-avatar.off-screen {
+  opacity: 0.4;
+  transition: opacity 0.5s ease;
+}
+
+.flo-body {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #A78BFA 0%, #EC4899 100%);
+  border-radius: 50%;
+  border: 2px solid #8B5CF6;
+  animation: float 4s ease-in-out infinite;
+  left: 5px;
+  top: 10px;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Cute rounded ears */
+.flo-ear {
+  position: absolute;
+  width: 14px;
+  height: 16px;
+  background: linear-gradient(135deg, #A78BFA 0%, #EC4899 100%);
+  border-radius: 70% 70% 50% 50%;
+  border: 2px solid #8B5CF6;
+  top: -6px;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+  z-index: -1;
+}
+
+.left-ear {
+  left: 5px;
+  transform: rotate(-25deg);
+}
+
+.right-ear {
+  right: 5px;
+  transform: rotate(25deg);
+}
+
+.left-ear::after,
+.right-ear::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 3px;
+  width: 8px;
+  height: 9px;
+  background: linear-gradient(135deg, #DDD6FE 0%, #FBBF24 100%);
+  border-radius: 60% 60% 40% 40%;
+}
+
+/* Cute oval eyes */
+.flo-eye {
+  position: absolute;
+  width: 6px;
+  height: 8px;
+  background: #333;
+  border-radius: 50%;
+  top: 16px;
+  transition: all 0.3s ease;
+}
+
+.flo-eye::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.left-eye {
+  left: 13px;
+}
+
+.right-eye {
+  right: 13px;
+}
+
+.flo-eye.blink {
+  height: 2px;
+  border-radius: 50%;
+  transform: scaleY(0.3);
+}
+
+.flo-eye.sleepy {
+  height: 5px;
+  transform: scaleY(0.6);
+}
+
+.flo-eye.sleepy::after {
+  opacity: 0.4;
+}
+
+/* Simple curved mouth (only when happy) */
+.flo-mouth {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 6px;
+  border: 1.5px solid #333;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Hover effects */
+.flo-avatar:hover .flo-body {
+  background: linear-gradient(135deg, #C084FC 0%, #F472B6 100%);
+  animation-duration: 2s;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.flo-avatar:hover .flo-ear {
+  background: linear-gradient(135deg, #C084FC 0%, #F472B6 100%);
+}
