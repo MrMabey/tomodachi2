@@ -8,12 +8,21 @@ export class IsometricScene {
   private camera: THREE.OrthographicCamera
   private renderer: THREE.WebGLRenderer
   private clock: THREE.Clock
-  private forest!: Forest
   private campground!: Campground
   private avatarManager!: AvatarManager
+  private raycaster: THREE.Raycaster
+  private mouse: THREE.Vector2
+  private draggedAvatar: any = null
+  private isDragging: boolean = false
+  private dragPlane: THREE.Plane
+  private dragOffset: THREE.Vector3
 
   constructor() {
     this.clock = new THREE.Clock()
+    this.raycaster = new THREE.Raycaster()
+    this.mouse = new THREE.Vector2()
+    this.dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+    this.dragOffset = new THREE.Vector3()
 
     // Create scene
     this.scene = new THREE.Scene()
@@ -53,7 +62,7 @@ export class IsometricScene {
     this.createGround()
 
     // Create forest and campground
-    this.forest = new Forest(this.scene)
+    new Forest(this.scene)  // Create forest (no need to store reference)
     this.campground = new Campground(this.scene)
 
     // Create and load avatars
@@ -61,6 +70,9 @@ export class IsometricScene {
     this.avatarManager.createAvatars().then(() => {
       console.log('✨ Avatars are now floating in the campground!')
     })
+
+    // Setup drag and drop event listeners
+    this.setupDragAndDrop()
   }
 
   private setupLighting() {
@@ -141,6 +153,82 @@ export class IsometricScene {
 
   public render() {
     this.renderer.render(this.scene, this.camera)
+  }
+
+  private setupDragAndDrop() {
+    const canvas = this.renderer.domElement
+
+    const onMouseDown = (event: MouseEvent) => {
+      // Calculate mouse position in normalized device coordinates
+      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+      this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+      // Update raycaster
+      this.raycaster.setFromCamera(this.mouse, this.camera)
+
+      // Get all avatar sprites
+      const avatars = this.avatarManager.getAvatars()
+      const sprites = avatars.map(avatar => avatar.getSprite())
+
+      // Check for intersections
+      const intersects = this.raycaster.intersectObjects(sprites)
+
+      if (intersects.length > 0) {
+        // Found an avatar!
+        const sprite = intersects[0].object as THREE.Sprite
+        const avatar = avatars.find(a => a.getSprite() === sprite)
+
+        if (avatar) {
+          this.draggedAvatar = avatar
+          this.isDragging = true
+          avatar.startDrag()
+
+          // Calculate the drag plane at the avatar's current height
+          this.dragPlane.constant = -sprite.position.y
+
+          // Calculate offset between intersection point and avatar position
+          const intersectPoint = new THREE.Vector3()
+          this.raycaster.ray.intersectPlane(this.dragPlane, intersectPoint)
+          this.dragOffset.copy(sprite.position).sub(intersectPoint)
+
+          canvas.style.cursor = 'grabbing'
+        }
+      }
+    }
+
+    const onMouseMove = (event: MouseEvent) => {
+      if (!this.isDragging || !this.draggedAvatar) return
+
+      // Update mouse position
+      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+      this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+      // Update raycaster
+      this.raycaster.setFromCamera(this.mouse, this.camera)
+
+      // Calculate new position on the drag plane
+      const intersectPoint = new THREE.Vector3()
+      this.raycaster.ray.intersectPlane(this.dragPlane, intersectPoint)
+
+      if (intersectPoint) {
+        intersectPoint.add(this.dragOffset)
+        this.draggedAvatar.setPosition(intersectPoint.x, intersectPoint.y, intersectPoint.z)
+      }
+    }
+
+    const onMouseUp = () => {
+      if (this.isDragging && this.draggedAvatar) {
+        this.draggedAvatar.endDrag()
+        this.draggedAvatar = null
+        this.isDragging = false
+        canvas.style.cursor = 'default'
+      }
+    }
+
+    canvas.addEventListener('mousedown', onMouseDown)
+    canvas.addEventListener('mousemove', onMouseMove)
+    canvas.addEventListener('mouseup', onMouseUp)
+    canvas.addEventListener('mouseleave', onMouseUp) // Stop dragging if mouse leaves canvas
   }
 
   public getScene(): THREE.Scene {

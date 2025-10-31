@@ -12,7 +12,9 @@ from peft import PeftModel
 import json
 import os
 import logging
+import requests
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -141,6 +143,61 @@ class TomoState:
 
 state = TomoState()
 
+# Memory service configuration
+MEMORY_SERVICE_URL = "http://localhost:5003"
+
+# Memory system helpers (via HTTP)
+def store_memory(user_input, response, thread_id="default"):
+    """Store a conversation turn in the memory system via HTTP"""
+    try:
+        # Store as a formatted conversation turn
+        memory_text = f"User: {user_input}\nTomo: {response}"
+
+        resp = requests.post(
+            f"{MEMORY_SERVICE_URL}/api/ingest",
+            json={"text": memory_text, "thread_id": thread_id},
+            timeout=5
+        )
+        resp.raise_for_status()
+
+        doc = resp.json()
+        logger.info(f"💾 Stored memory: doc_id={doc['doc_id']}, thread={thread_id}")
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"⚠️ Memory storage failed (service may be offline): {e}")
+    except Exception as e:
+        logger.error(f"Failed to store memory: {e}")
+
+def retrieve_memories(query, top_k=3, thread_id=None):
+    """Retrieve relevant memories from the memory system via HTTP"""
+    try:
+        # Set thread filters if thread_id is provided
+        thread_filters = [thread_id] if thread_id else None
+
+        resp = requests.post(
+            f"{MEMORY_SERVICE_URL}/api/query",
+            json={
+                "query_text": query,
+                "top_k": top_k,
+                "thread_id": thread_id if thread_id else "default"
+            },
+            timeout=5
+        )
+        resp.raise_for_status()
+
+        data = resp.json()
+        results = data.get("results", [])
+
+        if results:
+            logger.info(f"🧠 Retrieved {len(results)} memories (similarity: {results[0]['similarity']:.3f} - {results[-1]['similarity']:.3f})")
+
+        return results
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"⚠️ Memory retrieval failed (service may be offline): {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Failed to retrieve memories: {e}")
+        return []
+
 def load_base_model():
     """Load the base TinyLlama model"""
     if state.base_model is None:
@@ -249,10 +306,59 @@ def process_orchestrator_decision(user_input):
         logger.warning(f"Orchestrator returned non-JSON: {response}")
         return {"action": "chat"}, response, latency
 
-def process_chat_response(user_input):
+def process_chat_response(user_input, thread_id="default", use_memory=False):
     """Generate a conversational response using the persona adapter"""
-    response, latency = generate_response(user_input, state.model_config["persona_adapter_dir"], max_tokens=150)
-    return response, latency
+    # Retrieve relevant memories (disabled by default until properly configured)
+    memories = []
+    if use_memory:
+        memories = retrieve_memories(user_input, top_k=3, thread_id=thread_id)
+
+    # Build context from memories
+    memory_context = ""
+    if memories:
+        memory_context = "\n\nRelevant past context:\n"
+        for i, mem in enumerate(memories, 1):
+            # Handle different memory formats - extract text from nested structures
+            if isinstance(mem, dict):
+                # Try different possible keys for the text content
+                mem_text = (mem.get('text') or
+                           mem.get('content') or
+                           mem.get('document', {}).get('text') if isinstance(mem.get('document'), dict) else None)
+
+                # If still none, skip this memory
+                if not mem_text:
+                    logger.warning(f"Could not extract text from memory: {mem}")
+                    continue
+
+                memory_context += f"{i}. {mem_text}\n"
+            else:
+                memory_context += f"{i}. {str(mem)}\n"
+
+    # Append memory context to user input as hidden context for the model
+    # Only if we have valid memories
+    enhanced_input = user_input
+    if memory_context.strip() and memory_context != "\n\nRelevant past context:\n":
+        # Format as a system instruction that won't be echoed
+        enhanced_input = f"[Context from previous conversations:{memory_context}]\nUser: {user_input}"
+
+    response, latency = generate_response(enhanced_input, state.model_config["persona_adapter_dir"], max_tokens=150)
+
+    # Make sure we're only returning the actual generated response, not the context
+    # Remove any context that leaked into the response
+    if response.startswith("Relevant past context:") or "{'document':" in response:
+        # The model echoed the context - extract just the actual response
+        lines = response.split('\n')
+        # Find where the actual response starts
+        for i, line in enumerate(lines):
+            if line.startswith("Current user message:") or line.startswith("User:"):
+                # Everything after this is the actual conversation
+                response = '\n'.join(lines[i+1:]).strip()
+                break
+        else:
+            # Couldn't find marker, just return as-is but log warning
+            logger.warning(f"Response contained context echo: {response[:100]}")
+
+    return response, latency, memories
 
 # API Endpoints
 
@@ -286,13 +392,17 @@ def inference():
 
         # Stage 2: Route based on decision
         if decision.get("action") == "chat":
-            # Generate conversational response
-            response, persona_latency = process_chat_response(user_input)
+            # Generate conversational response (memory disabled for now)
+            response, persona_latency, memories = process_chat_response(user_input, thread_id="default", use_memory=False)
             result["response"] = response
             result["persona_latency"] = persona_latency
             result["route"] = "chat"
             result["total_latency"] = orchestrator_latency + persona_latency
+            result["memories_retrieved"] = len(memories) if memories else 0
             state.current_mood = "HELPFUL"
+
+            # Store this conversation turn in memory
+            store_memory(user_input, response, thread_id="default")
 
         else:
             # Command mode - extract intent
@@ -473,6 +583,121 @@ def unload_model():
         return jsonify({"message": "Model unloaded successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/audio/upload', methods=['POST'])
+def upload_audio():
+    """
+    Audio upload endpoint - receives audio from smart knob simulator or ESP32
+    Simulates the audio processing pipeline that will run on Raspberry Pi
+    """
+    try:
+        # Check if audio file is present
+        if 'audio' not in request.files:
+            return jsonify({"error": "No audio file provided"}), 400
+
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({"error": "Empty filename"}), 400
+
+        # Get optional parameters
+        sample_rate = request.form.get('sample_rate', '16000')
+        audio_format = request.form.get('format', 'webm')
+
+        # Create uploads directory if it doesn't exist
+        upload_dir = './uploads/audio'
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # Save the audio file
+        filename = secure_filename(f"recording_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{audio_format}")
+        filepath = os.path.join(upload_dir, filename)
+        audio_file.save(filepath)
+
+        file_size = os.path.getsize(filepath)
+        logger.info(f"🎤 Audio received: {filename} ({file_size} bytes, {sample_rate}Hz)")
+
+        result = {
+            "message": "Audio uploaded successfully",
+            "filename": filename,
+            "size_bytes": file_size,
+            "sample_rate": sample_rate,
+            "format": audio_format,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # TODO: Integration with whisper.cpp on Raspberry Pi
+        # This is where you would:
+        # 1. Convert audio format if needed (webm -> wav)
+        # 2. Send to whisper.cpp for transcription
+        # 3. Process transcription with LLM
+        # 4. Return response
+
+        # Placeholder for future whisper integration
+        result["transcription_status"] = "pending"
+        result["note"] = "Whisper.cpp integration pending - audio saved for processing"
+
+        # Log receipt
+        logger.info(f"📡 Audio received from Smart Knob: {filename}")
+        logger.info(f"   Size: {file_size} bytes ({file_size/1024:.2f} KB)")
+        logger.info(f"   Sample Rate: {sample_rate} Hz")
+        logger.info(f"   Duration: ~{file_size/(int(sample_rate)*2):.1f} seconds")
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error processing audio upload: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/audio/test', methods=['GET'])
+def test_audio_endpoint():
+    """Test endpoint to verify audio upload is working"""
+    return jsonify({
+        "status": "ready",
+        "message": "Audio upload endpoint is operational",
+        "upload_dir": "./uploads/audio",
+        "supported_formats": ["webm", "wav", "mp3"],
+        "sample_rate": "16000 Hz recommended"
+    })
+
+@app.route('/api/knob/trigger', methods=['POST'])
+def knob_trigger():
+    """Simple endpoint for smart knob button press"""
+    try:
+        data = request.json or {}
+        button_state = data.get('state', 'pressed')
+
+        logger.info(f"🎛️ Smart Knob button {button_state}!")
+        logger.info(f"   Triggering green indicator in Campground UI")
+
+        # Store the event
+        if not hasattr(app, 'knob_events'):
+            app.knob_events = []
+        app.knob_events.append({
+            "state": button_state,
+            "timestamp": datetime.now().isoformat()
+        })
+
+        return jsonify({
+            "status": "success",
+            "message": f"Button {button_state} received - UI should turn GREEN!",
+            "action": "turn_green",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error processing knob trigger: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/knob/status', methods=['GET'])
+def knob_status():
+    """Check if knob has sent any signals"""
+    if hasattr(app, 'knob_events') and app.knob_events:
+        latest = app.knob_events[-1]
+        # Clear after reading
+        app.knob_events = []
+        return jsonify({
+            "has_event": True,
+            "event": latest
+        })
+    return jsonify({"has_event": False})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

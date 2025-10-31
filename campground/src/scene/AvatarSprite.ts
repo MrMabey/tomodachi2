@@ -20,6 +20,8 @@ export class AvatarSprite {
   private velocity: THREE.Vector3
   private bounds = { x: 15, z: 15 }
   private targetHeight: number
+  private isDragging: boolean = false
+  private isRoaming: boolean = true
 
   constructor(scene: THREE.Scene, avatarClass: any, position: THREE.Vector3) {
     // Create avatar renderer instance
@@ -59,28 +61,63 @@ export class AvatarSprite {
     // Update canvas texture (for animation)
     this.canvasTexture.needsUpdate = true
 
-    // Floating movement
-    this.sprite.position.x += this.velocity.x
-    this.sprite.position.z += this.velocity.z
+    // Only roam if not being dragged
+    if (this.isRoaming && !this.isDragging) {
+      // Floating movement
+      this.sprite.position.x += this.velocity.x
+      this.sprite.position.z += this.velocity.z
 
-    // Bounce off boundaries
-    if (Math.abs(this.sprite.position.x) > this.bounds.x) {
-      this.velocity.x *= -1
-      this.sprite.position.x = Math.sign(this.sprite.position.x) * this.bounds.x
-    }
-    if (Math.abs(this.sprite.position.z) > this.bounds.z) {
-      this.velocity.z *= -1
-      this.sprite.position.z = Math.sign(this.sprite.position.z) * this.bounds.z
-    }
+      // Bounce off boundaries
+      if (Math.abs(this.sprite.position.x) > this.bounds.x) {
+        this.velocity.x *= -1
+        this.sprite.position.x = Math.sign(this.sprite.position.x) * this.bounds.x
+      }
+      if (Math.abs(this.sprite.position.z) > this.bounds.z) {
+        this.velocity.z *= -1
+        this.sprite.position.z = Math.sign(this.sprite.position.z) * this.bounds.z
+      }
 
-    // Gentle bobbing motion
-    this.sprite.position.y = this.targetHeight + Math.sin(time * 0.5 + this.sprite.position.x) * 0.3
+      // Gentle bobbing motion
+      this.sprite.position.y = this.targetHeight + Math.sin(time * 0.5 + this.sprite.position.x) * 0.3
+    } else if (!this.isDragging) {
+      // Still bob when not roaming but not dragging
+      this.sprite.position.y = this.targetHeight + Math.sin(time * 0.5 + this.sprite.position.x) * 0.3
+    }
   }
 
   public setMood(mood: string) {
     if (this.avatarRenderer && this.avatarRenderer.setMood) {
       this.avatarRenderer.setMood(mood)
     }
+  }
+
+  public getSprite(): THREE.Sprite {
+    return this.sprite
+  }
+
+  public startDrag() {
+    this.isDragging = true
+    this.isRoaming = false
+  }
+
+  public endDrag() {
+    this.isDragging = false
+    // Resume roaming after a short delay
+    setTimeout(() => {
+      this.isRoaming = true
+      // Give new random velocity when resuming
+      this.velocity.set(
+        (Math.random() - 0.5) * 0.02,
+        0,
+        (Math.random() - 0.5) * 0.02
+      )
+    }, 500)
+  }
+
+  public setPosition(x: number, y: number, z: number) {
+    this.sprite.position.set(x, y, z)
+    // Update target height to maintain current height
+    this.targetHeight = y
   }
 
   public destroy() {
@@ -95,8 +132,15 @@ export class AvatarSprite {
 export class AvatarManager {
   private avatars: AvatarSprite[] = []
   private scriptsLoaded = false
+  private scene: THREE.Scene
 
-  constructor(private scene: THREE.Scene) {}
+  constructor(scene: THREE.Scene) {
+    this.scene = scene
+  }
+
+  public getAvatars(): AvatarSprite[] {
+    return this.avatars
+  }
 
   async loadAvatarScripts() {
     if (this.scriptsLoaded) return

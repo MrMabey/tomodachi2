@@ -7,11 +7,15 @@ venv/
 # OS-specific
 .DS_Store
 
+# Logs
+*.log
+
 # Project specific
 /results/
 /fine_tuned_model/
 /orchestrator_adapter/checkpoint-*/
 /persona_adapter/checkpoint-*/
+/uploads/
 
 # IDEs
 .vscode/

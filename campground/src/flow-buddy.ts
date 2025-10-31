@@ -1,15 +1,15 @@
 // Flow Buddy - DOM-based floating avatar with advanced behaviors
 export class FlowBuddy {
-  private container: HTMLDivElement;
-  private avatar: HTMLDivElement;
-  private leftEye: HTMLDivElement;
-  private rightEye: HTMLDivElement;
-  private leftPupil: HTMLDivElement;
-  private rightPupil: HTMLDivElement;
-  private mouth: HTMLDivElement;
-  private leftCheek: HTMLDivElement;
-  private rightCheek: HTMLDivElement;
-  private desk: HTMLDivElement;
+  private container!: HTMLDivElement;
+  private avatar!: HTMLDivElement;
+  private leftEye!: HTMLDivElement;
+  private rightEye!: HTMLDivElement;
+  private leftPupil!: HTMLDivElement;
+  private rightPupil!: HTMLDivElement;
+  private mouth!: HTMLDivElement;
+  private leftCheek!: HTMLDivElement;
+  private rightCheek!: HTMLDivElement;
+  private desk!: HTMLDivElement;
 
   private time = 0;
   private isBlinking = false;
@@ -18,6 +18,12 @@ export class FlowBuddy {
   private mood = 'happy';
   private moodChangeTime = 0;
   private isLockInMode = false;
+
+  // Drag state
+  private isDragging = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
+  private dragStartTime = 0;
 
   constructor() {
     this.createAvatar();
@@ -219,6 +225,18 @@ export class FlowBuddy {
   private setupEventListeners() {
     // Mouse tracking for eye movement
     document.addEventListener('mousemove', (event) => {
+      // Handle dragging
+      if (this.isDragging) {
+        const newX = event.clientX - this.dragOffsetX;
+        const newY = event.clientY - this.dragOffsetY;
+
+        this.container.style.left = `${newX}px`;
+        this.container.style.top = `${newY}px`;
+        this.container.style.right = 'auto';
+        this.container.style.bottom = 'auto';
+        return;
+      }
+
       const rect = this.container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
@@ -238,9 +256,53 @@ export class FlowBuddy {
       }
     });
 
+    // Drag start
+    this.container.addEventListener('mousedown', (event) => {
+      if (event.button === 0) { // Left mouse button only
+        this.isDragging = true;
+        this.dragStartTime = Date.now();
+
+        const rect = this.container.getBoundingClientRect();
+        this.dragOffsetX = event.clientX - rect.left;
+        this.dragOffsetY = event.clientY - rect.top;
+
+        this.container.style.cursor = 'grabbing';
+        this.container.style.transition = 'none';
+        this.mood = 'surprised';
+
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+
+    // Drag end
+    document.addEventListener('mouseup', () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.container.style.cursor = 'pointer';
+        this.container.style.transition = 'all 0.5s ease';
+
+        // Only trigger click behavior if it was a quick click (not a drag)
+        const dragDuration = Date.now() - this.dragStartTime;
+        if (dragDuration < 200 && !this.isLockInMode) {
+          this.mood = 'surprised';
+          this.container.style.transform = 'scale(1.2) rotate(5deg)';
+          setTimeout(() => {
+            this.container.style.transform = 'scale(1)';
+            this.mood = 'happy';
+          }, 500);
+        } else {
+          // Return to normal after drag
+          setTimeout(() => {
+            this.mood = 'happy';
+          }, 500);
+        }
+      }
+    });
+
     // Hover interactions
     this.container.addEventListener('mouseenter', () => {
-      if (!this.isLockInMode) {
+      if (!this.isLockInMode && !this.isDragging) {
         this.container.style.transform = 'scale(1.1)';
         this.leftCheek.style.opacity = '0.6';
         this.rightCheek.style.opacity = '0.6';
@@ -249,23 +311,11 @@ export class FlowBuddy {
     });
 
     this.container.addEventListener('mouseleave', () => {
-      if (!this.isLockInMode) {
+      if (!this.isLockInMode && !this.isDragging) {
         this.container.style.transform = 'scale(1)';
         this.leftCheek.style.opacity = '0';
         this.rightCheek.style.opacity = '0';
         this.mood = 'happy';
-      }
-    });
-
-    // Click interaction
-    this.container.addEventListener('click', () => {
-      if (!this.isLockInMode) {
-        this.mood = 'surprised';
-        this.container.style.transform = 'scale(1.2) rotate(5deg)';
-        setTimeout(() => {
-          this.container.style.transform = 'scale(1)';
-          this.mood = 'happy';
-        }, 500);
       }
     });
   }
@@ -274,18 +324,20 @@ export class FlowBuddy {
     this.time += 0.02;
     const currentTime = Date.now();
 
-    // Floating animation
-    if (!this.isLockInMode) {
-      const floatOffset = Math.sin(this.time) * 8;
-      const rotateOffset = Math.sin(this.time * 0.5) * 2;
+    // Floating animation (skip if dragging)
+    if (!this.isDragging) {
+      if (!this.isLockInMode) {
+        const floatOffset = Math.sin(this.time) * 8;
+        const rotateOffset = Math.sin(this.time * 0.5) * 2;
 
-      if (!this.container.matches(':hover')) {
-        this.container.style.transform = `translateY(${floatOffset}px) rotate(${rotateOffset}deg)`;
+        if (!this.container.matches(':hover')) {
+          this.container.style.transform = `translateY(${floatOffset}px) rotate(${rotateOffset}deg)`;
+        }
+      } else {
+        // Lock In mode - subtle float
+        const focusedFloat = Math.sin(this.time * 0.3) * 0.5;
+        this.container.style.transform = `scale(0.7) translateY(${35 + focusedFloat}px)`;
       }
-    } else {
-      // Lock In mode - subtle float
-      const focusedFloat = Math.sin(this.time * 0.3) * 0.5;
-      this.container.style.transform = `scale(0.7) translateY(${35 + focusedFloat}px)`;
     }
 
     // Blinking

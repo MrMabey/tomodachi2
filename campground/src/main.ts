@@ -1,5 +1,4 @@
 import './style.css'
-import * as THREE from 'three'
 import { IsometricScene } from './scene/IsometricScene'
 import { FlowBuddy } from './flow-buddy'
 

@@ -55,152 +55,177 @@
         font-size: 20px;
       }
 
-      /* Side Panels */
+      /* Side Panels - Glassmorphism Sidebar */
       .side-panel {
         position: fixed;
-        left: -400px;
-        top: 0;
+        left: -450px;
+        top: 20px;
+        bottom: 20px;
         width: 400px;
-        height: 100vh;
-        background: #2d2d2d;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.1),
+            inset 0 0 20px rgba(255, 255, 255, 0.05);
         color: white;
         transition: left 0.3s ease;
         z-index: 1000;
-        overflow-y: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
       .side-panel.active {
-        left: 0;
+        left: 20px;
       }
 
       .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        border-bottom: 2px solid #667eea;
-        background: #222;
-      }
-
-      .panel-header h2 {
-        margin: 0;
-        color: white;
-        font-size: 1.3em;
+        display: none;
       }
 
       .close-panel {
-        background: none;
-        border: none;
-        font-size: 2em;
-        cursor: pointer;
-        color: white;
-        padding: 0;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s;
-      }
-
-      .close-panel:hover {
-        background: rgba(255,255,255,0.1);
+        display: none;
       }
 
       .panel-content {
-        padding: 20px;
+        padding: 0;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
       .panel-content h3 {
-        margin-bottom: 15px;
-        font-size: 1.1em;
-        opacity: 0.9;
+        display: none;
       }
 
       .new-chat-btn {
-        width: 100%;
-        padding: 12px;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-bottom: 20px;
-        transition: background 0.3s;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-
-      .new-chat-btn:hover {
-        background: #5568d3;
+        display: none;
       }
 
       .sidebar-divider {
-        height: 1px;
-        background: rgba(255,255,255,0.2);
-        margin: 15px 0;
+        display: none;
       }
 
+      /* Messages container */
       .chat-conversation {
-        margin-top: 20px;
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        padding: 20px;
       }
 
+      /* Fade at top for messages sliding up */
+      .chat-conversation::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, transparent 100%);
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* Message bubbles - absolute positioned like reference */
       .chat-bubble {
-        margin-bottom: 12px;
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: 0.9em;
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.4;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: calc(100% - 40px);
         word-wrap: break-word;
-        animation: fadeIn 0.3s;
+        pointer-events: all;
       }
 
       .chat-bubble.user {
-        background: #667eea;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%);
         color: white;
-        margin-left: 20px;
-        border-bottom-right-radius: 4px;
+        box-shadow:
+            0 10px 30px rgba(139, 92, 246, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       .chat-bubble.assistant {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
         color: white;
-        margin-right: 20px;
-        border-bottom-left-radius: 4px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       .bubble-time {
-        font-size: 0.75em;
-        opacity: 0.7;
-        margin-top: 4px;
+        display: none;
       }
 
       /* Floating Input */
+      /* Pump bar at bottom of sidebar */
       .floating-input-container {
-        position: fixed;
-        bottom: 10vh;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        max-width: 800px;
-        width: calc(100% - 100px);
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .input-group {
+        display: flex;
+        align-items: flex-end;
       }
 
       .pill-input {
         width: 100%;
-        padding: 18px 30px;
-        border: none;
-        border-radius: 50px;
-        font-size: 1.1em;
-        background: white;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        transition: all 0.3s;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: white;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.3s ease;
+        resize: none;
+        min-height: 44px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.4;
+      }
+
+      .pill-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
       }
 
       .pill-input:focus {
-        outline: none;
-        box-shadow: 0 6px 30px rgba(102, 126, 234, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.5);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+      }
+
+      /* Hide scrollbar but keep functionality */
+      .pill-input::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .pill-input::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .pill-input::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      .pill-input::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
 
       /* Toolbox */
@@ -277,19 +302,27 @@
       }
 
       .toolbox:hover .toolbox-option:nth-child(1) {
-        transform: translate(-80px, -80px) rotate(-30deg);
+        transform: translate(-70px, -90px) rotate(-30deg);
       }
 
       .toolbox:hover .toolbox-option:nth-child(2) {
-        transform: translate(-110px, -40px) rotate(-30deg);
+        transform: translate(-105px, -55px) rotate(-30deg);
       }
 
       .toolbox:hover .toolbox-option:nth-child(3) {
-        transform: translate(-110px, 10px) rotate(-30deg);
+        transform: translate(-120px, -5px) rotate(-30deg);
       }
 
       .toolbox:hover .toolbox-option:nth-child(4) {
-        transform: translate(-80px, 50px) rotate(-30deg);
+        transform: translate(-105px, 45px) rotate(-30deg);
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(5) {
+        transform: translate(-70px, 80px) rotate(-30deg);
+      }
+
+      .toolbox:hover .toolbox-option:nth-child(6) {
+        transform: translate(-20px, 100px) rotate(-30deg);
       }
 
       .toolbox-option:hover {
@@ -305,6 +338,121 @@
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes slideInCenter {
+        from {
+          opacity: 0;
+          transform: translateY(20vh) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes slideUpToSky {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(-100vh);
+          opacity: 0;
+        }
+      }
+
+      .chat-bubble.slide-in {
+        animation: slideInCenter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .chat-bubble.slide-up {
+        animation: slideUpToSky 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      .chat-bubble.fading {
+        opacity: 0;
+        transition: opacity 0.8s ease-out;
+      }
+
+      /* Message Display Area */
+      .message-display {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        max-width: 500px;
+        width: calc(100vw - 500px);
+        z-index: 900;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .message-bubble {
+        padding: 16px 24px;
+        border-radius: 20px;
+        font-size: 1em;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        word-wrap: break-word;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .message-bubble.user {
+        background: #667eea;
+        color: white;
+        align-self: flex-start;
+      }
+
+      .message-bubble.assistant {
+        background: white;
+        color: #333;
+        align-self: flex-start;
+      }
+
+      .message-bubble.loading {
+        background: white;
+        color: #333;
+        align-self: flex-start;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
+
+      .loading-dots {
+        display: inline-flex;
+        gap: 4px;
+      }
+
+      .loading-dots span {
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        animation: pulse 1.4s infinite;
+      }
+
+      .loading-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .loading-dots span:nth-child(3) {
+        animation-delay: 0.4s;
       }
 
       /* Parameter Controls */
@@ -490,7 +638,16 @@
       <span class="perf-hud-label">s</span>
     </div>
 
-    <!-- Left Side Panels -->
+    <!-- Smart Knob Status Indicator -->
+    <div class="perf-hud" style="top: 80px; width: 200px;" id="knobStatus">
+      <span class="perf-hud-label">🎛️ Knob:</span>
+      <span class="perf-hud-value" id="knobIndicator" style="color: #888;">Waiting...</span>
+    </div>
+
+    <!-- Message Display Area -->
+    <div class="message-display" id="messageDisplay"></div>
+
+    <!-- Glassmorphism Chat Sidebar -->
     <div class="side-panel" id="chatPanel" data-panel="chat">
       <div class="panel-header">
         <h2>💬 Chat</h2>
@@ -500,25 +657,27 @@
         <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
         <h3>Current Conversation</h3>
         <div class="sidebar-divider"></div>
+        <!-- Messages container -->
         <div id="sidebarConversation" class="chat-conversation">
-          <!-- Messages will appear here -->
+          <!-- Messages will appear here positioned absolutely -->
+        </div>
+        <!-- Pump bar at bottom -->
+        <div class="floating-input-container">
+          <div class="input-group">
+            <textarea
+              id="userInput"
+              class="pill-input"
+              placeholder="Enter your prompt..."
+              autocomplete="off"
+              rows="1"
+            ></textarea>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 3D Scene Container -->
     <div id="app"></div>
-
-    <!-- Floating Chat Input -->
-    <div class="floating-input-container">
-      <input
-        type="text"
-        id="userInput"
-        class="pill-input"
-        placeholder="Ask Tomo anything..."
-        onkeypress="if(event.key==='Enter') sendMessage()"
-      >
-    </div>
 
     <!-- Toolbox -->
     <div class="toolbox" id="toolbox">
@@ -528,6 +687,8 @@
         <div class="toolbox-option" data-panel="inference">🎛️</div>
         <div class="toolbox-option" data-panel="mood">🎭</div>
         <div class="toolbox-option" data-panel="status">📊</div>
+        <div class="toolbox-option" data-action="memories">🧠</div>
+        <div class="toolbox-option" data-panel="smartknob">🎛️</div>
       </div>
     </div>
 
@@ -719,7 +880,124 @@
       </div>
     </div>
 
+    <!-- Smart Knob Simulator Panel -->
+    <div class="side-panel" id="smartknobPanel" data-panel="smartknob">
+      <div class="panel-header">
+        <h2>🎛️ Smart Knob Simulator</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content" style="padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h3 style="color: white; margin-bottom: 10px;">Test Audio Recording</h3>
+          <p style="color: rgba(255,255,255,0.7); font-size: 0.9em;">
+            Simulates the ESP32 smart knob hardware
+          </p>
+        </div>
+
+        <!-- Smart Knob Switch (simulating LVGL switch) -->
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="
+            display: inline-block;
+            position: relative;
+            width: 100px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.3);
+          " id="smartKnobSwitch" onclick="toggleSmartKnobRecording()">
+            <div style="
+              position: absolute;
+              top: 5px;
+              left: 5px;
+              width: 46px;
+              height: 46px;
+              background: white;
+              border-radius: 50%;
+              transition: all 0.3s;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            " id="smartKnobToggle"></div>
+          </div>
+          <div style="margin-top: 15px;">
+            <span style="
+              display: inline-block;
+              padding: 8px 20px;
+              background: rgba(255,255,255,0.1);
+              border-radius: 20px;
+              color: white;
+              font-weight: bold;
+              font-size: 14px;
+            " id="smartKnobStatus">OFF</span>
+          </div>
+        </div>
+
+        <!-- Recording Stats -->
+        <div style="
+          background: rgba(255,255,255,0.1);
+          padding: 20px;
+          border-radius: 12px;
+          margin-bottom: 20px;
+        ">
+          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
+            <span>Recording Duration:</span>
+            <span id="recordingDuration">0:00</span>
+          </div>
+          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
+            <span>Audio Level:</span>
+            <div style="flex: 1; margin-left: 10px; background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
+              <div id="audioLevelBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.1s;"></div>
+            </div>
+          </div>
+          <div style="color: white; display: flex; justify-content: space-between;">
+            <span>Mic Status:</span>
+            <span id="micStatus">
+              <span class="indicator offline"></span> Not Recording
+            </span>
+          </div>
+        </div>
+
+        <!-- Audio Waveform Visualization -->
+        <div style="
+          background: rgba(0,0,0,0.3);
+          padding: 10px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        ">
+          <canvas id="waveformCanvas" width="360" height="100" style="width: 100%; height: 100px;"></canvas>
+        </div>
+
+        <!-- Test Buttons -->
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+          <button class="btn btn-primary" onclick="testUARTCommand('START_REC')" style="width: 100%;">
+            📡 Send START_REC
+          </button>
+          <button class="btn btn-secondary" onclick="testUARTCommand('STOP_REC')" style="width: 100%;">
+            📡 Send STOP_REC
+          </button>
+        </div>
+
+        <!-- UART Log -->
+        <div style="margin-top: 20px;">
+          <h4 style="color: white; margin-bottom: 10px; font-size: 14px;">UART Communication Log:</h4>
+          <div id="uartLog" style="
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #0f0;
+            max-height: 200px;
+            overflow-y: auto;
+          ">
+            <div style="color: #888;">Waiting for commands...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
     <script src="/ui.js"></script>
+    <script src="/smartknob.js"></script>
   </body>
 </html>
