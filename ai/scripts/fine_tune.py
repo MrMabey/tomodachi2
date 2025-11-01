@@ -53,9 +53,6 @@ def main():
         model=model,
         train_dataset=dataset,
         peft_config=lora_config,
-        dataset_text_field="text",
-        max_seq_length=None,
-        tokenizer=tokenizer,
         args=training_args,
     )
 
