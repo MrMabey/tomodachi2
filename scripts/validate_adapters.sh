@@ -27,7 +27,7 @@ if python3 ai/scripts/validate_training.py; then
     echo -e "\n${GREEN}==========================================${NC}"
     echo -e "${GREEN}✅ Validation Successful!                 ${NC}"
     echo -e "${GREEN}Your new adapters are working correctly. ${NC}"
-    echo -e "${GREEN}==========================================${NC}
+    echo -e "${GREEN}==========================================${NC}"
 else
     echo -e "\n${RED}==========================================${NC}"
     echo -e "${RED}❌ Validation Failed.                     ${NC}"
