@@ -1,0 +1,41 @@
+# Configuration for Tomodachi Fine-Tuning
+# This file centralizes hyperparameters for consistent and customizable training runs.
+
+# LoRA (Low-Rank Adaptation) Configuration
+lora_config:
+  lora_alpha: 16
+  lora_dropout: 0.1
+  r: 64
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+# Training Arguments
+training_args:
+  # Paths and saving
+  # output_dir is set via command line in the training script
+  num_train_epochs: 100
+  save_steps: 0 # Set to a positive integer to save intermediate checkpoints
+
+  # Batch size and optimization
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
+  optim: "adamw_torch"
+  learning_rate: 0.0002 # 2e-4
+  weight_decay: 0.001
+  max_grad_norm: 0.3
+  
+  # Scheduler
+  lr_scheduler_type: "constant"
+  warmup_ratio: 0.03
+
+  # Performance and precision
+  fp16: false
+  bf16: false
+
+  # Logging and reporting
+  logging_steps: 25
+  report_to: "none" # Disables integration with services like TensorBoard, WandB
+
+  # Other
+  group_by_length: true
+  max_steps: -1 # Overrides num_train_epochs if set to a positive integer

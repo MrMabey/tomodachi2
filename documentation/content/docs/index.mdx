@@ -1,0 +1,80 @@
+---
+title: Tomodachi Documentation
+description: Spatial AI collaboration environment with 3D campground, mood-based personalities, and vector memory
+---
+
+# Welcome to Tomodachi (友達)
+
+**Tomodachi** means "friends" in Japanese - a spatial AI collaboration environment where you and AI agents work together as companions in a shared digital campground.
+
+## Quick Start
+
+Get Tomodachi running in under 5 minutes:
+
+```bash
+git clone <repo-url>
+cd tomodachi
+./start.sh
+```
+
+Open http://localhost:5173 to explore the campground! 🏕️
+
+## Features
+
+- 🎭 **9 Distinct Moods** - From creative brainstorming to focused debugging
+- 🌐 **3D Campground** - Explorable world with meaningful spatial zones
+- 🧠 **Vector Memory** - RAG-based conversation memory with Annoy + SQLite
+- 🎛️ **Smart Knob** - ESP32-S3 hardware integration
+- ⚡ **Runs Locally** - No API keys, no cloud dependencies
+- 🎨 **Glassmorphism UI** - Beautiful liquid glass interface
+
+## Documentation Sections
+
+<Cards>
+  <Card title="Getting Started" href="/docs/getting-started" description="Installation, setup, and first steps" />
+  <Card title="Concepts" href="/docs/concepts/vision" description="Architecture, moods, and world zones" />
+  <Card title="Guides" href="/docs/guides" description="How-to guides and tutorials" />
+  <Card title="Development" href="/docs/development" description="Contributing, testing, and migration" />
+  <Card title="API Reference" href="/docs/api-reference" description="REST API documentation" />
+</Cards>
+
+## System Architecture
+
+Tomodachi runs three services:
+
+1. **Campground GUI** (Port 5173) - Three.js 3D interface
+2. **API Server** (Port 8080) - Flask + TinyLlama + LoRA adapters
+3. **Memory Service** (Port 5003) - Vector database (Annoy + SQLite)
+
+```
+┌─────────────────┐
+│  Campground UI  │  (Three.js - Port 5173)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   API Server    │  (Flask - Port 8080)
+└────┬────────┬───┘
+     │        │
+     ▼        ▼
+┌─────────┐  ┌──────────┐
+│ TinyLlama│  │ Memory   │  (Flask - Port 5003)
+│ + LoRA  │  │ (Annoy)  │
+└─────────┘  └──────────┘
+```
+
+## World Zones
+
+- 🏕️ **Campground** - Social hub (chat, coordination)
+- 🌲 **Sequoia** - Visualization tower (knowledge tree)
+- 🕳️ **Caves** - Memory archives (vector storage)
+- 🌾 **Crops** - Processing farm (training/learning)
+- 🌊 **Waterfall** - Data streams (API calls)
+- 🏔️ **Mountains** - Challenge zone (complex tasks)
+
+## Next Steps
+
+1. **Installation** - Follow the [setup guide](/docs/getting-started/installation) to get Tomodachi running.
+2. **Send Your First Message** - Learn how to [interact with AI agents](/docs/getting-started).
+3. **Explore Concepts** - Discover the [vision](/docs/concepts/vision) and [system architecture](/docs/concepts/system).
+4. **Customize** - Configure ports, enable features, and adjust settings.

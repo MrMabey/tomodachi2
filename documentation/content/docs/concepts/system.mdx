@@ -1,0 +1,147 @@
+---
+title: System Architecture
+description: Technical system design and components
+---
+
+# Token-Oriented Object Notation format for efficient LLM consumption
+# Generated: 2025-10-31
+
+project:
+ name: Tomodachi
+ concept: Spatial AI collaboration environment
+ metaphor: Friends working together in digital campground
+
+view_modes[2]{mode,purpose,interaction_style,hud_state}:
+ IMMERSIVE,Exploration and connection,Walk up and talk to agents,OFF
+ TECHNICAL,Management and monitoring,Click for stats and logs,ON
+
+world_zones[6]{name,location_metaphor,agent_purpose,data_function}:
+ Campground,Social hub,Chat and coordination,Central gathering
+ Sequoia,Visualization tower,Knowledge viewing,Data tree structure
+ Caves,Archives,Memory storage and retrieval,Vector database manifest
+ Crops,Processing farm,Training and learning,Computational tasks
+ Waterfall,Data streams,API calls and updates,Information flow
+ Mountains,Challenge zone,Complex reasoning,Long-running tasks
+
+agent_system:
+ embedding: true
+ persistence: continuous
+ autonomy_levels: 3
+ interaction_modes: 2
+
+agents_interaction[2]{mode,click_behavior,visual_feedback}:
+ HUD_OFF,Direct chat and movement,Walk up dialogue
+ HUD_ON,Stats panel popup,Logs and metrics
+
+pickup_mechanic:
+ implemented: true
+ drag_system: AvatarSprite.startDrag()
+ drop_zones: scanner,world_locations
+ behavior: agent_lifts,follows_cursor,can_be_placed
+
+scanner_interface:
+ purpose: Deep agent inspection
+ displays: logs,stats,memory_vector,tasks
+ actions: duplicate,archive,configure,release
+ location_types: physical_station,hud_panel
+
+avatar_rendering[7]{type,status,location}:
+ Robot,Implemented,campground/public/avatars/robot-avatar.js
+ Dragon,Implemented,campground/public/avatars/dragon-avatar.js
+ Ghost,Implemented,campground/public/avatars/ghost-avatar.js
+ Alien,Implemented,campground/public/avatars/alien-avatar.js
+ Panda,Implemented,campground/public/avatars/panda-avatar.js
+ FlowBuddy,Implemented,campground/public/avatars/flow-buddy-avatar.js
+ ASCII_Experimental,Created,~/Desktop/ascii_ai/experimental_avatar.py
+
+visualization_techniques[5]{name,use_case,file_reference}:
+ Braille_patterns,Dense neural activity,experimental_avatar.py:BRAILLE_BASE
+ Unicode_particles,Thought streams,experimental_avatar.py:particles
+ Block_elements,Fluid animations,experimental_avatar.py:BLOCKS
+ Zalgo_text,Glitch effects,experimental_avatar.py:ZALGO_*
+ Matrix_rain,Data processing,experimental_avatar.py:get_matrix_mode
+
+mood_states[9]{mood,temperature,use_case,visual_mapping}:
+ FOCUSED,0.3,Precise code,Concentrated particles
+ CREATIVE,1.2,Wild ideas,Flowing waves
+ HELPFUL,0.7,Teaching,Calm steady
+ LISTENING,0.5,Short responses,Attentive
+ THINKING,0.6,Analysis,Matrix rain
+ SUCCESS,0.8,Celebrating,Particle fireworks
+ ERROR,0.4,Troubleshooting,Glitchy corrupted
+ SLEEPING,0.2,Minimal,Dim slow
+ PHONE_HOME,0.9,Delegation,Cloud access
+
+ai_architecture:
+ dual_adapter: true
+ orchestrator: Routes commands vs chat
+ persona: Mood-driven responses
+ memory: Vector DB with Annoy
+
+intelligence_layers[3]{layer,model,purpose,location}:
+ Local,TinyLlama-1.1B,Fast decisions,Raspberry Pi
+ Cloud,Claude API,Complex reasoning,Remote call
+ Memory,Vector embeddings,Persistent context,SQLite+Annoy
+
+hardware[2]{device,purpose,features}:
+ RaspberryPi,Agent host,"Local LLM,Vector memory,Background monitoring"
+ ESP32-S3_SmartKnob,Physical interface,"Rotate,Press,Touchscreen,Haptic,Mic"
+
+hud_design:
+ inspiration: Halo Master Chief helmet
+ layout: Minimal edge elements
+ components: top_bar,motion_tracker,active_mode,agent_radar
+
+hud_components[4]{position,content,example}:
+ Top_bar,System status and mood,TOMO SYSTEM [FOCUSED] Memory:2.3GB
+ Bottom_left,Agent location radar,Motion tracker with dots
+ Bottom_right,Active mode and tasks,CHAT mode Tasks:[██░░]
+ Center_popup,Agent communications,Cortana-style messages
+
+autonomy_levels[3]{level,behavior,permission_model}:
+ Context_aware,Responds to file changes,Reactive only
+ Goal_aware,Tracks objectives proactively,Suggests actions
+ Collaborative,Takes initiative independently,Permission gates
+
+current_stack:
+ backend: Flask Python
+ frontend: Three.js TypeScript
+ 3d_library: Three.js
+ ui_style: Glassmorphism
+ llm_local: TinyLlama with LoRA adapters
+ llm_cloud: Claude API (planned)
+ memory: Annoy + SQLite
+ stt: Whisper (planned)
+
+file_structure:
+ ai/: Models and training scripts
+ campground/: 3D UI and avatars
+ server/: Flask API backend
+ memories/: Vector memory system
+ smartKnob/: ESP32 hardware code
+ docs/: Project documentation
+
+integration_plan:
+ ascii_avatars: Move to campground/public/avatars/ascii/
+ hud_system: Add to campground/src/hud/
+ scanner_ui: Create campground/src/scanner/
+ world_expansion: campground/src/scene/zones/
+
+next_integrations[5]{feature,status,priority}:
+ HUD_toggle_system,Not started,High
+ ASCII_avatar_integration,Not started,High
+ Scanner_interface,Partially implemented,Medium
+ World_zone_expansion,Not started,Medium
+ Claude_API_integration,Not started,Low
+
+experimental_features:
+ location: ~/Desktop/ascii_ai/
+ techniques: Braille,Particles,Fluid,Zalgo,Matrix
+ modes: idle,thinking,working,fluid,matrix,celebrating
+ integration_method: WebSocket or JavaScript port
+
+session_capture:
+ date: 2025-10-31
+ topics: HUD design,Agent interaction,Spatial computing,Cortana inspiration
+ new_concepts: Embedded agents,Pickup mechanics,Scanner inspection,View modes
+ vision_updated: true

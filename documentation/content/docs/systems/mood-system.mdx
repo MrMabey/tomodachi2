@@ -1,0 +1,221 @@
+---
+title: Mood System
+description: AI mood states and personality system
+---
+
+# 🎭 Mood System - Quick Reference
+
+## What It Does
+
+The Mood System gives Tomo **9 distinct personalities** by automatically adjusting:
+1. ⚙️ **Inference Parameters** (temperature, sampling, token length)
+2. 📝 **System Prompt** (behavioral instructions)
+
+Same question → Different moods → Dramatically different answers!
+
+## The 9 Moods
+
+| Mood | Emoji | Temp | Best For |
+|------|-------|------|----------|
+| **FOCUSED** | (o_o) | 0.3 | Code, precision, debugging |
+| **CREATIVE** | (^-^) | 1.2 | Brainstorming, ideation, design |
+| **HELPFUL** | (^_~) | 0.7 | Teaching, explanations, support |
+| **LISTENING** | (•_•) | 0.5 | Gathering input, clarifying |
+| **THINKING** | (◉_◉) | 0.6 | Analysis, reasoning, trade-offs |
+| **SUCCESS** | (^o^) | 0.8 | Celebrating, encouraging |
+| **ERROR** | (x_x) | 0.4 | Debugging, problem-solving |
+| **SLEEPING** | (-_-) | 0.2 | Minimal responses, low-power |
+| **PHONE_HOME** | (⊙_⊙) | 0.9 | Complex tasks, escalation |
+
+## Quick Start
+
+### In the GUI
+1. Click any mood button
+2. Parameters auto-adjust
+3. Next message uses that personality!
+4. Toggle "Mood Controls Parameters" to enable/disable
+
+### Via CLI
+```python
+# In your code
+state.current_mood = "CREATIVE"
+# Next response will be creative and playful!
+```
+
+### Via API
+```bash
+curl -X POST http://localhost:5000/api/mood \
+  -H "Content-Type: application/json" \
+  -d '{"mood": "CREATIVE"}'
+```
+
+## Example: Same Question, Different Moods
+
+**Question**: "How do I reverse a string in Python?"
+
+- **FOCUSED**: `s[::-1]` (just the code)
+- **HELPFUL**: Friendly explanation with examples
+- **CREATIVE**: 5+ wild alternative approaches
+- **THINKING**: Step-by-step analysis with trade-offs
+- **ERROR**: Common mistakes and fixes
+- **SLEEPING**: `text[::-1] Zzz...`
+
+See `MOOD_EXAMPLES.md` for full examples!
+
+## Temperature Cheat Sheet
+
+```
+0.2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5
+ │                                  │
+SLEEPING  FOCUSED  HELPFUL  CREATIVE
+PRECISE   RELIABLE  NATURAL  WILD
+```
+
+- **Low (0.2-0.4)**: Deterministic, focused, repetitive
+- **Mid (0.5-0.8)**: Balanced, natural, conversational
+- **High (0.9-1.5)**: Creative, diverse, unpredictable
+
+## When to Use Which Mood
+
+### 📋 Task-Based Selection
+
+| Task | Recommended Mood | Why |
+|------|------------------|-----|
+| Code review | FOCUSED | Precise, spot errors |
+| Brainstorming | CREATIVE | Generate novel ideas |
+| Learning | HELPFUL | Patient explanations |
+| Requirements gathering | LISTENING | Brief, clarifying questions |
+| Architecture design | THINKING | Methodical analysis |
+| Tests passing | SUCCESS | Celebrate wins! |
+| Bug fixing | ERROR | Solution-focused |
+| Idle/standby | SLEEPING | Conserve resources |
+| Beyond capabilities | PHONE_HOME | Escalate to external LLM |
+
+### 🔄 Workflow Example
+
+```
+User: "I need to build a user auth system"
+  ↓
+LISTENING: "What framework? Any existing code?"
+  ↓
+THINKING: Analyze requirements and constraints
+  ↓
+CREATIVE: Suggest 3 different approaches
+  ↓
+User: "Let's go with JWT"
+  ↓
+FOCUSED: Generate precise JWT implementation
+  ↓
+ERROR: Help debug token expiration bug
+  ↓
+SUCCESS: "Auth system complete! Great work!" 🎉
+```
+
+## Key Features
+
+### ✅ Automatic Parameter Adjustment
+- Click mood → parameters change instantly
+- Sliders update to show new values
+- No manual tuning needed!
+
+### ✅ System Prompt Injection
+- Each mood has unique behavioral instructions
+- Influences response style and content
+- Works with both chat and command modes
+
+### ✅ Real-time Feedback
+- Current mood displayed prominently
+- Description shown when mood changes
+- Metadata includes mood in responses
+
+### ✅ Toggle Control
+- Turn mood mode on/off anytime
+- Manual parameter control still available
+- Switch between automated and manual
+
+## Files to Reference
+
+| File | Purpose |
+|------|---------|
+| `MOOD_SYSTEM_README.md` | Complete documentation |
+| `MOOD_EXAMPLES.md` | Side-by-side comparisons |
+| `MOOD_SYSTEM_SUMMARY.md` | This quick reference (you are here) |
+| `tomo_api.py` | Backend implementation |
+| `tomo_gui/index.html` | Frontend UI |
+| `tomo_gui/app.js` | JavaScript logic |
+
+## API Endpoints
+
+```bash
+# Set mood
+POST /api/mood {"mood": "CREATIVE"}
+
+# Get current mood
+GET /api/mood
+
+# Toggle mood mode
+POST /api/mood/toggle {"active": true}
+```
+
+## Creating Custom Moods
+
+Edit `tomo_api.py`:
+
+```python
+MOOD_CONFIGS = {
+    "YOUR_MOOD": {
+        "params": {
+            "temperature": 0.8,
+            "top_k": 60,
+            "top_p": 0.95,
+            "max_new_tokens": 150
+        },
+        "system_prompt": "You are in YOUR_MOOD mode. [instructions]",
+        "description": "What this mood does"
+    }
+}
+```
+
+## Pro Tips
+
+1. **Match mood to task** - Don't debug with CREATIVE mode!
+2. **Experiment freely** - Moods change instantly, no commit needed
+3. **Watch the sliders** - See how moods affect parameters
+4. **Use mood transitions** - Create smooth conversational flows
+5. **Toggle when needed** - Manual control always available
+
+## Hardware Integration
+
+On ESP32 Smart Knob, moods control:
+- 🎨 Iris color (blue, purple, green, etc.)
+- ✨ Animation style (calm, energetic, minimal)
+- 📳 Haptic feedback intensity
+
+See `esp32_avatar/TomoFace/TomoFace.ino` for implementation.
+
+## Troubleshooting
+
+**Mood not changing behavior?**
+- Check "Mood Controls Parameters" is enabled
+- Verify sliders updated
+- Look for mood in message metadata
+
+**Responses too random/boring?**
+- Too random → Lower temp moods (FOCUSED, ERROR)
+- Too boring → Higher temp moods (CREATIVE, SUCCESS)
+
+**Want manual control?**
+- Uncheck "Mood Controls Parameters"
+- Adjust sliders directly
+- Parameters persist until next mood change
+
+---
+
+## 🎯 Bottom Line
+
+The Mood System transforms Tomo from **one personality** into **nine specialized personas**, each optimized for different tasks. It's like having 9 different AI assistants in one!
+
+**Try it now**: Ask the same question in FOCUSED vs CREATIVE mode and watch the magic happen! ✨
+
+For complete details, see: `MOOD_SYSTEM_README.md`
+For examples, see: `MOOD_EXAMPLES.md`

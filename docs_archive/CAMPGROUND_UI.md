@@ -1,0 +1,217 @@
+# 🏕️ Campground UI Documentation
+
+The Campground is Tomo's 3D glassmorphism chat interface built with Three.js and Vite.
+
+## 🚀 Quick Start
+
+```bash
+cd campground
+npm install
+npm run dev
+```
+
+The UI will be available at http://localhost:8080
+
+## 🎨 Design System
+
+### Glassmorphism Chat Sidebar
+
+**Visual Style:**
+- Frosted glass effect with `backdrop-filter: blur(20px)`
+- Semi-transparent white background `rgba(255, 255, 255, 0.1)`
+- Rounded corners (20px border-radius)
+- Inset shadow for depth
+- White border with low opacity
+
+**Positioning:**
+- Fixed left sidebar: 20px from all edges
+- Width: 400px
+- Slides in/out with smooth transition
+
+### Message Bubbles
+
+**User Messages (Purple Gradient):**
+```css
+background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(109, 40, 217, 0.9));
+```
+
+**Assistant Messages (Glass):**
+```css
+background: rgba(255, 255, 255, 0.15);
+backdrop-filter: blur(10px);
+```
+
+**Positioning Logic:**
+- Messages use absolute positioning
+- Newest message appears at vertical center
+- Older messages stack upward with 15px gap
+- Fade gradient at top (100px fade zone)
+- Opacity decreases as messages approach top
+
+### Input Area
+
+**Auto-Growing Textarea:**
+- Expands upward as user types
+- Min height: 44px
+- Max height: 200px
+- Scrolls internally when max reached
+- Resets height after sending
+
+**Behavior:**
+- `Enter` → Send message
+- `Shift+Enter` → New line
+- Auto-focus after sending
+
+## 🏗️ Architecture
+
+### File Structure
+
+```
+campground/
+├── index.html           # Main HTML with embedded styles
+├── public/
+│   └── ui.js           # Chat UI logic & API integration
+├── src/
+│   └── main.ts         # Three.js 3D scene setup
+├── package.json        # Node dependencies
+└── tsconfig.json       # TypeScript config
+```
+
+### Key Components
+
+**UI State Management (ui.js):**
+```javascript
+let messages = [];              // Message tracking for positioning
+let conversationHistory = [];   // Full chat history
+let currentParams = {...};      // Inference parameters
+```
+
+**Message Flow:**
+1. User types in textarea
+2. `sendMessage()` called on Enter
+3. Message added to messages array
+4. `positionMessages()` calculates positions
+5. API call to `/api/inference`
+6. Loading dots show while waiting
+7. Response arrives, positions update
+8. Older messages fade at top
+
+**Positioning Algorithm:**
+```javascript
+// Start from most recent (bottom)
+let currentY = middleY;
+for (let i = messages.length - 1; i >= 0; i--) {
+    const msgHeight = msg.element.getBoundingClientRect().height;
+    currentY = (i === last) ? middleY - msgHeight/2 : currentY - msgHeight - 15;
+    msg.element.style.top = `${currentY}px`;
+
+    // Fade in top zone
+    if (currentY < fadeZone) {
+        opacity = Math.max(0, currentY / fadeZone);
+    }
+}
+```
+
+## 🎮 User Interactions
+
+### Sidebar Toggle
+- Opens when chat tool clicked
+- Closes when clicking outside
+- Closes with Escape key
+- Stays open while interacting inside
+
+### Toolbox (Bottom Right)
+- 🧰 Main button (always visible)
+- Hover reveals 5 options in arc pattern
+- Options: Chat, Inference, Mood, Status, Memories
+- Scroll wheel navigates options
+- Enter/Space activates selection
+
+### 3D Scene (main.ts)
+- Three.js scene with ambient lighting
+- Camera positioned for optimal view
+- Renders 3D environment behind chat
+- Currently placeholder - ready for avatar integration
+
+## 🔌 API Integration
+
+### Endpoints Used
+
+```javascript
+const API_BASE = 'http://localhost:8080/api';
+
+// Chat inference
+POST /api/inference
+Body: { input: "user message" }
+Response: { response, mood, total_latency, ... }
+
+// System status
+GET /api/status
+Response: { model_loaded, current_mood, ... }
+
+// Set mood
+POST /api/mood
+Body: { mood: "FOCUSED" }
+
+// Update parameters
+POST /api/parameters
+Body: { temperature, max_new_tokens, ... }
+```
+
+## 🎨 Design Reference
+
+The design follows the liquid glassmorphism style from `ai-sidebar.html`:
+
+**Key Principles:**
+1. **Transparency layers** - Multiple levels of alpha blending
+2. **Backdrop blur** - Everything behind glass is blurred
+3. **Subtle animations** - Smooth transitions, no jarring movements
+4. **Centered flow** - Messages appear at center, flow upward
+5. **Fade boundaries** - Soft edges at top/bottom
+
+## 🚀 Future Enhancements
+
+- [ ] Animated 3D avatar in scene
+- [ ] Voice input visualization
+- [ ] Message threading/grouping
+- [ ] Rich media support (images, code blocks)
+- [ ] Export conversation history
+- [ ] Theme customization
+- [ ] Keyboard shortcuts panel
+- [ ] Mobile responsive layout
+
+## 🐛 Known Issues
+
+- Message positioning needs small delay for height calculation
+- Scroll behavior could be smoother on rapid messages
+- Loading dots alignment slightly off-center
+- Memory injection disabled (causes context leakage)
+
+## 📝 Development Notes
+
+**Testing Message Positioning:**
+```bash
+# Open browser console
+# Send multiple messages quickly
+# Check that they stack properly without overlap
+```
+
+**Debugging API Calls:**
+```bash
+# Check server logs
+tail -f server.log
+
+# Test API directly
+curl -X POST http://localhost:8080/api/inference \
+  -H "Content-Type: application/json" \
+  -d '{"input":"test"}'
+```
+
+**Performance:**
+- Three.js scene runs at 60 FPS on M1/M2 Macs
+- Message rendering is smooth with <50 messages
+- Consider virtual scrolling for 100+ messages
+
+---
+
+*Built with love for Tomo 🤖*

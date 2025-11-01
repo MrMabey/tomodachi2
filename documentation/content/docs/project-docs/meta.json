@@ -1,0 +1,10 @@
+{
+  "title": "Project Documentation",
+  "pages": [
+    "project-spec",
+    "roadmap",
+    "discovery",
+    "use-cases",
+    "hardware"
+  ]
+}

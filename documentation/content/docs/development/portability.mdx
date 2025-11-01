@@ -1,0 +1,295 @@
+---
+title: Portability Fixes
+description: Dynamic ports and graceful degradation
+---
+
+
+## Summary
+
+Fixed all the issues preventing Tomodachi from running on different machines. The project now has:
+
+✅ **Dynamic port allocation** - No more hard-coded ports
+✅ **Graceful degradation** - Works without adapter weights
+✅ **Easy setup** - Single command to start everything
+✅ **Validation tools** - Check setup before running
+✅ **Better error messages** - Clear troubleshooting guidance
+
+## What Changed
+
+### 1. Configuration System (`config.py`)
+
+**Before:**
+- Ports hard-coded in multiple files (5003, 8080, 5173)
+- No way to change without editing code
+- Adapter paths hard-coded
+- No feature detection
+
+**After:**
+- Centralized `.env` configuration
+- Automatic port conflict detection
+- Falls back to available ports automatically
+- Feature flags for adapters/memory
+- Cross-platform compatible
+
+**Usage:**
+```bash
+# See current config
+python3 config.py
+
+# Customize in .env
+TOMO_MEMORY_PORT=5010  # Your custom port
+TOMO_API_PORT=8090
+```
+
+### 2. Adapter Weights (Now Optional)
+
+**Before:**
+- Required `./ai/orchestrator_adapter/` and `./ai/persona_adapter/`
+- Would crash if missing
+- No fallback
+
+**After:**
+- Auto-detects if adapters exist
+- Falls back to base TinyLlama model gracefully
+- Clear logging about what's being used
+- Can force-disable with `TOMO_USE_ADAPTERS=false`
+
+**Key changes in `server/tomo_api.py`:**
+- Added `PEFT_AVAILABLE` check
+- Made `load_adapter()` return base model if adapters missing
+- Added helpful startup messages
+
+### 3. Unified Startup (`start.sh`)
+
+**Before:**
+- `start_tomo_gui.sh` - worked but hard-coded
+- No validation
+- Silent failures
+- Mac-specific paths
+
+**After:**
+- `start.sh` - fully automated setup
+- Creates venvs if missing
+- Installs dependencies
+- Handles dual-venv setup (main + memories)
+- Graceful shutdown with Ctrl+C
+- Log file management
+- Cross-platform (detects macOS for C++ headers)
+
+**Features:**
+- ✅ Auto-creates `.env` if missing
+- ✅ Sets up both Python environments
+- ✅ Installs npm dependencies
+- ✅ Starts all 3 services with proper PIDs
+- ✅ Colored output for readability
+- ✅ Cleanup on exit
+
+### 4. Setup Validation (`validate.py`)
+
+**New tool** to check setup before running:
+
+```bash
+python3 validate.py
+```
+
+Checks:
+- Python/Node.js versions
+- Project structure
+- Dependencies
+- Configuration files
+- Virtual environments
+- Port availability
+
+### 5. Documentation
+
+**New files:**
+- `SETUP.md` - Complete setup guide
+- `PORTABILITY_FIXES.md` - This file
+- `.env.example` - Configuration template
+
+## How to Use (For Your Buddy)
+
+### First Time Setup
+
+```bash
+# 1. Pull the latest changes
+git pull
+
+# 2. Check setup (optional but recommended)
+python3 validate.py
+
+# 3. Start everything
+./start.sh
+```
+
+That's it! The script handles:
+- Creating virtual environments
+- Installing Python packages
+- Installing npm packages
+- Finding available ports
+- Starting all services
+
+### If Ports Conflict
+
+```bash
+# Create .env file (if not exists)
+cp .env.example .env
+
+# Edit .env and set your ports
+nano .env
+
+# Change these lines:
+TOMO_MEMORY_PORT=5010  # Pick any available port
+TOMO_API_PORT=8090
+TOMO_GUI_PORT=5180
+
+# Start again
+./start.sh
+```
+
+### If Adapter Weights Missing
+
+**Don't worry!** The system will automatically:
+1. Detect adapters are missing
+2. Print a clear message: "⚠️  Adapters disabled (using base model only)"
+3. Use TinyLlama base model (auto-downloads from HuggingFace)
+4. Everything still works, just without the custom fine-tuned behaviors
+
+To add adapters later:
+```bash
+# Place your trained weights in:
+mkdir -p ai/orchestrator_adapter
+mkdir -p ai/persona_adapter
+
+# System will auto-detect and use them
+```
+
+## Technical Details
+
+### Dual Virtual Environments
+
+**Why two venvs?**
+- `venv/` - Main project (API server, transformers, torch)
+- `memories/.venv/` - Memory service (annoy needs specific Python version for C++ compatibility)
+
+**Important:** Don't merge them! The startup script handles both automatically.
+
+### Port Allocation Logic
+
+```python
+# config.py handles this:
+1. Try default port (e.g., 5003)
+2. If taken, scan for next available (5004, 5005, etc.)
+3. Update all services with found port
+4. Print clear message about what port is being used
+```
+
+### Adapter Detection
+
+```python
+# config.py checks:
+1. Do adapter directories exist?
+2. Do they have adapter_config.json?
+3. Is PEFT library installed?
+4. User preference in .env
+
+# If any check fails → Use base model
+```
+
+## Files Modified
+
+### Updated
+- `server/tomo_api.py` - Added config import, graceful adapter handling
+- `start_tomo_gui.sh` - Still works, but `start.sh` is better
+
+### Created
+- `config.py` - Centralized configuration
+- `.env.example` - Configuration template
+- `start.sh` - Unified startup script
+- `validate.py` - Setup validator
+- `SETUP.md` - Setup guide
+- `PORTABILITY_FIXES.md` - This file
+
+### Not Modified
+- `memories/` - Still uses its own venv (intentional)
+- `campground/` - No changes needed
+- Core AI logic - All intact
+
+## Backward Compatibility
+
+✅ Old scripts still work:
+- `start_tomo_gui.sh` - Still functional
+- Manual startup - Still possible
+
+✅ Existing setups keep working:
+- If you have adapters, they'll be used
+- If you have `.env`, it'll be respected
+- Logs still go to same places
+
+## Troubleshooting
+
+### "Port already in use"
+```bash
+# Option 1: Change port in .env
+TOMO_MEMORY_PORT=5010
+
+# Option 2: Kill the process
+lsof -i :5003
+kill <PID>
+```
+
+### "Adapter not found"
+This is **normal** if you don't have the weights. System will print:
+```
+⚠️  Adapters disabled (using base model only)
+   Reason: Adapter weights not found
+```
+
+Just means you'll use the base TinyLlama model. Still works!
+
+### "annoy build failed" (macOS)
+```bash
+# Install Xcode tools
+xcode-select --install
+
+# Or set in .env:
+CPLUS_INCLUDE_PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+```
+
+## Testing Checklist
+
+Before sharing with others, test:
+
+- [ ] Fresh clone on new machine
+- [ ] Port conflicts (start other services on 5003/8080/5173)
+- [ ] Missing adapters (rename `ai/` temporarily)
+- [ ] Missing dependencies (fresh venv)
+- [ ] Startup script (`./start.sh`)
+- [ ] Validation script (`python3 validate.py`)
+- [ ] Config script (`python3 config.py`)
+
+## Questions?
+
+Check:
+1. `SETUP.md` - Detailed setup guide
+2. `validate.py` - What's wrong with my setup?
+3. `config.py` - What are my current settings?
+4. `logs/` directory - What went wrong?
+
+## Summary for Your Buddy
+
+**The core issue:** "All the ports are hard coded and I have a ton of other projects I can't terminate. Plus the adapter weights are missing."
+
+**The fix:**
+1. **Ports** - Now configurable via `.env`, auto-finds alternatives
+2. **Adapters** - Now optional, falls back to base model
+3. **Complexity** - One script does everything: `./start.sh`
+4. **Validation** - Run `python3 validate.py` to check setup
+
+**Try it:**
+```bash
+git pull
+./start.sh
+```
+
+Should "just work" now, even with port conflicts and missing adapters! 🎉
