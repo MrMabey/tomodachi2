@@ -3,6 +3,7 @@ Centralized configuration for Tomodachi project.
 Handles environment variables, port allocation, and feature detection.
 """
 import os
+import sys
 import socket
 from pathlib import Path
 from typing import Optional
@@ -70,21 +71,21 @@ DEFAULT_GUI_PORT = 5173
 # Try to use configured ports, fall back to finding available ones
 MEMORY_PORT = get_int("TOMO_MEMORY_PORT", DEFAULT_MEMORY_PORT)
 if not is_port_available(MEMORY_PORT):
-    print(f"⚠️  Port {MEMORY_PORT} is in use, finding alternative...")
+    print(f"⚠️  Port {MEMORY_PORT} is in use, finding alternative...", file=sys.stderr)
     MEMORY_PORT = find_available_port(DEFAULT_MEMORY_PORT + 1)
-    print(f"✓ Using port {MEMORY_PORT} for memory service")
+    print(f"✓ Using port {MEMORY_PORT} for memory service", file=sys.stderr)
 
 API_PORT = get_int("TOMO_API_PORT", DEFAULT_API_PORT)
 if not is_port_available(API_PORT):
-    print(f"⚠️  Port {API_PORT} is in use, finding alternative...")
+    print(f"⚠️  Port {API_PORT} is in use, finding alternative...", file=sys.stderr)
     API_PORT = find_available_port(DEFAULT_API_PORT + 1)
-    print(f"✓ Using port {API_PORT} for API server")
+    print(f"✓ Using port {API_PORT} for API server", file=sys.stderr)
 
 GUI_PORT = get_int("TOMO_GUI_PORT", DEFAULT_GUI_PORT)
 if not is_port_available(GUI_PORT):
-    print(f"⚠️  Port {GUI_PORT} is in use, finding alternative...")
+    print(f"⚠️  Port {GUI_PORT} is in use, finding alternative...", file=sys.stderr)
     GUI_PORT = find_available_port(DEFAULT_GUI_PORT + 1)
-    print(f"✓ Using port {GUI_PORT} for GUI")
+    print(f"✓ Using port {GUI_PORT} for GUI", file=sys.stderr)
 
 # === Model Configuration ===
 BASE_MODEL_NAME = os.environ.get("TOMO_BASE_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
