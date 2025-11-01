@@ -159,6 +159,25 @@ echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 echo ""
 
+# === First-Time User Guidance ===
+# Check if adapters are being used and show a helpful message if not.
+eval $(python3 -c "import config; print(f'USE_ADAPTERS={config.USE_ADAPTERS})")
+
+if [ "$USE_ADAPTERS" = "False" ]; then
+    echo -e "${YELLOW}===================================================================${NC}"
+    echo -e "${YELLOW}NOTE: Your Tomodachi is running with the generic base model.${NC}"
+    echo -e "${YELLOW}To unlock its full personality, you need to train the adapters.${NC}"
+    echo ""
+    echo -e "To do this, first press ${GREEN}Ctrl+C${YELLOW} to stop the current services."
+    echo -e "Then, run the following command:"
+    echo ""
+    echo -e "  ${GREEN}./scripts/train_adapters.sh${NC}"
+    echo ""
+    echo -e "${YELLOW}After training is complete, run ${GREEN}./start.sh${YELLOW} again.${NC}"
+    echo -e "${YELLOW}===================================================================${NC}"
+    echo ""
+fi
+
 # Cleanup function
 cleanup() {
     echo ""
