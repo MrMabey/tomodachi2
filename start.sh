@@ -161,7 +161,7 @@ echo ""
 
 # === First-Time User Guidance ===
 # Check if adapters are being used and show a helpful message if not.
-eval $(python3 -c "import config; print(f'USE_ADAPTERS={config.USE_ADAPTERS})")
+eval $(python3 -c "import config; print(f'USE_ADAPTERS={config.USE_ADAPTERS}')")
 
 if [ "$USE_ADAPTERS" = "False" ]; then
     echo -e "${YELLOW}===================================================================${NC}"
