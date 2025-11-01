@@ -64,6 +64,11 @@ if [ ! -d "memories/.venv" ]; then
 fi
 
 echo -e "${BLUE}Installing/updating memory dependencies...${NC}"
+# Handle macOS-specific C++ headers for 'annoy' build if on Darwin
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export CPLUS_INCLUDE_PATH=${CPLUS_INCLUDE_PATH:-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1}
+    echo -e "${YELLOW}macOS detected. Setting CPLUS_INCLUDE_PATH for compiler.${NC}"
+fi
 cd memories
 source .venv/bin/activate
 pip install -q --upgrade pip
