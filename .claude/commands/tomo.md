@@ -1,9 +1,11 @@
 # Load Tomodachi Project Context
 
 Read project documentation to understand current state:
-- /Users/mamatoya/tomodachi/docs/VISION.md
-- /Users/mamatoya/tomodachi/docs/SYSTEM.toon
+- /Users/mamatoya/tomodachi/documentation/content/docs/concepts/vision.mdx
+- /Users/mamatoya/tomodachi/documentation/content/docs/concepts/system.mdx
 - /Users/mamatoya/tomodachi/README.md
+
+**Full documentation available at:** https://turtletuber.github.io/tomodachi/
 
 ## Project Overview
 
@@ -37,6 +39,7 @@ Read project documentation to understand current state:
 ✅ Vector memory with RAG
 ✅ Smart knob hardware integration
 ✅ Glassmorphism 3D UI
+✅ GitHub Pages documentation site (Fumadocs)
 
 **In Progress:**
 - HUD toggle system (Master Chief / Halo aesthetic)
@@ -45,6 +48,14 @@ Read project documentation to understand current state:
 - World zone expansion
 - Autonomous agent behaviors (Level 3)
 - Claude API integration for complex reasoning
+
+**Project Structure:**
+- `/campground/` - Three.js 3D UI and frontend
+- `/server/` - Flask API backend
+- `/ai/` - AI models and training
+- `/memories/` - Vector memory system
+- `/smartKnob/` - ESP32 hardware code
+- `/documentation/` - Fumadocs site (deployed to GitHub Pages)
 
 **ASCII Avatar Experiments:**
 Location: ~/Desktop/ascii_ai/
