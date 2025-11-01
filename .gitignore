@@ -2,10 +2,23 @@
 __pycache__/
 *.pyc
 venv/
+/memories/.venv/
+
+# Archives
+/docs_archive/
 *.egg-info/
 
 # OS-specific
 .DS_Store
+
+# Node.js dependencies
+node_modules/
+/campground/node_modules/
+/documentation/node_modules/
+
+# Next.js build output
+/documentation/.next/
+/documentation/out/
 
 # Logs
 *.log
@@ -21,3 +34,6 @@ venv/
 .vscode/
 .idea/
 *.safetensors
+
+# Local environment variables
+.env
