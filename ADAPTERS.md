@@ -1,0 +1,205 @@
+# Tomodachi Adapter Weights
+
+This guide explains how to package, distribute, and install the LoRA adapter weights for Tomodachi.
+
+## What Are Adapters?
+
+Tomodachi uses **two fine-tuned LoRA adapters** on top of the TinyLlama 1.1B base model:
+
+1. **Orchestrator Adapter** - Routes user input to the appropriate response mode
+2. **Persona Adapter** - Generates personality-rich responses with 9 mood states
+
+**Without adapters**: Tomodachi falls back to the base TinyLlama model (still functional, just less specialized)
+**With adapters**: Full personality system and intelligent routing ✨
+
+## For Users: Installing Adapters
+
+### Quick Install
+
+If you have a download link from the project maintainer:
+
+```bash
+# Method 1: Direct install
+./scripts/install_adapters.sh YOUR_DOWNLOAD_LINK
+
+# Method 2: Manual download
+# 1. Download adapters.tar.gz from the shared link
+# 2. Extract in project root:
+tar -xzf adapters.tar.gz
+```
+
+### Verify Installation
+
+```bash
+# Check if adapters are present
+ls -la ai/
+
+# Should see:
+# ai/orchestrator_adapter/
+# ai/persona_adapter/
+```
+
+### Without Adapters
+
+If you don't have the adapter weights, **that's okay!** Tomodachi will:
+- Automatically download TinyLlama base model (~2.2GB, one time)
+- Run with basic functionality
+- Display: `⚠️  Adapters disabled (using base model only)`
+
+To run without adapters, just:
+```bash
+./start.sh
+```
+
+## For Maintainers: Packaging Adapters
+
+### Creating a Distribution Package
+
+When you have trained adapter weights:
+
+```bash
+# 1. Package the adapters
+./scripts/package_adapters.sh
+
+# This creates: dist/tomodachi-adapters-TIMESTAMP.tar.gz
+```
+
+### Uploading to Google Drive / Dropbox
+
+**Google Drive:**
+1. Upload `dist/tomodachi-adapters-*.tar.gz` to Google Drive
+2. Right-click → Share → Get link
+3. Set to "Anyone with the link can view"
+4. Copy the shareable link
+5. Get the direct download link:
+   ```
+   Original: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+   Direct:   https://drive.google.com/uc?export=download&id=FILE_ID
+   ```
+
+**Dropbox:**
+1. Upload `dist/tomodachi-adapters-*.tar.gz` to Dropbox
+2. Right-click → Share → Create link
+3. Change `dl=0` to `dl=1` in the URL for direct download:
+   ```
+   Original: https://www.dropbox.com/s/xxxxx/file.tar.gz?dl=0
+   Direct:   https://www.dropbox.com/s/xxxxx/file.tar.gz?dl=1
+   ```
+
+### Update Download Link
+
+Add the link to this file:
+
+```markdown
+## Current Adapter Weights
+
+**Version**: v1.0 (Date: YYYY-MM-DD)
+**Download**: [Google Drive](YOUR_DIRECT_LINK) | [Dropbox](YOUR_DIRECT_LINK)
+**Size**: ~50MB
+**MD5**: (optional checksum)
+
+### Installation:
+```bash
+./scripts/install_adapters.sh YOUR_DIRECT_LINK
+```
+```
+
+## Hardware Packaging (Future Vision)
+
+For offline/air-gapped installations with physical hardware:
+
+### USB/SD Card Distribution
+
+```bash
+# Create complete offline package
+./scripts/package_for_offline.sh
+
+# This will include:
+# - Tomodachi code
+# - Adapter weights
+# - Base model (TinyLlama ~2.2GB)
+# - All dependencies (wheels)
+# - Setup scripts
+```
+
+Structure:
+```
+tomodachi-complete/
+├── tomodachi/              # Git repo
+├── adapters/
+│   ├── orchestrator_adapter/
+│   └── persona_adapter/
+├── models/
+│   └── TinyLlama-1.1B/     # Pre-downloaded base model
+├── wheels/                  # Python packages (pip download)
+└── install_offline.sh       # Offline setup script
+```
+
+**Total size**: ~3GB (suitable for 4GB+ USB stick)
+
+### For Raspberry Pi Images
+
+```bash
+# Pre-install everything in a disk image
+# Users just flash SD card and boot
+
+# Image includes:
+# - Raspberry Pi OS
+# - Tomodachi + adapters
+# - Pre-cached models
+# - All dependencies
+# - Auto-start on boot
+```
+
+## File Sizes Reference
+
+- **Adapter weights**: ~10-50MB each (2 adapters = ~20-100MB total)
+- **Base model (TinyLlama)**: ~2.2GB (shared, cached by HuggingFace)
+- **Python dependencies**: ~500MB (torch, transformers, etc.)
+- **Complete offline package**: ~3GB
+
+## Security Notes
+
+⚠️ **Never commit weights to git!** Already covered by `.gitignore`:
+```gitignore
+*.safetensors
+/orchestrator_adapter/checkpoint-*/
+/persona_adapter/checkpoint-*/
+```
+
+## Troubleshooting
+
+### "Adapters not found"
+```bash
+# Check if extracted correctly
+ls ai/orchestrator_adapter/adapter_config.json
+ls ai/persona_adapter/adapter_config.json
+
+# If files exist but still not detected, check file permissions
+chmod -R 755 ai/
+```
+
+### "Download failed"
+```bash
+# Test the download URL manually
+curl -L YOUR_URL -o test.tar.gz
+
+# Check file size (should be 20-100MB)
+ls -lh test.tar.gz
+```
+
+### Adapters work on one machine but not another
+- Check Python version (needs 3.10+)
+- Verify PEFT library installed: `pip list | grep peft`
+- Check for `adapter_config.json` in adapter directories
+
+## Current Adapter Weights
+
+**Status**: 🔴 No adapters currently distributed
+**Reason**: Using base model testing phase
+
+When adapters are available, download links will appear here.
+
+---
+
+**Questions?** See [SETUP.md](SETUP.md) for general setup or [PORTABILITY_FIXES.md](PORTABILITY_FIXES.md) for troubleshooting.

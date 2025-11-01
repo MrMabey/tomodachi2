@@ -1,0 +1,275 @@
+# Brainstorm Session: Spatial Computing & HUD Design
+
+**Date:** October 31, 2025
+**Focus:** Vision alignment, HUD interaction model, agent embodiment
+
+---
+
+## Key Insights
+
+### 1. Tomodachi = Friends, Not Tools
+- Not "your AI" but a **shared space** where you and AI agents collaborate
+- Agents are peers, companions working alongside you
+- "Campground" metaphor captures collaborative workspace concept
+
+### 2. The Two-View Model
+**HUD OFF (Immersive):**
+- Beautiful 3D forest exploration
+- Agents exist as characters in the world
+- Walk up and talk directly
+- Pure spatial experience
+
+**HUD ON (Technical):**
+- Same world + data overlay
+- Master Chief / Halo helmet aesthetic
+- Stats, logs, metrics visible
+- Click agents for detailed panels
+
+**Critical:** Agents exist in BOTH modes - they're embedded in the environment, not UI elements
+
+### 3. World Map Expansion
+User sketched full campground world:
+```
+Mountain Range (caves) → Complex tasks
+    ↓
+Forest paths
+    ↓
+Caves (back right) → Memory archives
+    ↓
+Waterfall → Data streams
+    ↓
+Tended crops → Processing/learning
+    ↓
+CAMPGROUND → Social hub
+    ↓
+Giant Sequoia → Visualization tower (spiral camera path)
+```
+
+**Spatial meaning:** Agent location = current activity
+- Campground = idle/chat
+- Caves = memory work
+- Crops = processing
+- Mountains = hard problems
+- Sequoia = visualization/overview
+
+### 4. Cortana-Style Agent Presence
+Inspired by Halo's Cortana:
+- Lives in HUD but also appears in world
+- Companion, not servant
+- Has personality and opinions
+- Can fragment/specialize (multiple instances)
+- Proactive communication
+
+Tomodachi agents should:
+- Appear when relevant (HUD on or off)
+- Deliver messages naturally
+- Show personality through ASCII art + animation
+- Build relationship over time
+
+### 5. Pickup & Scanner Mechanics
+**Discovery:** Code already has drag system!
+- `AvatarSprite.startDrag()` / `endDrag()` implemented
+- Agents can be picked up and moved
+
+**Scanner concept:**
+- Place agent on scanner station
+- View full logs, stats, memory state
+- Actions: duplicate, archive, configure, release
+- Works in world (physical station) or HUD (click panel)
+
+### 6. ASCII+++ Rendering
+Created experimental avatar with multiple techniques:
+- Braille patterns (8 pixels per character!)
+- Unicode particles
+- Block elements for shading
+- Zalgo text for glitch effects
+- Matrix digital rain
+- Fluid wave simulations
+
+**Location:** `~/Desktop/ascii_ai/experimental_avatar.py`
+
+**Modes map to Tomo moods:**
+- FOCUSED → Thinking (braille patterns, particles)
+- CREATIVE → Fluid (flowing waves)
+- SUCCESS → Celebrating (fireworks)
+- THINKING → Matrix (data rain)
+- ERROR → Glitchy (corrupted text)
+
+### 7. WebGL vs ASCII Debate
+**Question:** Is ASCII best for fast creative rendering?
+
+**Options explored:**
+- Pure ASCII (retro, readable)
+- WebGL particles (fast, beautiful)
+- Shader-based (infinite variety)
+- SVG (scalable, smooth)
+- Hybrid ASCII+++ (text structure + GL effects)
+
+**Decision:** ASCII+++ hybrid feels right
+- Keeps technical aesthetic
+- WebGL can enhance (glow, particles, color)
+- Each agent can have unique signature
+- Fast enough for real-time
+
+### 8. Integration Path
+**Existing:**
+- ✅ Three.js campground scene
+- ✅ Multiple avatar types (Robot, Dragon, Ghost, Alien, Panda, FlowBuddy)
+- ✅ Drag/drop system
+- ✅ Mood-based personality (9 states)
+- ✅ Vector memory system
+- ✅ Local LLM with dual adapters
+
+**To Add:**
+- HUD toggle system
+- ASCII avatar rendering integration
+- Scanner interface UI
+- World zone expansion (caves, sequoia, crops, mountains)
+- Agent autonomous behaviors
+- Claude API for complex tasks
+
+### 9. Autonomy Levels
+**Level 1 (Context-Aware):** React to environment
+- File changes, commits, errors
+- Triggered by you, but intelligently
+
+**Level 2 (Goal-Aware):** Track objectives
+- Remember what you're working on
+- Suggest next steps
+- Checkpoint progress
+
+**Level 3 (Collaborative):** Take initiative
+- Write code proactively
+- Run tests automatically
+- Make decisions independently
+- **Permission system gates actions**
+
+**Target:** Level 3 (High autonomy) with permission framework
+
+### 10. TOON for Token Efficiency
+Discovered TOON format (Token-Oriented Object Notation):
+- 30-60% fewer tokens than JSON
+- Tabular data format
+- Perfect for structured info exchange
+- Created SYSTEM.toon with project architecture
+
+---
+
+## Decisions Made
+
+1. **HUD is toggle, not mode switch** - Agents always exist
+2. **Spatial locations have meaning** - Not just aesthetic
+3. **ASCII+++ for agent rendering** - Hybrid approach
+4. **Scanner is inspection interface** - Deep agent analysis
+5. **Cortana-style persistence** - Companions, not tools
+6. **World zones = task categories** - Physical manifestation of work
+
+---
+
+## Questions Resolved
+
+**Q:** Can agents be picked up?
+**A:** Yes! Already implemented in AvatarSprite.ts
+
+**Q:** Where does ASCII avatar fit?
+**A:** HUD overlays + campground avatars (both!)
+
+**Q:** Is this a tamagotchi/pet?
+**A:** No - collaborative workspace with AI friends
+
+**Q:** Should we use WebGL or ASCII?
+**A:** Hybrid - ASCII structure + WebGL enhancement
+
+**Q:** How to save session efficiently?
+**A:** TOON format for structured data, Markdown for narrative
+
+---
+
+## Creative Outputs
+
+### Files Created Today
+1. `~/Desktop/ascii_ai/claude_avatar.py` - Simple ASCII avatar
+2. `~/Desktop/ascii_ai/experimental_avatar.py` - Multi-technique avatar (braille, particles, fluid, matrix, zalgo)
+3. `~/Desktop/ascii_ai/README.md` - Avatar documentation
+4. `~/Desktop/ascii_ai/HOW_TO_RUN.md` - Usage instructions
+
+### Documentation Created
+1. `/docs/VISION.md` - Complete project philosophy and goals
+2. `/docs/SYSTEM.toon` - Technical architecture (TOON format)
+3. `/docs/sessions/2025-10-31_spatial_computing_brainstorm.md` - This file
+
+---
+
+## Next Session Priorities
+
+### Immediate (This Week)
+1. Test HUD toggle mechanism in campground
+2. Integrate one ASCII avatar style
+3. Map moods → avatar animations
+4. Design scanner UI mockup
+
+### Near-term (Next Week)
+1. Implement HUD overlay system
+2. Add scanner interface
+3. Create first world zone (beyond campground)
+4. Test agent pickup + scanner flow
+
+### Future
+1. World expansion (all zones)
+2. Claude API integration
+3. Autonomous Level 3 behaviors
+4. Voice input (Whisper)
+5. Multiple simultaneous agents
+
+---
+
+## Quotes & Moments
+
+> "when the hood is flipped down..." → HUD! (dictation typo became concept)
+
+> "tomodachi means friends" → Core philosophy emerged
+
+> "like Master Chief from Halo" → Perfect reference for HUD aesthetic
+
+> "you pick them up. if we put them on the scanner, you can see their logs" → Spatial interaction model clicked
+
+> "yes to all of this" → Alignment achieved
+
+---
+
+## Technical Discoveries
+
+**Braille Unicode (U+2800-28FF):**
+- 256 possible patterns
+- 8 pixels per character
+- 2x4 dot matrix
+- Way higher resolution than standard ASCII
+
+**Particle Physics in Text:**
+- Velocity, mass, collision
+- Turbulence and damping
+- Can simulate fluids in terminal
+- IOCCC 2012 winner did full SPH
+
+**WebGL + ASCII Hybrid:**
+- Render ASCII to texture
+- Apply shaders (glow, distortion)
+- Keep readability + add atmosphere
+- Best of both worlds
+
+---
+
+## Personal Notes
+
+This session felt different - less "build this feature" and more "discover what this wants to be." The campground world sketch unlocked spatial thinking. Realizing agents are embedded (not UI) was the key insight. HUD/hood typo leading to Halo reference was serendipitous.
+
+The tomodachi = friends framing shifts everything. Not optimizing for efficiency, but for companionship. The system should feel alive, not productive.
+
+---
+
+**Session Quality:** ⭐⭐⭐⭐⭐
+**Alignment:** Complete
+**Next Steps:** Clear
+**Vibe:** Collaborative exploration
+
+*Saved with love for future reference* 🏕️✨

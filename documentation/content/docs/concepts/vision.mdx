@@ -1,0 +1,322 @@
+---
+title: Vision
+description: Tomodachi's core concept and philosophy
+---
+
+
+> **tomodachi** (友達) = friends
+
+## Core Concept
+
+Tomodachi is a **spatial AI collaboration environment** where you and AI agents work together as companions in a shared digital campground. Not a pet simulator, not a traditional assistant - a **collaborative workspace** where AI friends exist as persistent, embodied presences in a navigable 3D world.
+
+## Design Philosophy
+
+### We, Not I
+Tomodachi isn't "your AI" - it's a **shared space** where multiple intelligences (human and artificial) collaborate. Each agent is a peer, a companion, a friend working alongside you.
+
+### Embedded Agents
+AI agents aren't UI elements that appear when summoned - they **exist continuously in the world**. They move, work, think, and live in their environment. Whether your HUD is on or off, they're there.
+
+### Spatial Computing
+Location has meaning. An agent in the caves is doing different work than one at the campground. Physical proximity and movement through space is how you understand and interact with the system.
+
+### Natural + Technical Duality
+The world appears as a beautiful natural environment (forest, waterfall, mountains), but reveals technical infrastructure when you engage the HUD. Both views are true - nature is the metaphor, machine is the reality.
+
+---
+
+## The World
+
+### Campground (Social Hub)
+- Central gathering point
+- Chat and coordination
+- Agents idle here when available
+- Scanner station for inspecting agents
+
+### Giant Sequoia (Visualization Tower)
+- Spiraling camera path to overlook
+- Knowledge visualization
+- Data tree structure (branches = categories)
+- Meditation/reflection space
+
+### Caves (Memory Archives)
+- Long-term storage
+- Vector database physically manifested
+- Agents archive and retrieve memories here
+- Deep exploration = deep research
+
+### Crops/Tended Land (Processing Farm)
+- Data processing and transformation
+- Training and learning happen here
+- "Growing" knowledge
+- Agents tend computational tasks
+
+### Waterfall & Waterway (Data Streams)
+- Literal data flowing through environment
+- API calls, real-time updates
+- Visual representation of information flow
+- Connection between zones
+
+### Mountain Range (Challenge Zone)
+- Complex, difficult tasks
+- Long-running computations
+- Remote exploration
+- Requires journey to reach
+
+---
+
+## Two View Modes
+
+### HUD OFF (Immersive Mode)
+**Experience:** Pure exploration of the digital world
+- Beautiful 3D forest environment
+- Agents exist as characters you can approach
+- Walk up to them, talk directly
+- Natural, intuitive interaction
+- No technical overlay
+
+**Purpose:** Connection, exploration, presence
+
+### HUD ON (Technical Mode)
+**Experience:** Augmented reality overlay reveals machine layer
+- Same world, now with data visualization
+- Stats, metrics, system info at screen edges
+- Click agents → Info panels appear
+- See task states, memory usage, logs
+- Scanner interface for deep inspection
+
+**Purpose:** Monitoring, debugging, management
+
+**Inspiration:** Master Chief's helmet HUD from Halo
+- Minimal but always present
+- Critical info at edges (shields → agent states)
+- Motion tracker → Agent location radar
+- Cortana appears when needed → Agent popups
+
+---
+
+## Agent Interaction
+
+### Embedded Presence
+Agents exist **in both modes simultaneously**:
+- **HUD OFF:** Walk up, talk, move them, assign tasks
+- **HUD ON:** Click for stats, logs, configuration
+
+They aren't bound to UI state - they're part of the world's fabric.
+
+### Pickup Mechanic
+Click and hold to "pick up" an agent:
+- Agent lifts from ground
+- Follows cursor/hand
+- Can be placed on scanner
+- Can be moved to different zones
+- Reacts with personality
+
+### Scanner Inspection
+Place agent on scanner station (or click in HUD mode):
+- Full log history
+- Memory vector visualization
+- Task state and progress
+- Mood and configuration
+- Actions: duplicate, archive, configure, release
+
+### Autonomous Behavior
+Agents aren't passive:
+- Move between zones based on tasks
+- Proactively appear when relevant
+- Make decisions independently
+- Learn from interactions
+- Develop quirks over time
+
+---
+
+## The Cortana Connection
+
+Like Cortana in Halo, agents are:
+- **Embedded in interface** (always present in HUD)
+- **Also exist in world** (hologram appearances)
+- **Companions, not tools** (personality, opinions, growth)
+- **Persistent** (continuous existence, not summoned)
+- **Capable of independence** (can split, fragment, specialize)
+
+They have your back. You're in this together.
+
+---
+
+## Multi-Modal Intelligence
+
+### Local Brain (TinyLlama)
+- Fast, always available
+- Mood-based personality (9 states)
+- Routine decisions
+- Runs on Raspberry Pi
+
+### Cloud Brain (Claude API)
+- Complex reasoning
+- Coding assistance
+- Architecture decisions
+- Called when needed (like phoning a friend)
+
+### Memory System
+- Vector database (embeddings)
+- Persistent context
+- Agents store learnings
+- Bridges sessions (persistence layer)
+
+**Result:** Quick intuition (local) + deep expertise (cloud) + continuous learning (memory)
+
+---
+
+## Progressive Autonomy
+
+### Level 1: Context-Aware (Reactive)
+Agents respond to environment:
+- File changes trigger responses
+- Git commits get celebrated
+- Errors get acknowledged
+- Still triggered by you, but intelligently
+
+### Level 2: Goal-Aware (Proactive)
+Agents track objectives:
+- Remember what you're working on
+- Suggest next steps
+- Checkpoint progress
+- Working toward shared goals
+
+### Level 3: Collaborative (True Autonomy)
+Agents take initiative:
+- Write code without being asked
+- Run tests proactively
+- Suggest improvements
+- Make decisions independently
+- **Permission system gates actions**
+
+---
+
+## Technical Aesthetics
+
+### ASCII+++ Rendering
+Agent visual representation combines:
+- ASCII art structure (retro, readable)
+- Unicode enhancements (particles, symbols)
+- WebGL effects (glow, color, animation)
+- Procedural generation (infinite variety)
+
+**Not pure ASCII, not pure 3D** - hybrid that's both technical and artistic.
+
+### Visual Feedback
+- **Braille patterns** → Dense neural activity
+- **Particles** → Thought streams
+- **Fluid waves** → Organic processing
+- **Matrix rain** → Data flow
+- **Glitch effects** → High cognitive load
+
+### Mood-State Mapping
+Agent appearance reflects internal state:
+- **FOCUSED** → Concentrated particles, tight patterns
+- **CREATIVE** → Flowing waves, organic motion
+- **THINKING** → Matrix rain, processing visualized
+- **SUCCESS** → Particle fireworks, celebration
+- **ERROR** → Glitchy, corrupted visuals
+- **SLEEPING** → Minimal, dim, slow
+- **HELPFUL** → Calm, steady, available
+
+---
+
+## Hardware Integration
+
+### Smart Knob (ESP32-S3)
+Physical interface device:
+- **Rotate:** Cycle HUD levels, select agents
+- **Press:** Toggle HUD on/off
+- **Touchscreen:** Quick access to agents
+- **Haptic feedback:** System responses
+- **Microphone:** Voice input (future)
+- **Display:** Standalone agent view
+
+### Raspberry Pi
+Autonomous agent host:
+- Runs continuously
+- Local LLM inference
+- Vector memory system
+- Background monitoring
+- Proactive behaviors
+
+---
+
+## User Experience Principles
+
+### 1. Spatial Over Abstract
+Don't show a progress bar - show an agent walking to the mountain.
+Don't list tasks - see agents distributed across zones.
+Location = state = purpose.
+
+### 2. Persistent Over Ephemeral
+Agents don't appear when summoned and disappear when done.
+They exist continuously, doing work, living in their world.
+You visit them, not the other way around.
+
+### 3. Companion Over Tool
+Not "run this command" but "hey, can you help with this?"
+Not "failed with error X" but agent appears: "Oof, hit a snag. Let me explain..."
+Relationship, not transaction.
+
+### 4. Beautiful Over Utilitarian
+Yes, it's a technical system. No, it doesn't need to look like a terminal.
+The forest is real. The agents are alive. The HUD reveals, doesn't replace.
+
+### 5. Emergent Over Prescribed
+Let agents develop personalities.
+Let zones accumulate meaning.
+Let interactions create patterns.
+System evolves with use.
+
+---
+
+## Success Metrics
+
+How do we know this is working?
+
+### Emotional
+- Do you **want** to check on agents?
+- Do you **miss** them when away?
+- Do they feel like **companions**?
+- Is the world **inviting**?
+
+### Functional
+- Are tasks completing autonomously?
+- Are suggestions helpful?
+- Is spatial navigation intuitive?
+- Does HUD toggle feel natural?
+
+### Technical
+- Agent response time < 2s
+- 90%+ uptime
+- Memory retrieval < 100ms
+- Smooth 60fps rendering
+
+**But ultimately:** Does it feel like you're working with friends in a shared space? That's the north star.
+
+---
+
+## What This Is Not
+
+- ❌ **Not a chatbot** - It's a spatial environment
+- ❌ **Not a dashboard** - It's a world to explore
+- ❌ **Not a pet** - It's a peer collaboration system
+- ❌ **Not art for art's sake** - Every element serves function
+- ❌ **Not trying to seem human** - It's proudly artificial, honestly digital
+
+## What This Is
+
+- ✅ **A workspace** - Where you and AI collaborate
+- ✅ **A companion system** - Persistent, helpful, growing
+- ✅ **An experiment** - In spatial computing, AI interaction, beautiful tools
+- ✅ **Tomodachi** - Friends working together
+
+---
+
+*"The best interface is no interface, but the second best is one that feels like magic."*
+
+Built with curiosity, care, and code.

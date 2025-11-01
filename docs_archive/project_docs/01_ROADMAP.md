@@ -1,7 +1,7 @@
 # Project Roadmap
 
-**Version:** 3.0 (Web GUI + Mood System Implemented ✓)
-**Last Updated:** October 24, 2025
+**Version:** 3.1 (Campground UI + Smart Knob Hardware Integration ✓)
+**Last Updated:** October 30, 2025
 
 This document outlines the strategic phases for the Tamagotchi AI Companion project, reflecting new priorities based on our discovery phase.
 
@@ -111,10 +111,26 @@ This phase is about validating a viable AI engine for the Raspberry Pi 5. Our to
 
 This phase begins *after* a core AI engine is validated in Phase 1.
 
+*   **COMPLETED ✓ (October 30, 2025):**
+    *   ✓ **Smart Knob ESP32-S3 Integration:**
+        *   ✓ LVGL 8.3.11 touchscreen button UI on smart knob display
+        *   ✓ WiFi communication from ESP32 → Mac Flask server
+        *   ✓ HTTP POST endpoint `/api/knob/trigger` for button events
+        *   ✓ Polling endpoint `/api/knob/status` for Campground UI updates
+        *   ✓ Real-time visual feedback in browser (green indicator)
+        *   ✓ Working end-to-end flow: Tap button → WiFi → Server → Browser UI
+        *   ✓ Sample code library (ADC, SD card, audio, encoder, LVGL tests)
+        *   ✓ Documentation: Working code in `smartKnob/knob_button_test/`
+
+*   **IN PROGRESS:**
+    *   Audio recording via I2S microphone on ESP32-S3
+    *   Whisper STT integration for voice input from knob
+    *   Stream audio from ESP32 to Mac for processing
+
 *   **LATER:**
-    *   Develop the ESP32 firmware based on the "stateless executor" principle.
-    *   Implement MQTT communication between the Raspberry Pi and the ESP32.
-    *   Integrate audio streaming from the ESP32 to the Pi for STT processing.
+    *   Implement MQTT communication (alternative to HTTP)
+    *   Raspberry Pi 5 deployment (currently Mac-based)
+    *   Haptic feedback integration (DRV2605 motor driver)
 
 ## Phase 3: UI & User Experience (The Dashboard)
 
@@ -124,6 +140,15 @@ This phase begins *after* a core AI engine is validated in Phase 1.
     *   ✓ Mood system visual interface with 9 personality buttons
     *   ✓ Conversation history and performance metrics
     *   ✓ Comprehensive documentation suite
+    *   ✓ **Campground UI (October 2025):**
+        *   ✓ Three.js 3D isometric scene with glassmorphism design
+        *   ✓ Avatar system with multiple characters (Flow Buddy, Dragon, Robot, etc.)
+        *   ✓ Chat interface with sliding glassmorphic sidebar
+        *   ✓ Toolbox navigation (Chat, Inference, Mood, Status, Memories)
+        *   ✓ Performance HUD with FPS and memory stats
+        *   ✓ Smart Knob status indicator (real-time hardware feedback)
+        *   ✓ Vector memory admin interface integration
+        *   ✓ Vite + TypeScript build system
 
 *   **FUTURE:**
     *   Chrome Extension UI for system tray monitoring

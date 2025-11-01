@@ -8,16 +8,29 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import PeftModel
 import json
 import os
+import sys
 import logging
 import requests
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from pathlib import Path
+
+# Add parent directory to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import config
+
+# Try to import PEFT, but make it optional
+try:
+    from peft import PeftModel
+    PEFT_AVAILABLE = True
+except ImportError:
+    logger.warning("⚠️  PEFT library not available - adapter support disabled")
+    PEFT_AVAILABLE = False
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='../gui', static_url_path='')
@@ -126,10 +139,11 @@ class TomoState:
         self.current_adapter_name = None
         self.conversation_history = []
         self.model_config = {
-            "base_model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-            "orchestrator_adapter_dir": "./ai/orchestrator_adapter",
-            "persona_adapter_dir": "./ai/persona_adapter",
+            "base_model_name": config.BASE_MODEL_NAME,
+            "orchestrator_adapter_dir": str(config.ORCHESTRATOR_ADAPTER_DIR),
+            "persona_adapter_dir": str(config.PERSONA_ADAPTER_DIR),
         }
+        self.adapters_available = config.USE_ADAPTERS and PEFT_AVAILABLE
         self.base_inference_params = {
             "max_new_tokens": 150,
             "temperature": 0.7,
@@ -144,7 +158,7 @@ class TomoState:
 state = TomoState()
 
 # Memory service configuration
-MEMORY_SERVICE_URL = "http://localhost:5003"
+MEMORY_SERVICE_URL = config.MEMORY_SERVICE_URL
 
 # Memory system helpers (via HTTP)
 def store_memory(user_input, response, thread_id="default"):
@@ -212,7 +226,20 @@ def load_base_model():
     return state.base_model, state.tokenizer
 
 def load_adapter(adapter_dir):
-    """Load a LoRA adapter on top of the base model"""
+    """Load a LoRA adapter on top of the base model (or return base model if adapters unavailable)"""
+    # If adapters are not available, return base model
+    if not state.adapters_available:
+        logger.info("Adapters not available - using base model only")
+        base_model, _ = load_base_model()
+        return base_model
+
+    # Check if adapter directory exists
+    if not os.path.exists(adapter_dir):
+        logger.warning(f"⚠️  Adapter directory not found: {adapter_dir}")
+        logger.info("Falling back to base model")
+        base_model, _ = load_base_model()
+        return base_model
+
     if state.current_adapter_name == adapter_dir:
         logger.info(f"Adapter {adapter_dir} already loaded")
         return state.current_adapter
@@ -226,19 +253,26 @@ def load_adapter(adapter_dir):
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
     # Load new adapter
-    state.current_adapter = PeftModel.from_pretrained(base_model, adapter_dir)
-    state.current_adapter_name = adapter_dir
-    logger.info(f"Adapter loaded: {adapter_dir}")
+    try:
+        state.current_adapter = PeftModel.from_pretrained(base_model, adapter_dir)
+        state.current_adapter_name = adapter_dir
+        logger.info(f"✓ Adapter loaded: {adapter_dir}")
+        return state.current_adapter
+    except Exception as e:
+        logger.error(f"Failed to load adapter: {e}")
+        logger.info("Falling back to base model")
+        return base_model
 
-    return state.current_adapter
-
-def generate_response(prompt, adapter_dir, max_tokens=None, use_mood_params=True):
-    """Generate a response using the specified adapter"""
-    model = load_adapter(adapter_dir)
+def generate_response(prompt, adapter_dir=None, max_tokens=None, use_mood_params=True):
+    """Generate a response using the specified adapter (or base model if unavailable)"""
+    if adapter_dir and state.adapters_available:
+        model = load_adapter(adapter_dir)
+    else:
+        model, _ = load_base_model()
     _, tokenizer = load_base_model()
 
     # Only use mood system prompts for persona/chat adapter, NOT orchestrator
-    is_orchestrator = "orchestrator" in adapter_dir.lower()
+    is_orchestrator = adapter_dir and "orchestrator" in adapter_dir.lower()
     system_prompt = ""
 
     if use_mood_params and not is_orchestrator and state.mood_mode_active and state.current_mood in MOOD_CONFIGS:
@@ -700,16 +734,23 @@ def knob_status():
     return jsonify({"has_event": False})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-
     print("=" * 60)
     print("🤖 TOMO API Server Starting...")
     print("=" * 60)
     print(f"Base Model: {state.model_config['base_model_name']}")
-    print(f"Orchestrator: {state.model_config['orchestrator_adapter_dir']}")
-    print(f"Persona: {state.model_config['persona_adapter_dir']}")
+    if state.adapters_available:
+        print(f"✓ Adapters enabled:")
+        print(f"  Orchestrator: {state.model_config['orchestrator_adapter_dir']}")
+        print(f"  Persona:      {state.model_config['persona_adapter_dir']}")
+    else:
+        print(f"⚠️  Adapters disabled (using base model only)")
+        if not PEFT_AVAILABLE:
+            print("   Reason: PEFT library not installed")
+        elif not config.USE_ADAPTERS:
+            print("   Reason: Adapter weights not found")
+    print(f"Memory Service: {MEMORY_SERVICE_URL}")
     print("=" * 60)
-    print(f"GUI will be available at: http://localhost:{port}")
+    print(f"API Server: http://localhost:{config.API_PORT}")
     print("=" * 60)
 
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=config.DEBUG, host='0.0.0.0', port=config.API_PORT)

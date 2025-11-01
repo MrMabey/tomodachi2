@@ -1,0 +1,12 @@
+{
+  "title": "Development",
+  "pages": [
+    "testing",
+    "migration",
+    "portability",
+    "working-with-claude",
+    "cleanup-plan",
+    "modularity",
+    "todo"
+  ]
+}

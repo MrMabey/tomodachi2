@@ -27,6 +27,7 @@ fi
 
 echo ""
 echo "Starting services..."
+echo "  - Memory Service: http://localhost:5003"
 echo "  - API Server: http://localhost:8080"
 echo "  - GUI (Campground): http://localhost:5173"
 echo ""
@@ -34,14 +35,24 @@ echo "Press Ctrl+C to stop"
 echo "=========================================="
 echo ""
 
-# Start both servers in background
+# Start memory service (with C++ headers fix for annoy)
+cd memories
+export CPLUS_INCLUDE_PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/usr/include/c++/v1
+source .venv/bin/activate
+FLASK_APP=edge_rag.web:create_app FLASK_RUN_PORT=5003 python3 -m flask run --reload > ../memory.log 2>&1 &
+MEMORY_PID=$!
+deactivate
+cd ..
+
+# Start API server
 python3 server/tomo_api.py &
 API_PID=$!
 
+# Start GUI
 cd campground && npm run dev &
 GUI_PID=$!
 
 # Wait for Ctrl+C
-trap "kill $API_PID $GUI_PID; exit" INT
+trap "kill $MEMORY_PID $API_PID $GUI_PID 2>/dev/null; exit" INT
 
 wait
