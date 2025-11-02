@@ -237,102 +237,87 @@
       }
 
       .toolbox-button {
-        width: 60px;
-        height: 60px;
-        background: #333;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8em;
+        font-size: 1.9em;
         box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 3px solid rgba(255, 255, 255, 0.3);
       }
 
       .toolbox:hover .toolbox-button {
-        transform: scale(1.05);
-        box-shadow: 0 6px 30px rgba(102, 126, 234, 0.4);
+        transform: scale(1.1) rotate(15deg);
+        box-shadow: 0 8px 35px rgba(102, 126, 234, 0.6);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        border-color: rgba(255, 255, 255, 0.5);
       }
 
       .toolbox-options {
         position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 150px;
-        height: 150px;
+        /* Center the container on the toolbox button */
+        bottom: 32px; /* Half of button height (64px) */
+        right: 32px; /* Half of button width (64px) */
+        width: 0;
+        height: 0;
         pointer-events: none;
-        transform: rotate(30deg);
-        transform-origin: bottom right;
       }
 
       .toolbox-option {
         position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 50px;
-        height: 50px;
-        background: white;
+        /* Position from center point (0, 0) */
+        left: 0;
+        top: 0;
+        width: 56px;
+        height: 56px;
+        margin-left: -28px; /* Half of width to center */
+        margin-top: -28px; /* Half of height to center */
+        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4em;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        font-size: 1.5em;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.2);
         cursor: pointer;
         opacity: 0;
-        transform: translate(0, 0) rotate(-30deg);
-        transition: opacity 0.3s, transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform: translate(0, 0);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         pointer-events: none;
+        border: 2px solid rgba(255, 255, 255, 0.8);
       }
 
-      /* Arc positions around top-left quadrant */
-      .toolbox:hover .toolbox-option {
+      /* Expanded state - show options */
+      .toolbox.expanded .toolbox-option {
         opacity: 1;
+        pointer-events: all;
       }
 
-      /* Delay pointer events until animation completes */
-      @keyframes enablePointer {
-        from { pointer-events: none; }
-        to { pointer-events: all; }
+      /* Selected option at 135° (northwest/top-left) */
+      .toolbox-option.selected {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.5), 0 8px 25px rgba(102, 126, 234, 0.5);
+        color: white;
+        transform: scale(1.2);
+        filter: brightness(1.15);
+        z-index: 100;
       }
 
-      .toolbox:hover .toolbox-option {
-        animation: enablePointer 0s 0.35s forwards;
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(1) {
-        transform: translate(-70px, -90px) rotate(-30deg);
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(2) {
-        transform: translate(-105px, -55px) rotate(-30deg);
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(3) {
-        transform: translate(-120px, -5px) rotate(-30deg);
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(4) {
-        transform: translate(-105px, 45px) rotate(-30deg);
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(5) {
-        transform: translate(-70px, 80px) rotate(-30deg);
-      }
-
-      .toolbox:hover .toolbox-option:nth-child(6) {
-        transform: translate(-20px, 100px) rotate(-30deg);
-      }
 
       .toolbox-option:hover {
-        transform: scale(1.1) !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        filter: brightness(1.15);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
       }
 
       .toolbox-option.active {
-        background: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5), 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
       }
 
       @keyframes fadeIn {

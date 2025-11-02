@@ -441,24 +441,6 @@ function closePanel() {
     currentPanel = null;
 }
 
-function selectOption(index) {
-    const options = document.querySelectorAll('.toolbox-option');
-    if (options[index]) {
-        currentOptionIndex = index;
-
-        // Visual highlight (no transform to avoid vibration)
-        options.forEach((opt, i) => {
-            if (i === index) {
-                opt.style.background = '#667eea';
-                opt.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.5)';
-            } else {
-                opt.style.background = 'white';
-                opt.style.boxShadow = '';
-            }
-        });
-    }
-}
-
 // Unload Model
 async function unloadModel() {
     if (!confirm('Unload the current model? This will free up memory.')) return;
@@ -553,19 +535,112 @@ function saveMessageToThread(message) {
     }
 }
 
-// Setup Toolbox
+// ============================================================================
+// CIRCULAR TOOLBOX MENU
+// ============================================================================
+// A rotary dial-style menu where options rotate around a circle and the
+// option at a fixed selector position (135° = northwest) is highlighted.
+//
+// Key Learnings:
+// - CSS screen coordinates have Y-axis pointing DOWN (not up like math)
+// - Must use -Math.sin() to flip Y-axis for proper positioning
+// - Centered coordinate system: .toolbox-options acts as (0,0) origin
+// - Options positioned with translate(x, y) from center point
+// ============================================================================
+
 const toolbox = document.getElementById('toolbox');
 
 if (toolbox) {
-    // Click handlers for toolbox options
+    // Configuration
+    const SELECTOR_ANGLE = 135; // Fixed selector position (northwest/top-left diagonal)
+    const RADIUS = 120; // Distance from center (pixels)
+    const NUM_OPTIONS = 6; // Number of tool options
+    const ANGLE_STEP = 360 / NUM_OPTIONS; // Degrees between each option (60°)
+    const SCROLL_THRESHOLD = 15; // Pixels of scroll needed to trigger rotation
+    const SCROLL_DEBOUNCE_TIME = 40; // ms cooldown after rotation (prevents flick scroll wildness)
+    const SCROLL_RESET_TIME = 150; // ms before scroll accumulator resets
+    const DEBUG_MODE = false; // Set to true to enable console logging
+
+    // State
+    let currentRotation = SELECTOR_ANGLE; // Start with first option at selector
+    let toolboxExpanded = false;
+
+    const toolboxButton = toolbox.querySelector('.toolbox-button');
+    const toolboxOptions = toolbox.querySelector('.toolbox-options');
     const options = document.querySelectorAll('.toolbox-option');
+
+    // Toggle toolbox expansion
+    toolboxButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toolboxExpanded = !toolboxExpanded;
+        if (toolboxExpanded) {
+            toolbox.classList.add('expanded');
+            updateOptionPositions();
+        } else {
+            toolbox.classList.remove('expanded');
+        }
+    });
+
+    // Calculate position for each option based on current rotation
+    function updateOptionPositions() {
+        options.forEach((option, index) => {
+            // Calculate angle for this option (starting at 0 degrees = right)
+            const baseAngle = index * ANGLE_STEP; // 0°, 60°, 120°, 180°, 240°, 300°
+            const currentAngle = (baseAngle + currentRotation) % 360;
+
+            // Convert to radians
+            const radians = (currentAngle * Math.PI) / 180;
+
+            // Calculate position from center point (0, 0)
+            // IMPORTANT: CSS screen coordinates have Y-axis pointing DOWN
+            // So we need to flip the Y-axis from standard math coordinates
+            // Standard math: 0° = right, 90° = up, 180° = left, 270° = down
+            // CSS screen: 0° = right, 90° = down, 180° = left, 270° = up
+            // 315° should be top-left diagonal: x negative, y negative
+            const x = Math.cos(radians) * RADIUS;
+            const y = -Math.sin(radians) * RADIUS;  // Flip Y for screen coordinates
+
+            // Apply transform
+            option.style.transform = `translate(${x}px, ${y}px)`;
+            option.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+            // Debug mode: Add angle info to tooltip
+            if (DEBUG_MODE) {
+                option.title = `${currentAngle.toFixed(0)}° [${x.toFixed(0)}, ${y.toFixed(0)}]`;
+            }
+
+            // Check if this option is at the selector position (within tolerance)
+            // Normalize angle difference to -180 to 180 range to handle wrapping
+            let angleDiff = currentAngle - SELECTOR_ANGLE;
+            while (angleDiff > 180) angleDiff -= 360;
+            while (angleDiff < -180) angleDiff += 360;
+
+            if (Math.abs(angleDiff) < ANGLE_STEP / 2) {
+                // This option is selected
+                option.classList.add('selected');
+                currentOptionIndex = index;
+
+                // Debug mode: Log selection changes
+                if (DEBUG_MODE && option.dataset.wasSelected !== 'true') {
+                    console.log(`✓ Option ${index} selected at ${currentAngle.toFixed(1)}° (target: ${SELECTOR_ANGLE}°, pos: [${x.toFixed(1)}, ${y.toFixed(1)}])`);
+                    option.dataset.wasSelected = 'true';
+                }
+            } else {
+                option.classList.remove('selected');
+                if (DEBUG_MODE && option.dataset.wasSelected === 'true') {
+                    option.dataset.wasSelected = 'false';
+                }
+            }
+        });
+    }
+
+    // Click handlers for toolbox options
     options.forEach((option, index) => {
         option.addEventListener('click', () => {
             const panelName = option.dataset.panel;
             const action = option.dataset.action;
 
             if (action === 'memories') {
-                // Open memory admin panel in new window
                 window.open('http://localhost:5003/', '_blank');
             } else if (panelName) {
                 openPanel(panelName);
@@ -573,39 +648,53 @@ if (toolbox) {
         });
     });
 
-    // Scroll to navigate through options (with debouncing)
+    // Scroll wheel rotation handler
     let scrollTimeout = null;
     let isScrolling = false;
+    let scrollAccumulator = 0;
 
     toolbox.addEventListener('wheel', (e) => {
+        if (!toolboxExpanded) return;
         e.preventDefault();
 
-        // Ignore rapid scroll events
-        if (isScrolling) return;
+        // Accumulate scroll delta to prevent jittery movement
+        scrollAccumulator += e.deltaY;
 
-        isScrolling = true;
-        const options = document.querySelectorAll('.toolbox-option');
-        const direction = e.deltaY > 0 ? 1 : -1;
+        // Trigger rotation when threshold is reached
+        if (Math.abs(scrollAccumulator) >= SCROLL_THRESHOLD && !isScrolling) {
+            isScrolling = true;
+            const direction = scrollAccumulator > 0 ? 1 : -1;
+            scrollAccumulator = 0;
 
-        // Update current selection
-        currentOptionIndex = (currentOptionIndex + direction + options.length) % options.length;
-        selectOption(currentOptionIndex);
+            // Rotate by one step (60° for 6 options)
+            currentRotation = (currentRotation - (direction * ANGLE_STEP) + 360) % 360;
+            updateOptionPositions();
 
-        // Debounce: wait 150ms before allowing next scroll
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            isScrolling = false;
-        }, 150);
+            // Debounce to prevent rapid successive rotations
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+            }, SCROLL_DEBOUNCE_TIME);
+        } else {
+            // Reset accumulator if user stops scrolling
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                scrollAccumulator = 0;
+                isScrolling = false;
+            }, SCROLL_RESET_TIME);
+        }
     }, { passive: false });
 
-    // Enter or Space key to activate current selection
+    // Enter or Space key to activate selected option
     document.addEventListener('keydown', (e) => {
         if ((e.key === 'Enter' || e.key === ' ') && !e.target.matches('input, textarea')) {
-            e.preventDefault(); // Prevent page scroll on space
-            const options = document.querySelectorAll('.toolbox-option');
-            if (options[currentOptionIndex]) {
-                const panelName = options[currentOptionIndex].dataset.panel;
-                const action = options[currentOptionIndex].dataset.action;
+            if (!toolboxExpanded) return;
+
+            e.preventDefault();
+            const selectedOption = document.querySelector('.toolbox-option.selected');
+            if (selectedOption) {
+                const panelName = selectedOption.dataset.panel;
+                const action = selectedOption.dataset.action;
 
                 if (action === 'memories') {
                     window.open('http://localhost:5003/', '_blank');
@@ -616,10 +705,22 @@ if (toolbox) {
         }
     });
 
-    // Escape to close panel
+    // Escape to close toolbox
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            if (toolboxExpanded) {
+                toolboxExpanded = false;
+                toolbox.classList.remove('expanded');
+            }
             closePanel();
+        }
+    });
+
+    // Close toolbox when clicking outside
+    document.addEventListener('click', (e) => {
+        if (toolboxExpanded && !toolbox.contains(e.target)) {
+            toolboxExpanded = false;
+            toolbox.classList.remove('expanded');
         }
     });
 }
