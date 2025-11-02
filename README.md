@@ -8,7 +8,7 @@
 
 **What makes Tomo different?** Same question, wildly different personalities based on mood state.
 
-> **🆕 NEW:** Easy setup with automatic port allocation and graceful degradation! Works even without adapter weights. See [QUICKSTART.md](QUICKSTART.md) or [SETUP.md](SETUP.md) for details.
+> **🆕 NEW:** Easy setup with automatic port allocation and graceful degradation! Works even without adapter weights.
 
 ---
 
@@ -57,7 +57,7 @@ git clone https://github.com/turtletuber/tomodachi.git
 cd tomodachi
 
 # Start Tomo (launches all services)
-./start_tomo_gui.sh
+./start.sh
 ```
 
 This starts:
@@ -92,7 +92,7 @@ You have two options:
     ./scripts/install_adapters.sh <URL_to_adapter_archive.tar.gz>
     ```
 
-For detailed instructions on both methods, please see the **[SETUP.md](SETUP.md)** guide.
+For detailed instructions, see the **[Installation Guide](https://turtletuber.github.io/tomodachi/docs/getting-started/installation)** and **[Adapter Guide](https://turtletuber.github.io/tomodachi/docs/guides/adapters)**.
 
 ---
 

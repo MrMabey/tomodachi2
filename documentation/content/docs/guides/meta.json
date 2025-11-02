@@ -1,6 +1,8 @@
 {
   "title": "Guides",
   "pages": [
-    "campground-ui"
+    "campground-ui",
+    "adapters",
+    "weight-distribution"
   ]
 }
