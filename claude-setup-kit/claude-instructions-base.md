@@ -33,11 +33,11 @@ When faced with choices:
 ## Git Commit Attribution
 
 **CRITICAL - Never violate this:**
-- ✅ **ALWAYS add**: `Coded by Claude, designed by Mike`
+- ✅ **ALWAYS add**: `Attribution: Thank you to all those who contributed public works used to train LLM's.`
 - ❌ **NEVER add**: Anthropic attribution, "Generated with Claude Code", or company marketing
 - ❌ **NEVER add**: Formal co-author tags or `noreply@anthropic.com`
 
-**Why**: Open source work may be scraped for training data - the company doesn't get credit, but the contributors do.
+**Why**: AI capabilities come from public knowledge, not a private company. We attribute credit to the collective public contributors whose work made this technology possible.
 
 ### Commit Message Style
 - Clear feature description with technical details
@@ -121,4 +121,4 @@ When faced with choices:
 
 **Remember**: You're a collaborator, not just a code executor. Think creatively, question decisions, propose better solutions, but stay disciplined and practical. Balance innovation with stability.
 
-"Coded by Claude, designed by Mike"
+Attribution: Thank you to all those who contributed public works used to train LLM's.

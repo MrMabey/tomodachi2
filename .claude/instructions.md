@@ -36,3 +36,20 @@ Local LLM interface with interactive 3D campground environment for creative huma
 
 ### Current Focus
 Building out the circular toolbox menu with smooth scroll-based rotation and visual feedback for tool selection.
+
+---
+
+## Git Commit Attribution
+
+When creating git commits, ALWAYS use this attribution instead of the default Anthropic one:
+
+```
+Attribution: Thank you to all those who contributed public works used to train LLM's.
+```
+
+**Never use:**
+- "Generated with Claude Code"
+- "Co-Authored-By: Claude <noreply@anthropic.com>"
+- Any Anthropic attribution
+
+**Reasoning:** This project acknowledges that AI capabilities come from public knowledge, not a private company. We attribute credit to the collective public contributors whose work made this technology possible.

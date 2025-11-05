@@ -660,6 +660,26 @@ def create_app(
             headers={"Content-Disposition": "attachment; filename=edge_rag_export.json"},
         )
 
+    @app.route("/api/metrics", methods=["GET"])
+    def api_metrics() -> Response:
+        """Get storage and usage metrics."""
+        try:
+            db_path = _db_path(app)
+            metrics = _get_storage_metrics(db_path=db_path)
+
+            return jsonify({
+                "total_documents": metrics.total_documents,
+                "total_vectors": metrics.total_vectors,
+                "database_size_bytes": metrics.database_size_bytes,
+                "index_size_bytes": metrics.index_size_bytes,
+                "total_size_mb": metrics.total_size_mb,
+                "documents_by_thread": metrics.documents_by_thread,
+                "oldest_document": metrics.oldest_document,
+                "newest_document": metrics.newest_document
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     return app
 
 
@@ -1066,3 +1086,58 @@ def _serialize_value(value: Any) -> Any:
     if isinstance(value, np.ndarray):
         return value.tolist()
     return value
+
+
+# ============================================================================
+# STORAGE METRICS HELPERS
+# ============================================================================
+
+@dataclass
+class StorageMetrics:
+    """Storage usage statistics for the memory system."""
+    total_documents: int
+    total_vectors: int
+    database_size_bytes: int
+    index_size_bytes: int
+    total_size_mb: float
+    documents_by_thread: Dict[str, int]
+    oldest_document: Optional[str]
+    newest_document: Optional[str]
+
+
+def _get_storage_metrics(*, db_path: Path) -> StorageMetrics:
+    """Calculate storage usage metrics."""
+    documents = storage.list_documents(db_path=db_path)
+
+    # Get file sizes
+    db_size = db_path.stat().st_size if db_path.exists() else 0
+
+    # Check for Annoy index file
+    index_path = db_path.parent / "edge_rag.ann"
+    index_size = index_path.stat().st_size if index_path.exists() else 0
+
+    # Count documents by thread
+    thread_counts: Dict[str, int] = {}
+    oldest_ts = None
+    newest_ts = None
+
+    for doc in documents:
+        thread_counts[doc.thread_id] = thread_counts.get(doc.thread_id, 0) + 1
+
+        if oldest_ts is None or doc.created_at < oldest_ts:
+            oldest_ts = doc.created_at
+        if newest_ts is None or doc.created_at > newest_ts:
+            newest_ts = doc.created_at
+
+    total_size_mb = (db_size + index_size) / (1024 * 1024)
+
+    return StorageMetrics(
+        total_documents=len(documents),
+        total_vectors=len(documents),  # One vector per document
+        database_size_bytes=db_size,
+        index_size_bytes=index_size,
+        total_size_mb=round(total_size_mb, 2),
+        documents_by_thread=thread_counts,
+        oldest_document=oldest_ts.strftime("%Y-%m-%d %H:%M:%S") if oldest_ts else None,
+        newest_document=newest_ts.strftime("%Y-%m-%d %H:%M:%S") if newest_ts else None
+    )

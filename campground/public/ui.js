@@ -24,6 +24,8 @@ let messages = []; // Track message elements for positioning
 document.addEventListener('DOMContentLoaded', () => {
     checkStatus();
     setInterval(checkStatus, 5000); // Check status every 5 seconds
+    checkModelMemory(); // Initial check
+    setInterval(checkModelMemory, 3000); // Check model memory every 3 seconds
     loadChatThreads();
     initializeCurrentThread();
     pollKnobStatus(); // Check for knob button presses
@@ -97,9 +99,47 @@ async function checkStatus() {
         if (status.current_mood) {
             updateMoodDisplay(status.current_mood);
         }
+
+        // Fetch memory metrics
+        checkMemoryMetrics();
     } catch (error) {
         document.getElementById('apiStatus').textContent = 'Offline';
         document.getElementById('statusIndicator').className = 'indicator offline';
+    }
+}
+
+// Memory Metrics Check
+async function checkMemoryMetrics() {
+    try {
+        const metrics = await apiCall('/memory/metrics');
+        const memCount = metrics.total_documents || 0;
+        const memSize = metrics.total_size_mb ? `${metrics.total_size_mb} MB` : '0 MB';
+        const memOldest = metrics.oldest_document || 'None';
+
+        // Update Status panel (all metrics now in one place)
+        document.getElementById('memoryCount').textContent = memCount;
+        document.getElementById('memorySize').textContent = memSize;
+        document.getElementById('memoryOldest').textContent = memOldest;
+    } catch (error) {
+        // Memory service might be offline
+        const offline = 'N/A';
+        document.getElementById('memoryCount').textContent = offline;
+        document.getElementById('memorySize').textContent = offline;
+        document.getElementById('memoryOldest').textContent = 'Service offline';
+    }
+}
+
+// Model Memory Check
+async function checkModelMemory() {
+    try {
+        const memory = await apiCall('/model/memory');
+        const memUsage = memory.rss_human || 'N/A';
+
+        // Update Status Panel
+        document.getElementById('hudModelMemory').textContent = memUsage;
+    } catch (error) {
+        // Model memory unavailable
+        document.getElementById('hudModelMemory').textContent = 'N/A';
     }
 }
 
@@ -145,10 +185,10 @@ async function sendMessage() {
             // Add response to sidebar
             addSidebarMessage('assistant', response.response);
 
-            // Update stats
+            // Update stats with response text for token counting
             stats.totalLatency += response.total_latency;
             stats.messageCount++;
-            updateStats(response.total_latency);
+            updateStats(response.total_latency, response.response);
 
             // Update mood from response
             if (response.mood) {
@@ -197,7 +237,7 @@ function addMessageBubble(type, content) {
     return bubble;
 }
 
-// Add Message to Sidebar (following reference positioning logic)
+// Add Message to Sidebar (simplified for scrolling)
 function addSidebarMessage(type, content) {
     const sidebarConversation = document.getElementById('sidebarConversation');
     const bubbleDiv = document.createElement('div');
@@ -212,6 +252,9 @@ function addSidebarMessage(type, content) {
     // Add to container
     sidebarConversation.appendChild(bubbleDiv);
 
+    // Auto-scroll to bottom to show new message
+    sidebarConversation.scrollTop = sidebarConversation.scrollHeight;
+
     // Store message data
     const messageData = {
         element: bubbleDiv,
@@ -220,72 +263,16 @@ function addSidebarMessage(type, content) {
     };
     messages.push(messageData);
 
-    // Position messages
-    positionMessages();
-
     return messageData;
 }
 
-// Position messages like the reference (stacking upward from center)
-function positionMessages() {
-    const container = document.getElementById('sidebarConversation');
-    if (!container) return;
-
-    const containerHeight = container.clientHeight;
-    const middleY = containerHeight / 2;
-
-    // Use requestAnimationFrame for smooth positioning
-    requestAnimationFrame(() => {
-        let currentY = middleY;
-
-        // Position from most recent (bottom) to oldest (top)
-        for (let i = messages.length - 1; i >= 0; i--) {
-            const msg = messages[i];
-
-            // Get actual height of the element
-            const rect = msg.element.getBoundingClientRect();
-            const msgHeight = rect.height || 60; // fallback height
-
-            if (i === messages.length - 1) {
-                // Most recent message at middle
-                currentY = middleY - msgHeight / 2;
-            } else {
-                // Stack upward with 15px gap
-                currentY = currentY - msgHeight - 15;
-            }
-
-            // Apply position
-            msg.element.style.top = `${currentY}px`;
-
-            // Calculate opacity based on position (fade at top)
-            const fadeZone = 100; // Top 100px is fade zone
-            if (currentY < fadeZone) {
-                const opacity = Math.max(0, currentY / fadeZone);
-                msg.element.style.opacity = opacity;
-
-                // Mark for removal if completely faded
-                if (opacity <= 0 && !msg.element.classList.contains('fading')) {
-                    msg.element.classList.add('fading');
-                    setTimeout(() => {
-                        if (msg.element.parentNode) {
-                            msg.element.remove();
-                            messages = messages.filter(m => m !== msg);
-                        }
-                    }, 600);
-                }
-            } else {
-                msg.element.style.opacity = 1;
-            }
-        }
-    });
-}
+// No longer needed with scrolling layout
 
 // Remove a specific message
 function removeMessage(messageData) {
     if (messageData && messageData.element && messageData.element.parentNode) {
         messageData.element.remove();
         messages = messages.filter(m => m !== messageData);
-        positionMessages();
     }
 }
 
@@ -396,12 +383,25 @@ function updateMoodDisplay(mood) {
 }
 
 // Update Stats
-function updateStats(lastLatency = null) {
+function updateStats(lastLatency = null, responseText = null) {
     if (lastLatency !== null) {
-        // Update HUD
+        // Update Status Panel - Latency
         const hudLatencyEl = document.getElementById('hudLatency');
         if (hudLatencyEl) {
-            hudLatencyEl.textContent = lastLatency.toFixed(2);
+            hudLatencyEl.textContent = `${lastLatency.toFixed(2)}s`;
+        }
+
+        // Calculate tokens (rough estimate: ~4 chars per token)
+        let tokenCount = 0;
+        let tokensPerSec = 0;
+
+        if (responseText) {
+            tokenCount = Math.ceil(responseText.length / 4);
+            tokensPerSec = lastLatency > 0 ? (tokenCount / lastLatency).toFixed(1) : 0;
+
+            // Update Status Panel - Tokens
+            document.getElementById('hudTokens').textContent = tokenCount;
+            document.getElementById('hudTokensPerSec').textContent = `${tokensPerSec} t/s`;
         }
     }
 }
@@ -649,8 +649,8 @@ if (toolbox) {
     });
 
     // Scroll wheel rotation handler
-    let scrollTimeout = null;
-    let isScrolling = false;
+    let debounceTimeout = null;
+    let resetTimeout = null;
     let scrollAccumulator = 0;
 
     toolbox.addEventListener('wheel', (e) => {
@@ -660,9 +660,11 @@ if (toolbox) {
         // Accumulate scroll delta to prevent jittery movement
         scrollAccumulator += e.deltaY;
 
-        // Trigger rotation when threshold is reached
-        if (Math.abs(scrollAccumulator) >= SCROLL_THRESHOLD && !isScrolling) {
-            isScrolling = true;
+        // Clear the reset timeout since user is actively scrolling
+        clearTimeout(resetTimeout);
+
+        // Trigger rotation when threshold is reached (if not in debounce cooldown)
+        if (Math.abs(scrollAccumulator) >= SCROLL_THRESHOLD && !debounceTimeout) {
             const direction = scrollAccumulator > 0 ? 1 : -1;
             scrollAccumulator = 0;
 
@@ -671,18 +673,15 @@ if (toolbox) {
             updateOptionPositions();
 
             // Debounce to prevent rapid successive rotations
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                isScrolling = false;
+            debounceTimeout = setTimeout(() => {
+                debounceTimeout = null;
             }, SCROLL_DEBOUNCE_TIME);
-        } else {
-            // Reset accumulator if user stops scrolling
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                scrollAccumulator = 0;
-                isScrolling = false;
-            }, SCROLL_RESET_TIME);
         }
+
+        // Reset accumulator if user stops scrolling for a while
+        resetTimeout = setTimeout(() => {
+            scrollAccumulator = 0;
+        }, SCROLL_RESET_TIME);
     }, { passive: false });
 
     // Enter or Space key to activate selected option
@@ -737,12 +736,11 @@ async function pollKnobStatus() {
         if (data.has_event) {
             // Button was pressed!
             indicator.textContent = 'PRESSED!';
-            indicator.style.color = '#0f0';
-            indicator.style.textShadow = '0 0 10px #0f0';
+            indicator.style.color = '#4caf50';
+            indicator.style.fontWeight = 'bold';
 
             const statusDiv = document.getElementById('knobStatus');
-            statusDiv.style.background = 'rgba(0, 255, 0, 0.2)';
-            statusDiv.style.borderColor = 'rgba(0, 255, 0, 0.5)';
+            statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
 
             console.log('🎛️ KNOB BUTTON PRESSED!', data.event);
 
@@ -750,9 +748,8 @@ async function pollKnobStatus() {
             setTimeout(() => {
                 indicator.textContent = 'Waiting...';
                 indicator.style.color = '#888';
-                indicator.style.textShadow = 'none';
-                statusDiv.style.background = 'rgba(0, 0, 0, 0.7)';
-                statusDiv.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+                indicator.style.fontWeight = 'normal';
+                statusDiv.style.background = '';
             }, 2000);
         }
     } catch (error) {
@@ -763,6 +760,78 @@ async function pollKnobStatus() {
     setTimeout(pollKnobStatus, 500);
 }
 
+// Voice Input
+let recognition = null;
+let isRecording = false;
+
+function initializeVoiceRecognition() {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const input = document.getElementById('userInput');
+            input.value = transcript;
+            input.focus();
+            stopRecording();
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+            addSidebarMessage('system', `Voice input error: ${event.error}`);
+        };
+
+        recognition.onend = () => {
+            stopRecording();
+        };
+    } else {
+        console.warn('Speech recognition not supported in this browser');
+    }
+}
+
+function toggleVoiceInput() {
+    if (!recognition) {
+        addSidebarMessage('system', 'Voice input not supported in this browser');
+        return;
+    }
+
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        startRecording();
+    }
+}
+
+function startRecording() {
+    isRecording = true;
+    const micButton = document.getElementById('micButton');
+    micButton.classList.add('recording');
+    micButton.textContent = '⏹️';
+
+    try {
+        recognition.start();
+        addSidebarMessage('system', 'Listening...');
+    } catch (error) {
+        console.error('Error starting recognition:', error);
+        stopRecording();
+    }
+}
+
+function stopRecording() {
+    isRecording = false;
+    const micButton = document.getElementById('micButton');
+    micButton.classList.remove('recording');
+    micButton.textContent = '🎤';
+}
+
+// Initialize voice recognition on load
+initializeVoiceRecognition();
+
 console.log('🏕️ Campground UI loaded successfully');
 console.log('Keyboard shortcuts:');
 console.log('  Ctrl/Cmd + K: Focus input');
@@ -770,3 +839,4 @@ console.log('  Enter/Space (when not typing): Open selected tool');
 console.log('  Escape: Close panel');
 console.log('  Scroll on toolbox: Navigate through options');
 console.log('\n🎛️ Smart Knob: Press button to test!');
+console.log('🎤 Voice Input: Click mic button to dictate');

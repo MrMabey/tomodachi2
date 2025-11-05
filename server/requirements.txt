@@ -7,3 +7,5 @@ accelerate>=0.25.0
 datasets
 trl
 pyyaml
+psutil>=5.9.0
+requests>=2.31.0
