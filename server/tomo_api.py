@@ -219,8 +219,8 @@ def load_base_model():
         state.tokenizer = AutoTokenizer.from_pretrained(state.model_config["base_model_name"])
         state.base_model = AutoModelForCausalLM.from_pretrained(
             state.model_config["base_model_name"],
-            torch_dtype=torch.float32,
-            device_map="auto"
+            torch_dtype=torch.float16,
+            device_map="mps"
         )
         logger.info("Base model loaded successfully")
     return state.base_model, state.tokenizer
@@ -330,6 +330,11 @@ def process_orchestrator_decision(user_input):
         max_tokens=100,
         use_mood_params=False  # Disable mood influence for routing
     )
+
+    # Clean up the response string before parsing
+    # The model sometimes includes the <|im_end|> token, which breaks JSON parsing
+    if "<|im_end|>" in response:
+        response = response.split("<|im_end|>")[0]
 
     # Try to parse as JSON
     try:

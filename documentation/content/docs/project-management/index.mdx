@@ -1,0 +1,300 @@
+---
+title: Project Management
+description: Centralized project planning, roadmap, and workgroup tracking
+---
+
+# Project Management
+
+Centralized hub for tracking Tomo's development across all workgroups.
+
+## Project Overview
+
+### 🔥 Now
+Current high-priority work across all teams.
+
+- **Adapter Training V3** - Address test failures with expanded training data (Mental Models)
+- **Memory Architecture Design** - Define multi-adapter memory system (Memories, Mental Models)
+- **Document Memory Decisions Made** - Record architectural decisions already agreed upon (Memories)
+
+### ⏭️ Next
+Upcoming work after current priorities complete.
+
+- **RAG Pipeline Implementation** - Build context-aware response system (Memories, Mental Models)
+- **Voice Input Integration** - Whisper STT via Smart Knob (Hardware, Automation)
+
+### 🔮 Later
+Future enhancements and explorations.
+
+- **Command Execution Layer** - Build intent handlers (Automation, Memories)
+- **Base Model Upgrade** - Research TinyLlama → Gemma 2B migration path (Mental Models)
+
+---
+
+## Roadmap
+
+### Phase 1: Core AI Engine ✅ (Mostly Complete)
+- ✅ Dual-adapter architecture (orchestrator + persona)
+- ✅ 9-mood personality system
+- ✅ Comprehensive testing (30 test cases, 76.7% success rate)
+- 🔄 Training data expansion (in progress)
+- 🔜 Memory system integration
+
+### Phase 2: Hardware Integration 🔄 (In Progress)
+- ✅ ESP32-S3 Smart Knob with touchscreen
+- ✅ WiFi communication to Flask API
+- 🔄 I2S microphone audio capture
+- 🔜 Whisper STT integration
+- 🔜 Raspberry Pi 5 deployment
+
+### Phase 3: User Experience ✅ (Complete)
+- ✅ Campground UI with Three.js 3D scene
+- ✅ Glassmorphism design system
+- ✅ Real-time parameter controls
+- ✅ Memory admin interface
+- 🔜 Dark mode & mobile responsive
+
+---
+
+## Workgroups
+
+### 🎨 [Frontend](#frontend)
+Campground UI, web interfaces, and user experience
+
+**Now:** *(None)*
+
+**Next:** Dark Mode Toggle
+
+**Later:** Mobile-Responsive Design, PWA
+
+---
+
+### 🔧 [Hardware](#hardware)
+ESP32-S3 Smart Knob, sensors, and physical integration
+
+**Now:** I2S Microphone Audio Recording
+
+**Next:** Stream Audio to Mac for Processing
+
+**Later:** Haptic Feedback, MQTT Protocol, RPi5 Deployment
+
+---
+
+### ⚙️ [Automation](#automation)
+Command execution, integrations, and workflow automation
+
+**Now:** *(None)*
+
+**Next:** *(None)*
+
+**Later:** Phone Home API, Reminder System, Email & Text Integration
+
+---
+
+### 🧠 [Memories](#memories)
+Vector memory, SQLite, and data persistence
+
+**Backlog:** [Memory Architecture Design Decisions](#memories-backlog)
+
+**Now:** Document Decisions Already Made
+
+**Next:** Build RAG Pipeline Infrastructure
+
+**Later:** Memory Pruning, Cross-Adapter Memory Retrieval
+
+---
+
+### 🤖 [Mental Models](#mental-models)
+Adapter training, fine-tuning, and model optimization
+
+**Now:** Expand Training Data Based on V2 Test Results
+
+**Next:** Retrain Adapters, Expand Test Suite to 50+ Prompts
+
+**Later:** Train Mood-Specific Persona Adapters
+
+---
+
+## Detailed Workgroup Backlogs
+
+### Frontend
+
+#### Backlog
+*(Empty)*
+
+#### Now
+*(None)*
+
+#### Next
+- **Dark Mode Toggle** - Add dark/light theme switcher to Campground UI
+
+#### Later
+- **Mobile-Responsive Design** - Optimize Campground UI for mobile devices
+- **Progressive Web App (PWA)** - Enable offline functionality and installability
+
+---
+
+### Hardware
+
+#### Backlog
+*(Empty)*
+
+#### Now
+- **I2S Microphone Audio Recording** - Capture audio from ESP32-S3 digital microphone
+
+#### Next
+- **Stream Audio to Mac for Processing** - Send recorded audio over WiFi to Flask API for Whisper processing
+
+#### Later
+- **Haptic Feedback Integration** - Use DRV2605 motor driver for touch response
+- **MQTT Communication Protocol** - Alternative to HTTP for real-time hardware communication
+- **Raspberry Pi 5 Deployment** - Migrate from Mac development environment to RPi5 production
+
+---
+
+### Automation
+
+#### Backlog
+*(Empty)*
+
+#### Now
+*(None)*
+
+#### Next
+*(None)*
+
+#### Later
+- **Phone Home to Claude/GPT** - API integration for complex task delegation to larger models
+- **Reminder System** - Time-based notifications and task reminders
+- **Email & Text Integration** - Send messages via external APIs
+
+---
+
+### Memories
+
+<h4 id="memories-backlog">Backlog</h4>
+
+**Memory Architecture Design Decisions** - Critical questions from memory team
+
+**Decisions Already Made:**
+- ✅ **Orchestrator will NOT use RAG** - speed matters for routing
+- ✅ **Adapter weights are generated locally** - NOT hosted in repo (see README)
+- ✅ **Single thread for Tomo** - not multi-threaded conversations
+- ✅ **Store story notes and contextual memories** - things that might be useful to remember
+- ✅ **Implementation priority:** Start with one persona adapter → add mood filtering → orchestrator passive storage → cross-adapter retrieval
+
+**Open Questions:**
+1. **❓ Should we use metadata filtering for memories?**
+   - e.g., `adapter`, `mood`, `thread_id` fields for filtering
+
+2. **What's the SQLite schema for conversation threads?**
+   - Need: `thread_id`, `message_id`, `role`, `content`, `adapter`, `mood`, `timestamp`
+
+3. **Should we implement memory pruning?**
+   - Delete old/irrelevant memories to keep DB fast
+
+**Technical Details:**
+- Context window problem: TinyLlama only has 2048 tokens (~1500 words)
+- Token budget allocation across system prompt, RAG context, history, and output
+
+**Adapter-Specific Memory Strategies:**
+```
+Orchestrator:
+  - No RAG (too slow for routing)
+  - Last 2-3 messages only
+  - Fast routing priority
+
+Persona (FOCUSED):
+  - Last 5 messages
+  - Top-3 RAG results
+  - Short responses = more context room
+
+Persona (CREATIVE):
+  - Last 3 messages
+  - Top-5 RAG results
+  - Long responses = less history room
+
+Persona (THINKING):
+  - Last 7 messages
+  - Top-5 RAG results
+  - Step-by-step analysis needs
+```
+
+**RAG Integration Flow:**
+```
+EMBED query → QUERY vector DB → RETRIEVE history →
+BUILD PROMPT → SEND TO MODEL → EMBED & STORE response
+```
+
+**Implementation Priority:**
+1. Get memory working with ONE persona adapter (no mood switching)
+2. Add mood-specific filtering
+3. Add orchestrator memory (passive storage only)
+4. Add cross-adapter memory retrieval
+
+**Cross-Adapter Learning:**
+- Orchestrator can see persona's past conversations for better routing over time
+
+#### Now
+- **Document Decisions Already Made** - Record the architectural decisions we've already agreed on (see decisions above ✅)
+
+#### Next
+- **Build RAG Pipeline Infrastructure** - Implement embed → query → retrieve flow with Annoy + SQLite
+
+#### Later
+- **Memory Pruning System** - Automatically remove old or irrelevant memories
+- **Cross-Adapter Memory Retrieval** - Allow orchestrator to learn from persona conversations
+
+---
+
+### Mental Models
+
+#### Backlog
+*(Empty)*
+
+#### Now
+- **Expand Training Data Based on V2 Test Results**
+  - **Priority 1:** Query vs Command detection
+    - "Is X on my list?" vs "Add X to my list"
+  - **Priority 2:** Model Escalation understanding
+    - "I need a more powerful model", "phone home and ask Claude..."
+  - **Priority 3:** Structured Message Extraction
+    - Recipient fields for texts/emails
+  - **Priority 4:** Opinion Chat Routing
+    - "What do you think about X?" → chat mode
+
+#### Next
+- **Retrain Adapters with Expanded Dataset** - Fine-tune orchestrator_adapter_v3 and persona_adapter_v2
+- **Expand Test Suite to 50+ Prompts** - Add edge cases and challenging scenarios to validation
+
+#### Later
+- **Train Mood-Specific Persona Adapters** - Separate adapters for FOCUSED, CREATIVE, THINKING personalities
+
+---
+
+## How to Use This Document
+
+### For Contributors
+1. Check your workgroup's **Now** section for current priorities
+2. Review **Backlog** for design decisions that need input
+3. Update `_data.json` to reflect progress
+4. Link session notes and PRs to relevant tasks
+
+### For Project Leads
+1. Review **Project Overview** for cross-team dependencies
+2. Move items between Now/Next/Later as priorities shift
+3. Add new items to workgroup backlogs
+4. Ensure _data.json stays in sync with roadmap.mdx
+
+### Updating This Document
+All task data is centralized in `_data.json`. When you update tasks:
+1. Edit `documentation/content/docs/project-management/_data.json`
+2. Changes automatically propagate to all views
+3. This page, roadmap, and workgroup pages all reference the same source
+
+---
+
+## Related Documentation
+
+- [Project Roadmap](/docs/project-docs/roadmap) - Detailed phase breakdown
+- [Session Notes](/docs/sessions) - Development logs and decisions
+- [Adapter Training V2 Results](/docs/sessions/adapter-training-v2) - Latest test analysis

@@ -1,0 +1,5 @@
+{"text": "<|im_start|>user\nCan you play some music that's good for coding?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"play_music\", \"genre\": \"coding\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI need to remember to buy milk on my way home.<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"create_reminder\", \"content\": \"buy milk\"}<|im_end|>"}
+{"text": "<|im_start|>user\nWhat's the latest news about the new Llama 3 model?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"search_news\", \"topic\": \"Llama 3 model\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI'm feeling really stressed out right now.<|im_end|>\n<|im_start|>assistant\n{\"action\": \"chat\"}<|im_end|>"}
+{"text": "<|im_start|>user\nCan you write a poem about a sad robot?<|im_end|>\n<|im_start|>assistant\n{\"action\": \"chat\"}<|im_end|>"}

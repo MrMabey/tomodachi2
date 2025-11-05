@@ -749,95 +749,10 @@
       <div class="toolbox-button">🧰</div>
       <div class="toolbox-options">
         <div class="toolbox-option" data-panel="chat">💬</div>
-        <div class="toolbox-option" data-panel="inference">🎛️</div>
         <div class="toolbox-option" data-panel="mood">🎭</div>
         <div class="toolbox-option" data-panel="status">📊</div>
         <div class="toolbox-option" data-action="memories">🧠</div>
         <div class="toolbox-option" data-panel="smartknob">🎛️</div>
-      </div>
-    </div>
-
-    <div class="side-panel" id="inferencePanel" data-panel="inference">
-      <div class="panel-header">
-        <h2>🎛️ Inference Parameters</h2>
-        <button class="close-panel" onclick="closePanel()">×</button>
-      </div>
-      <div class="panel-content">
-        <div class="param-group">
-          <label>Temperature: <span class="param-value" id="tempValue">0.7</span></label>
-          <input
-            type="range"
-            id="temperature"
-            min="0"
-            max="2"
-            step="0.1"
-            value="0.7"
-            oninput="updateParam('temperature', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Max Tokens: <span class="param-value" id="tokensValue">150</span></label>
-          <input
-            type="range"
-            id="maxTokens"
-            min="10"
-            max="500"
-            step="10"
-            value="150"
-            oninput="updateParam('max_new_tokens', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Top-K: <span class="param-value" id="topkValue">50</span></label>
-          <input
-            type="range"
-            id="topK"
-            min="1"
-            max="100"
-            step="1"
-            value="50"
-            oninput="updateParam('top_k', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Top-P: <span class="param-value" id="toppValue">0.95</span></label>
-          <input
-            type="range"
-            id="topP"
-            min="0"
-            max="1"
-            step="0.05"
-            value="0.95"
-            oninput="updateParam('top_p', this.value)"
-          >
-        </div>
-
-        <div class="checkbox-group">
-          <input
-            type="checkbox"
-            id="doSample"
-            checked
-            onchange="updateParam('do_sample', this.checked)"
-          >
-          <label for="doSample">Enable Sampling</label>
-        </div>
-
-        <div class="checkbox-group">
-          <input
-            type="checkbox"
-            id="moodMode"
-            checked
-            onchange="toggleMoodMode(this.checked)"
-          >
-          <label for="moodMode">Mood Controls Parameters</label>
-        </div>
-
-        <button class="btn btn-primary" onclick="applyParameters()" style="width: 100%;">
-          Apply Parameters
-        </button>
       </div>
     </div>
 
@@ -1063,15 +978,6 @@
           <span class="status-value" id="memoryOldest" style="font-size: 0.85em;">-</span>
         </div>
 
-        <div style="margin: 20px 0; padding-top: 15px; border-top: 1px solid #ddd;">
-          <h3 style="color: #333; font-size: 1.1em; margin-bottom: 10px;">🎛️ Smart Knob</h3>
-        </div>
-
-        <div class="status-item" id="knobStatus">
-          <span class="status-label">Button Status</span>
-          <span class="status-value" id="knobIndicator" style="color: #888;">Waiting...</span>
-        </div>
-
         <button class="btn btn-secondary" onclick="unloadModel()" style="width: 100%; margin-top: 10px;">
           Unload Model
         </button>
@@ -1092,44 +998,23 @@
           </p>
         </div>
 
-        <!-- Button Status -->
+        <!-- Polling Control -->
         <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-          <div style="color: white; display: flex; justify-content: space-between; align-items: center;">
+          <div style="color: white; margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="knobPollingToggle" checked onchange="toggleKnobPolling()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+              <span style="font-weight: bold;">Enable Knob Polling</span>
+            </label>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.85em; margin-top: 8px; margin-left: 28px;">
+              Continuously check for button presses every 500ms
+            </p>
+          </div>
+          <div style="color: white; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
             <span style="font-weight: bold;">Button Status:</span>
             <span id="knobButtonStatus" style="color: #888;">Waiting...</span>
           </div>
         </div>
 
-        <!-- TODO List -->
-        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
-          <h4 style="color: #0ff; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid rgba(0,255,255,0.2); padding-bottom: 10px;">
-            📋 Development TODO
-          </h4>
-
-          <!-- TODO Item 1 -->
-          <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <div style="color: white; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
-              <span style="font-size: 20px; margin-right: 10px;">☐</span>
-              <span>Voice Dictation Flow</span>
-            </div>
-            <div style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; padding-left: 30px;">
-              Press and hold button on knob → Dictate into knob → Release → Send to computer
-            </div>
-          </div>
-
-          <!-- TODO Item 2 -->
-          <div style="padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <div style="color: white; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
-              <span style="font-size: 20px; margin-right: 10px;">☐</span>
-              <span>ASCII Avatar Display</span>
-            </div>
-            <div style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; padding-left: 30px;">
-              AI ASCII depictions on the knob display
-              <br>
-              <span style="color: #0ff; font-family: monospace; font-size: 12px;">→ Check: ~/Desktop/ascii_ai/</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

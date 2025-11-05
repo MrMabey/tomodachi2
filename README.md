@@ -75,24 +75,30 @@ The startup script will:
 
 **First run takes ~2 minutes** to download TinyLlama model (~2GB).
 
-### 📦 Getting the Adapters (Optional but Recommended)
+### ⚠️ Important: Training Adapters
 
-To unlock Tomo's full personality and smart routing features, you need LoRA adapters. The system will function without them, but it will use the generic base model.
+**The adapter weights are NOT included in the repository.** You must train them locally to unlock Tomo's full capabilities (personality system, smart routing, command detection).
 
-You have two options:
+**Why?** Adapter weights are binary files (~100MB) that don't belong in git. Training from source data ensures reproducibility and keeps the repo clean.
 
-1.  **Train Locally (Recommended for Devs):** Generate your own adapters from the source data. This ensures you have the latest version.
-    ```bash
-    # This will take a while!
-    ./scripts/train_adapters.sh
-    ```
+**To generate adapters:**
+```bash
+# Train orchestrator (routes between chat/command)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/orchestrator_training_v2.jsonl \
+  --output_dir ai/orchestrator_adapter_v2
 
-2.  **Download Pre-Trained:** Get started quickly by downloading a pre-trained set.
-    ```bash
-    ./scripts/install_adapters.sh <URL_to_adapter_archive.tar.gz>
-    ```
+# Train persona (handles mood-based responses)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/persona_training.jsonl \
+  --output_dir ai/persona_adapter
+```
 
-For detailed instructions, see the **[Installation Guide](https://turtletuber.github.io/tomodachi/docs/getting-started/installation)** and **[Adapter Guide](https://turtletuber.github.io/tomodachi/docs/guides/adapters)**.
+**Training time:** ~10-30 minutes per adapter (depending on hardware).
+
+**Without adapters:** The system will still run but falls back to generic TinyLlama responses (no mood system, no smart routing).
+
+For more details, see the **[Adapter Guide](https://turtletuber.github.io/tomodachi/docs/guides/adapters)**.
 
 ---
 

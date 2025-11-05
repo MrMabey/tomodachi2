@@ -750,11 +750,24 @@ if (toolbox) {
 }
 
 // Poll for knob button presses
+let knobPollingEnabled = true;
+let knobPollingTimeout = null;
+
 async function pollKnobStatus() {
     const statusIndicator = document.getElementById('knobIndicator');
     const buttonStatus = document.getElementById('knobButtonStatus');
 
     if (!statusIndicator && !buttonStatus) return;
+
+    // Check if polling is enabled
+    if (!knobPollingEnabled) {
+        // Update status to show polling is disabled
+        if (buttonStatus) {
+            buttonStatus.textContent = 'Polling Disabled';
+            buttonStatus.style.color = '#ff9800';
+        }
+        return; // Don't schedule next poll
+    }
 
     try {
         const response = await fetch(`${API_BASE}/knob/status`);
@@ -788,9 +801,11 @@ async function pollKnobStatus() {
                 buttonStatus.style.fontWeight = 'bold';
 
                 setTimeout(() => {
-                    buttonStatus.textContent = 'Waiting...';
-                    buttonStatus.style.color = '#888';
-                    buttonStatus.style.fontWeight = 'normal';
+                    if (knobPollingEnabled) {
+                        buttonStatus.textContent = 'Waiting...';
+                        buttonStatus.style.color = '#888';
+                        buttonStatus.style.fontWeight = 'normal';
+                    }
                 }, 2000);
             }
 
@@ -800,8 +815,39 @@ async function pollKnobStatus() {
         console.error('Error polling knob status:', error);
     }
 
-    // Poll every 500ms
-    setTimeout(pollKnobStatus, 500);
+    // Poll every 500ms if still enabled
+    if (knobPollingEnabled) {
+        knobPollingTimeout = setTimeout(pollKnobStatus, 500);
+    }
+}
+
+// Toggle knob polling
+function toggleKnobPolling() {
+    const toggle = document.getElementById('knobPollingToggle');
+    const buttonStatus = document.getElementById('knobButtonStatus');
+
+    knobPollingEnabled = toggle.checked;
+
+    if (knobPollingEnabled) {
+        // Re-enable polling
+        if (buttonStatus) {
+            buttonStatus.textContent = 'Waiting...';
+            buttonStatus.style.color = '#888';
+        }
+        console.log('🎛️ Knob polling enabled');
+        pollKnobStatus(); // Restart polling
+    } else {
+        // Disable polling
+        if (knobPollingTimeout) {
+            clearTimeout(knobPollingTimeout);
+            knobPollingTimeout = null;
+        }
+        if (buttonStatus) {
+            buttonStatus.textContent = 'Polling Disabled';
+            buttonStatus.style.color = '#ff9800';
+        }
+        console.log('🎛️ Knob polling disabled');
+    }
 }
 
 // Voice Input
