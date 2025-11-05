@@ -22,8 +22,10 @@ export class AvatarSprite {
   private targetHeight: number
   private isDragging: boolean = false
   private isRoaming: boolean = true
+  private name: string
 
-  constructor(scene: THREE.Scene, avatarClass: any, position: THREE.Vector3) {
+  constructor(scene: THREE.Scene, avatarClass: any, position: THREE.Vector3, name: string = 'Avatar') {
+    this.name = name
     // Create avatar renderer instance
     this.avatarRenderer = new avatarClass(80)
     const canvas = this.avatarRenderer.getCanvas()
@@ -93,6 +95,10 @@ export class AvatarSprite {
 
   public getSprite(): THREE.Sprite {
     return this.sprite
+  }
+
+  public getName(): string {
+    return this.name
   }
 
   public startDrag() {
@@ -180,18 +186,18 @@ export class AvatarManager {
 
     // Create different avatar types at random positions
     const avatarTypes = [
-      { class: window.AvatarRenderer, pos: new THREE.Vector3(-5, 3, -5) },
-      { class: window.DragonAvatar, pos: new THREE.Vector3(5, 4, -5) },
-      { class: window.RobotAvatar, pos: new THREE.Vector3(-5, 3, 5) },
-      { class: window.GhostAvatar, pos: new THREE.Vector3(5, 4, 5) },
-      { class: window.AlienAvatar, pos: new THREE.Vector3(0, 5, -8) },
-      { class: window.PandaAvatar, pos: new THREE.Vector3(-8, 3, 0) },
-      { class: window.FlowBuddyAvatar, pos: new THREE.Vector3(8, 4, 0) }
+      { class: window.AvatarRenderer, pos: new THREE.Vector3(-5, 3, -5), name: 'Tomo' },
+      { class: window.DragonAvatar, pos: new THREE.Vector3(5, 4, -5), name: 'Dragon' },
+      { class: window.RobotAvatar, pos: new THREE.Vector3(-5, 3, 5), name: 'Robo' },
+      { class: window.GhostAvatar, pos: new THREE.Vector3(5, 4, 5), name: 'Ghosty' },
+      { class: window.AlienAvatar, pos: new THREE.Vector3(0, 5, -8), name: 'Zorp' },
+      { class: window.PandaAvatar, pos: new THREE.Vector3(-8, 3, 0), name: 'Panda' },
+      { class: window.FlowBuddyAvatar, pos: new THREE.Vector3(8, 4, 0), name: 'Flow' }
     ]
 
-    for (const { class: AvatarClass, pos } of avatarTypes) {
+    for (const { class: AvatarClass, pos, name } of avatarTypes) {
       if (AvatarClass) {
-        const avatar = new AvatarSprite(this.scene, AvatarClass, pos)
+        const avatar = new AvatarSprite(this.scene, AvatarClass, pos, name)
         this.avatars.push(avatar)
       }
     }

@@ -30,11 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close sidebar when clicking outside
     document.addEventListener('click', (e) => {
-        const chatPanel = document.getElementById('chatPanel');
         const toolbox = document.getElementById('toolbox');
+        const canvas = document.querySelector('canvas'); // 3D canvas element
 
-        // Check if click is outside sidebar and toolbox
-        if (chatPanel && !chatPanel.contains(e.target) && !toolbox.contains(e.target)) {
+        // Check if click is on a side panel or toolbox or canvas
+        const isOnPanel = e.target.closest('.side-panel');
+        const isOnToolbox = toolbox && toolbox.contains(e.target);
+        const isOnCanvas = canvas && canvas.contains(e.target);
+
+        // Only close if clicking outside all panels, toolbox, and canvas
+        if (!isOnPanel && !isOnToolbox && !isOnCanvas) {
             closePanel();
         }
     });
@@ -762,6 +767,164 @@ async function pollKnobStatus() {
     // Poll every 500ms
     setTimeout(pollKnobStatus, 500);
 }
+
+// ===== TODO CHECKLIST MANAGEMENT =====
+let todos = [];
+
+// Load todos from localStorage
+function loadTodos() {
+    const stored = localStorage.getItem('cabinTodos');
+    if (stored) {
+        todos = JSON.parse(stored);
+        renderTodos();
+    }
+}
+
+// Save todos to localStorage
+function saveTodos() {
+    localStorage.setItem('cabinTodos', JSON.stringify(todos));
+}
+
+// Add a new todo
+function addTodo() {
+    const input = document.getElementById('newTodoInput');
+    const text = input.value.trim();
+
+    if (text) {
+        todos.push({
+            id: Date.now(),
+            text: text,
+            completed: false
+        });
+        input.value = '';
+        saveTodos();
+        renderTodos();
+    }
+}
+
+// Toggle todo completion
+function toggleTodo(id, event) {
+    if (event) {
+        event.stopPropagation(); // Prevent closing the panel
+    }
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.completed = !todo.completed;
+        saveTodos();
+        renderTodos();
+    }
+}
+
+// Delete a todo
+function deleteTodo(id, event) {
+    if (event) {
+        event.stopPropagation(); // Prevent closing the panel
+    }
+    todos = todos.filter(t => t.id !== id);
+    saveTodos();
+    renderTodos();
+}
+
+// Render todos
+function renderTodos() {
+    const todoList = document.getElementById('todoList');
+    if (!todoList) return;
+
+    if (todos.length === 0) {
+        todoList.innerHTML = `
+            <div style="
+                text-align: center;
+                padding: 40px 20px;
+                color: rgba(255,255,255,0.5);
+                font-style: italic;
+            ">
+                No tasks yet. Add one above!
+            </div>
+        `;
+        return;
+    }
+
+    todoList.innerHTML = todos.map(todo => `
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        ">
+            <input
+                type="checkbox"
+                ${todo.completed ? 'checked' : ''}
+                onchange="toggleTodo(${todo.id}, event)"
+                style="
+                    width: 20px;
+                    height: 20px;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                "
+            />
+            <span style="
+                flex: 1;
+                color: white;
+                ${todo.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}
+            ">
+                ${todo.text}
+            </span>
+            <button
+                onclick="deleteTodo(${todo.id}, event)"
+                style="
+                    background: rgba(244, 67, 54, 0.8);
+                    border: none;
+                    color: white;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    transition: background 0.2s;
+                "
+                onmouseover="this.style.background='rgba(244, 67, 54, 1)'"
+                onmouseout="this.style.background='rgba(244, 67, 54, 0.8)'"
+            >
+                ×
+            </button>
+        </div>
+    `).join('');
+}
+
+// Allow Enter key to add todo
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('newTodoInput');
+    if (input) {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+    }
+    loadTodos();
+});
+
+// Tab key focuses checklist input when panel is open
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        const checklistPanel = document.getElementById('checklistPanel');
+        const input = document.getElementById('newTodoInput');
+
+        // If checklist panel is open, focus the input
+        if (checklistPanel && checklistPanel.classList.contains('active') && input) {
+            e.preventDefault(); // Prevent default tab behavior
+            input.focus();
+        }
+    }
+});
 
 console.log('🏕️ Campground UI loaded successfully');
 console.log('Keyboard shortcuts:');

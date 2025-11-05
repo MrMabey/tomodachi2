@@ -613,9 +613,33 @@
       .indicator.offline {
         background: #f44336;
       }
+
+      /* Avatar Name Tooltip */
+      #avatarTooltip {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      #avatarTooltip.visible {
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
+    <!-- Avatar Name Tooltip -->
+    <div id="avatarTooltip"></div>
+
     <!-- Performance HUD -->
     <div class="perf-hud">
       <span class="perf-hud-label">⚡</span>
@@ -672,6 +696,7 @@
         <div class="toolbox-option" data-panel="inference">🎛️</div>
         <div class="toolbox-option" data-panel="mood">🎭</div>
         <div class="toolbox-option" data-panel="status">📊</div>
+        <div class="toolbox-option" data-panel="checklist">📝</div>
         <div class="toolbox-option" data-action="memories">🧠</div>
         <div class="toolbox-option" data-panel="smartknob">🎛️</div>
       </div>
@@ -862,6 +887,49 @@
         <button class="btn btn-secondary" onclick="unloadModel()" style="width: 100%; margin-top: 10px;">
           Unload Model
         </button>
+      </div>
+    </div>
+
+    <!-- Checklist Panel -->
+    <div class="side-panel" id="checklistPanel" data-panel="checklist">
+      <div class="panel-header">
+        <h2>📝 Cabin Checklist</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content" style="padding: 20px;">
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">My To-Do's</h3>
+          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input
+              type="text"
+              id="newTodoInput"
+              placeholder="Add a new task..."
+              style="
+                flex: 1;
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 14px;
+                outline: none;
+              "
+              onfocus="this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.boxShadow='0 0 20px rgba(139, 92, 246, 0.2)'"
+              onblur="this.style.borderColor='rgba(255,255,255,0.3)'; this.style.boxShadow='none'"
+            />
+            <button
+              onclick="addTodo()"
+              class="btn btn-primary"
+              style="padding: 10px 20px; white-space: nowrap;"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div id="todoList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Todos will be added here -->
+        </div>
       </div>
     </div>
 

@@ -16,6 +16,8 @@ export class IsometricScene {
   private isDragging: boolean = false
   private dragPlane: THREE.Plane
   private dragOffset: THREE.Vector3
+  private hoveredAvatar: any = null
+  private tooltip: HTMLElement
 
   constructor() {
     this.clock = new THREE.Clock()
@@ -23,6 +25,9 @@ export class IsometricScene {
     this.mouse = new THREE.Vector2()
     this.dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
     this.dragOffset = new THREE.Vector3()
+
+    // Get tooltip element
+    this.tooltip = document.getElementById('avatarTooltip')!
 
     // Create scene
     this.scene = new THREE.Scene()
@@ -166,6 +171,34 @@ export class IsometricScene {
       // Update raycaster
       this.raycaster.setFromCamera(this.mouse, this.camera)
 
+      // Check for cabin click first
+      const cabin = this.campground.getCabin()
+      const cabinObjects: THREE.Object3D[] = []
+      cabin.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          cabinObjects.push(child)
+        }
+      })
+
+      const cabinIntersects = this.raycaster.intersectObjects(cabinObjects)
+      if (cabinIntersects.length > 0) {
+        // Clicked on cabin - open checklist panel
+        event.stopPropagation() // Prevent close-panel logic from triggering
+        const checklistPanel = document.getElementById('checklistPanel')
+        if (checklistPanel) {
+          const isAlreadyOpen = checklistPanel.classList.contains('active')
+          // Close other panels
+          document.querySelectorAll('.side-panel').forEach(panel => {
+            panel.classList.remove('active')
+          })
+          // Toggle or open the checklist panel
+          if (!isAlreadyOpen) {
+            checklistPanel.classList.add('active')
+          }
+        }
+        return // Don't check for avatar clicks
+      }
+
       // Get all avatar sprites
       const avatars = this.avatarManager.getAvatars()
       const sprites = avatars.map(avatar => avatar.getSprite())
@@ -197,8 +230,6 @@ export class IsometricScene {
     }
 
     const onMouseMove = (event: MouseEvent) => {
-      if (!this.isDragging || !this.draggedAvatar) return
-
       // Update mouse position
       this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
       this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -206,13 +237,45 @@ export class IsometricScene {
       // Update raycaster
       this.raycaster.setFromCamera(this.mouse, this.camera)
 
-      // Calculate new position on the drag plane
-      const intersectPoint = new THREE.Vector3()
-      this.raycaster.ray.intersectPlane(this.dragPlane, intersectPoint)
+      if (this.isDragging && this.draggedAvatar) {
+        // Handle dragging
+        const intersectPoint = new THREE.Vector3()
+        this.raycaster.ray.intersectPlane(this.dragPlane, intersectPoint)
 
-      if (intersectPoint) {
-        intersectPoint.add(this.dragOffset)
-        this.draggedAvatar.setPosition(intersectPoint.x, intersectPoint.y, intersectPoint.z)
+        if (intersectPoint) {
+          intersectPoint.add(this.dragOffset)
+          this.draggedAvatar.setPosition(intersectPoint.x, intersectPoint.y, intersectPoint.z)
+        }
+      } else {
+        // Handle hovering
+        const avatars = this.avatarManager.getAvatars()
+        const sprites = avatars.map(avatar => avatar.getSprite())
+        const intersects = this.raycaster.intersectObjects(sprites)
+
+        if (intersects.length > 0) {
+          const sprite = intersects[0].object as THREE.Sprite
+          const avatar = avatars.find(a => a.getSprite() === sprite)
+
+          if (avatar && avatar !== this.hoveredAvatar) {
+            this.hoveredAvatar = avatar
+            this.tooltip.textContent = avatar.getName()
+            this.tooltip.classList.add('visible')
+            canvas.style.cursor = 'grab'
+          }
+
+          // Update tooltip position
+          this.tooltip.style.left = `${event.clientX + 15}px`
+          this.tooltip.style.top = `${event.clientY + 15}px`
+        } else if (this.hoveredAvatar) {
+          // No longer hovering
+          this.hoveredAvatar = null
+          this.tooltip.classList.remove('visible')
+          canvas.style.cursor = 'default'
+        } else {
+          // Update tooltip position even when hovering nothing (for smooth transitions)
+          this.tooltip.style.left = `${event.clientX + 15}px`
+          this.tooltip.style.top = `${event.clientY + 15}px`
+        }
       }
     }
 
@@ -225,10 +288,20 @@ export class IsometricScene {
       }
     }
 
+    const onMouseLeave = () => {
+      onMouseUp() // Stop dragging if mouse leaves canvas
+
+      // Hide tooltip when mouse leaves canvas
+      if (this.hoveredAvatar) {
+        this.hoveredAvatar = null
+        this.tooltip.classList.remove('visible')
+      }
+    }
+
     canvas.addEventListener('mousedown', onMouseDown)
     canvas.addEventListener('mousemove', onMouseMove)
     canvas.addEventListener('mouseup', onMouseUp)
-    canvas.addEventListener('mouseleave', onMouseUp) // Stop dragging if mouse leaves canvas
+    canvas.addEventListener('mouseleave', onMouseLeave)
   }
 
   public getScene(): THREE.Scene {
