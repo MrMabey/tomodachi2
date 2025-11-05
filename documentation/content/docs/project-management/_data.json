@@ -213,7 +213,20 @@
     "mental-models": {
       "name": "Mental Models",
       "description": "Adapter training, fine-tuning, and model optimization",
-      "backlog": [],
+      "backlog": [
+        {
+          "id": "models-qa-opinion-routing",
+          "title": "Q&A: Should opinion questions route to chat or command?",
+          "description": "Testing shows orchestrator incorrectly routes opinion questions to COMMAND mode",
+          "priority": "high",
+          "examples": [
+            "User: 'What's your favorite color?'",
+            "Current: Mode=COMMAND, Intent=get_favorite_color",
+            "Expected: Mode=CHAT (conversational response with personality)",
+            "Issue: Questions asking for Tomo's opinion/preferences should route to chat, not command execution"
+          ]
+        }
+      ],
       "now": [
         {
           "id": "models-training-data-expansion",

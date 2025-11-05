@@ -2,19 +2,13 @@
   "title": "Documentation",
   "pages": [
     "index",
-    "---Getting Started---",
     "getting-started",
-    "---Concepts---",
+    "project-management",
     "concepts",
-    "---Project Documentation---",
     "project-docs",
-    "---Systems---",
     "systems",
-    "---Guides---",
     "guides",
-    "---Development---",
     "development",
-    "---Session Notes---",
     "sessions"
   ]
 }
