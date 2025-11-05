@@ -258,27 +258,8 @@ export class IsometricScene {
   }
 
   private setupHUDControls() {
-    window.addEventListener('keydown', (event: KeyboardEvent) => {
-      // H key to toggle HUD arm
-      if (event.key === 'h' || event.key === 'H') {
-        this.mechanicalArm.toggle()
-        console.log(`🦾 HUD Arm ${this.mechanicalArm.getIsDeployed() ? 'deployed' : 'retracted'}`)
-      }
-
-      // Number keys to change tint
-      const tintMap: Record<string, any> = {
-        '1': 'clear',
-        '2': 'orange',
-        '3': 'green',
-        '4': 'yellow',
-        '5': 'white',
-      }
-
-      if (tintMap[event.key]) {
-        this.mechanicalArm.setTint(tintMap[event.key])
-        console.log(`🎨 HUD Tint: ${tintMap[event.key]}`)
-      }
-    })
+    // Mechanical arm is now controlled by side panel opening/closing
+    // No keyboard controls needed
   }
 
   public getMechanicalArm(): MechanicalArm {

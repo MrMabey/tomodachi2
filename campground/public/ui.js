@@ -419,6 +419,12 @@ function openPanel(panelName) {
     if (panel) {
         panel.classList.add('active');
         currentPanel = panelName;
+
+        // Deploy mechanical arm when panel opens
+        if (window.campgroundScene) {
+            window.campgroundScene.getMechanicalArm().deploy();
+            console.log('🦾 Mechanical arm deployed with panel');
+        }
     }
 
     // Update active state on toolbox options
@@ -438,6 +444,13 @@ function closePanel() {
     document.querySelectorAll('.toolbox-option').forEach(opt => {
         opt.classList.remove('active');
     });
+
+    // Retract mechanical arm when panel closes
+    if (window.campgroundScene) {
+        window.campgroundScene.getMechanicalArm().retract();
+        console.log('🦾 Mechanical arm retracted with panel');
+    }
+
     currentPanel = null;
 }
 

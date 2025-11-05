@@ -28,6 +28,4 @@ animate()
 
 console.log('🏕️ Base Camp initializing...')
 console.log('🎀 Flow Buddy is ready!')
-console.log('🦾 Mechanical HUD Arm controls:')
-console.log('   H - Toggle arm deployment')
-console.log('   1-5 - Change HUD tint (1=clear, 2=orange, 3=green, 4=yellow, 5=white)')
+console.log('🦾 Mechanical HUD Arm: Attached to side panels')

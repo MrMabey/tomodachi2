@@ -55,12 +55,12 @@
         font-size: 20px;
       }
 
-      /* Side Panels - Glassmorphism Sidebar */
+      /* Side Panels - With 3D Mechanical Arm */
       .side-panel {
         position: fixed;
         left: -450px;
         top: 20px;
-        bottom: 20px;
+        bottom: 8%;
         width: 400px;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(20px);
@@ -71,7 +71,7 @@
             0 20px 40px rgba(0, 0, 0, 0.1),
             inset 0 0 20px rgba(255, 255, 255, 0.05);
         color: white;
-        transition: left 0.3s ease;
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1000;
         overflow: hidden;
         display: flex;
@@ -80,6 +80,19 @@
 
       .side-panel.active {
         left: 20px;
+        border-left: 3px solid rgba(0, 255, 255, 0.6);
+        box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            inset 0 0 20px rgba(255, 255, 255, 0.05),
+            -8px 0 30px rgba(0, 255, 255, 0.4),
+            inset -2px 0 20px rgba(0, 255, 255, 0.2);
+        animation: hologramFlicker 0.1s ease-in;
+      }
+
+      @keyframes hologramFlicker {
+        0% { opacity: 0.7; }
+        50% { opacity: 0.9; }
+        100% { opacity: 1; }
       }
 
       .panel-header {

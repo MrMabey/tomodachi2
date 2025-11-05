@@ -59,13 +59,12 @@ export class MechanicalArm {
 
     this.armGroup = new THREE.Group()
 
-    // Position in screen space (bottom-left quarter)
-    // Negative X = left, Negative Y = bottom
-    // Adjust these values to position the arm where you want
-    this.armGroup.position.set(-20.5, -7, 0)
+    // Position at bottom of side panel (left side of screen)
+    // Will be attached to panel bottom when panel is active
+    this.armGroup.position.set(-20.5, -9, 0)
 
-    // Scale up the entire arm 4x
-    this.armGroup.scale.set(4, 4, 4)
+    // Scale down for panel attachment
+    this.armGroup.scale.set(2, 2, 2)
 
     this.createBaseJoint()
     this.createLowerArm()
@@ -77,13 +76,10 @@ export class MechanicalArm {
 
     this.hudScene.add(this.armGroup)
 
-    console.log('🦾 HUD Arm initialized in screen space at:', this.armGroup.position)
-    console.log('🦾 HUD Scene children count:', this.hudScene.children.length)
-    console.log('🦾 Arm Group children count:', this.armGroup.children.length)
+    console.log('🦾 HUD Arm initialized (attached to side panel)')
 
-    // Start deployed for testing
-    this.deploy()
-    console.log('🦾 Arm deployed on startup for visibility testing')
+    // Start retracted - will deploy when panel opens
+    this.retract()
   }
 
   private createBaseJoint(): void {
@@ -225,8 +221,9 @@ export class MechanicalArm {
   }
 
   private createBeam(): void {
-    // Holographic projection beam
-    const beamGeometry = new THREE.PlaneGeometry(3, 0.05)
+    // Holographic projection beam pointing toward side panel
+    // Shorter beam to just reach the panel
+    const beamGeometry = new THREE.PlaneGeometry(4, 0.05)
     const beamMaterial = new THREE.MeshStandardMaterial({
       color: 0x00ffff,
       emissive: 0x00ffff,
@@ -236,11 +233,11 @@ export class MechanicalArm {
       side: THREE.DoubleSide,
     })
     this.beamLight = new THREE.Mesh(beamGeometry, beamMaterial)
-    this.beamLight.position.set(4.2, 0, 0.2)
+    this.beamLight.position.set(2.5, 0, 0.2)
     this.armGroup.add(this.beamLight)
 
     // Add animated scan lines
-    const scanLineGeometry = new THREE.PlaneGeometry(3, 0.01)
+    const scanLineGeometry = new THREE.PlaneGeometry(4, 0.01)
     const scanLineMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xffffff,
@@ -255,74 +252,28 @@ export class MechanicalArm {
   }
 
   private createHUDWindow(): void {
-    // Transparent floating window
-    const windowGeometry = new THREE.PlaneGeometry(3, 2)
+    // No separate window - the side panel IS the holographic projection
+    // Create an invisible placeholder for compatibility
+    const windowGeometry = new THREE.PlaneGeometry(0.1, 0.1)
     const windowMaterial = new THREE.MeshStandardMaterial({
-      color: 0x88ccff,
-      emissive: 0x004488,
-      emissiveIntensity: 0.2,
       transparent: true,
-      opacity: 0.15,
-      side: THREE.DoubleSide,
-      metalness: 0.1,
-      roughness: 0.8,
+      opacity: 0,
     })
     this.hudWindow = new THREE.Mesh(windowGeometry, windowMaterial)
-    this.hudWindow.position.set(4.2, 1.2, 0)
-
-    // Add frame/border
-    const frameGeometry = new THREE.EdgesGeometry(windowGeometry)
-    const frameMaterial = new THREE.LineBasicMaterial({
-      color: 0x00ffff,
-      linewidth: 2,
-    })
-    const frame = new THREE.LineSegments(frameGeometry, frameMaterial)
-    this.hudWindow.add(frame)
-
-    // Corner markers (Halo-style)
-    const cornerSize = 0.15
-    const cornerMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00ffff,
-      emissive: 0x00ffff,
-      emissiveIntensity: 0.8,
-    })
-
-    const positions = [
-      [-1.5, 1, 0.01],
-      [1.5, 1, 0.01],
-      [-1.5, -1, 0.01],
-      [1.5, -1, 0.01],
-    ]
-
-    positions.forEach(([x, y, z]) => {
-      const corner = new THREE.Mesh(
-        new THREE.BoxGeometry(cornerSize, 0.02, 0.02),
-        cornerMaterial
-      )
-      corner.position.set(x, y, z)
-      this.hudWindow.add(corner)
-
-      const corner2 = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, cornerSize, 0.02),
-        cornerMaterial
-      )
-      corner2.position.set(x, y, z)
-      this.hudWindow.add(corner2)
-    })
-
+    this.hudWindow.visible = false
     this.armGroup.add(this.hudWindow)
   }
 
   private createParticles(): void {
-    // Digital particles flowing along the beam
-    const particleCount = 50
+    // Digital particles flowing upward toward the panel
+    const particleCount = 150  // More particles for consistent flow
     const positions = new Float32Array(particleCount * 3)
     const colors = new Float32Array(particleCount * 3)
 
     for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = Math.random() * 3
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.3
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.1
+      positions[i * 3] = (Math.random() - 0.5) * 4        // X: match beam width (4 units wide)
+      positions[i * 3 + 1] = Math.random() * 8 - 4        // Y: flowing upward (start from -4 to 4)
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.3  // Z: depth variation
 
       colors[i * 3] = 0
       colors[i * 3 + 1] = 1
@@ -342,7 +293,7 @@ export class MechanicalArm {
     })
 
     this.particleSystem = new THREE.Points(particleGeometry, particleMaterial)
-    this.particleSystem.position.set(2.7, 0, 0.2)
+    this.particleSystem.position.set(2.7, 4, 0.2)  // Moved up by 2 units
     this.armGroup.add(this.particleSystem)
   }
 
@@ -423,13 +374,13 @@ export class MechanicalArm {
     this.hudWindow.visible = eased > 0.01
     this.scanLine.visible = eased > 0.01
 
-    // Animate particles along beam
+    // Animate particles flowing upward toward the panel
     const positions = this.particleSystem.geometry.attributes.position as THREE.BufferAttribute
     for (let i = 0; i < positions.count; i++) {
-      let x = positions.getX(i)
-      x += deltaTime * 2 // Move particles along beam
-      if (x > 3) x = 0 // Reset to start
-      positions.setX(i, x)
+      let y = positions.getY(i)
+      y += deltaTime * 2 // Move particles upward
+      if (y > 4) y = -4 // Reset to bottom when reaching top
+      positions.setY(i, y)
     }
     positions.needsUpdate = true
 
