@@ -661,13 +661,25 @@ if (toolbox) {
         });
     });
 
-    // Scroll wheel rotation handler
+    // Scroll wheel rotation handler - works globally on campground view
     let debounceTimeout = null;
     let resetTimeout = null;
     let scrollAccumulator = 0;
 
-    toolbox.addEventListener('wheel', (e) => {
-        if (!toolboxExpanded) return;
+    // Listen to wheel events on the entire window
+    window.addEventListener('wheel', (e) => {
+        // Don't interfere with scrolling inside panels or chat
+        if (e.target.closest('.side-panel') || e.target.closest('input') || e.target.closest('textarea')) {
+            return;
+        }
+
+        // Auto-expand toolbox on first scroll
+        if (!toolboxExpanded) {
+            toolboxExpanded = true;
+            toolbox.classList.add('expanded');
+            updateOptionPositions();
+        }
+
         e.preventDefault();
 
         // Accumulate scroll delta to prevent jittery movement
@@ -739,8 +751,10 @@ if (toolbox) {
 
 // Poll for knob button presses
 async function pollKnobStatus() {
-    const indicator = document.getElementById('knobIndicator');
-    if (!indicator) return;
+    const statusIndicator = document.getElementById('knobIndicator');
+    const buttonStatus = document.getElementById('knobButtonStatus');
+
+    if (!statusIndicator && !buttonStatus) return;
 
     try {
         const response = await fetch(`${API_BASE}/knob/status`);
@@ -748,22 +762,39 @@ async function pollKnobStatus() {
 
         if (data.has_event) {
             // Button was pressed!
-            indicator.textContent = 'PRESSED!';
-            indicator.style.color = '#4caf50';
-            indicator.style.fontWeight = 'bold';
+            // Update Status Panel indicator
+            if (statusIndicator) {
+                statusIndicator.textContent = 'PRESSED!';
+                statusIndicator.style.color = '#4caf50';
+                statusIndicator.style.fontWeight = 'bold';
 
-            const statusDiv = document.getElementById('knobStatus');
-            statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
+                const statusDiv = document.getElementById('knobStatus');
+                if (statusDiv) {
+                    statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
+                }
+
+                setTimeout(() => {
+                    statusIndicator.textContent = 'Waiting...';
+                    statusIndicator.style.color = '#888';
+                    statusIndicator.style.fontWeight = 'normal';
+                    if (statusDiv) statusDiv.style.background = '';
+                }, 2000);
+            }
+
+            // Update Smart Knob Panel button status
+            if (buttonStatus) {
+                buttonStatus.textContent = 'PRESSED!';
+                buttonStatus.style.color = '#4caf50';
+                buttonStatus.style.fontWeight = 'bold';
+
+                setTimeout(() => {
+                    buttonStatus.textContent = 'Waiting...';
+                    buttonStatus.style.color = '#888';
+                    buttonStatus.style.fontWeight = 'normal';
+                }, 2000);
+            }
 
             console.log('🎛️ KNOB BUTTON PRESSED!', data.event);
-
-            // Reset after 2 seconds
-            setTimeout(() => {
-                indicator.textContent = 'Waiting...';
-                indicator.style.color = '#888';
-                indicator.style.fontWeight = 'normal';
-                statusDiv.style.background = '';
-            }, 2000);
         }
     } catch (error) {
         console.error('Error polling knob status:', error);

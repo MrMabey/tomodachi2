@@ -902,6 +902,87 @@
         <div id="moodDescription" style="padding: 10px; background: #f5f5f5; border-radius: 6px; font-size: 0.9em; margin-top: 10px;">
           Click a mood to see its description and parameters
         </div>
+
+        <!-- Inference Parameters -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.2);">
+          <h3 style="color: #fff; font-size: 1em; margin-bottom: 15px;">⚙️ Inference Parameters</h3>
+
+          <div class="param-group">
+            <label>Temperature: <span class="param-value" id="tempValue">0.7</span></label>
+            <input
+              type="range"
+              id="temperature"
+              min="0"
+              max="2"
+              step="0.1"
+              value="0.7"
+              oninput="updateParam('temperature', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Max Tokens: <span class="param-value" id="tokensValue">150</span></label>
+            <input
+              type="range"
+              id="maxTokens"
+              min="10"
+              max="500"
+              step="10"
+              value="150"
+              oninput="updateParam('max_new_tokens', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Top-K: <span class="param-value" id="topkValue">50</span></label>
+            <input
+              type="range"
+              id="topK"
+              min="1"
+              max="100"
+              step="1"
+              value="50"
+              oninput="updateParam('top_k', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Top-P: <span class="param-value" id="toppValue">0.95</span></label>
+            <input
+              type="range"
+              id="topP"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.95"
+              oninput="updateParam('top_p', this.value)"
+            >
+          </div>
+
+          <div class="checkbox-group">
+            <input
+              type="checkbox"
+              id="doSample"
+              checked
+              onchange="updateParam('do_sample', this.checked)"
+            >
+            <label for="doSample">Enable Sampling</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input
+              type="checkbox"
+              id="moodMode"
+              checked
+              onchange="toggleMoodMode(this.checked)"
+            >
+            <label for="moodMode">Mood Controls Parameters</label>
+          </div>
+
+          <button class="btn btn-primary" onclick="applyParameters()" style="width: 100%;">
+            Apply Parameters
+          </button>
+        </div>
       </div>
     </div>
 
@@ -997,117 +1078,56 @@
       </div>
     </div>
 
-    <!-- Smart Knob Simulator Panel -->
+    <!-- ESP32 Smart Knob Panel -->
     <div class="side-panel" id="smartknobPanel" data-panel="smartknob">
       <div class="panel-header">
-        <h2>🎛️ Smart Knob Simulator</h2>
+        <h2>🎛️ ESP32 Smart Knob</h2>
         <button class="close-panel" onclick="closePanel()">×</button>
       </div>
       <div class="panel-content" style="padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h3 style="color: white; margin-bottom: 10px;">Test Audio Recording</h3>
+          <h3 style="color: white; margin-bottom: 10px;">Hardware Integration</h3>
           <p style="color: rgba(255,255,255,0.7); font-size: 0.9em;">
-            Simulates the ESP32 smart knob hardware
+            ESP32-S3 Smart Knob with voice input
           </p>
         </div>
 
-        <!-- Smart Knob Switch (simulating LVGL switch) -->
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="
-            display: inline-block;
-            position: relative;
-            width: 100px;
-            height: 60px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid rgba(255,255,255,0.3);
-          " id="smartKnobSwitch" onclick="toggleSmartKnobRecording()">
-            <div style="
-              position: absolute;
-              top: 5px;
-              left: 5px;
-              width: 46px;
-              height: 46px;
-              background: white;
-              border-radius: 50%;
-              transition: all 0.3s;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            " id="smartKnobToggle"></div>
-          </div>
-          <div style="margin-top: 15px;">
-            <span style="
-              display: inline-block;
-              padding: 8px 20px;
-              background: rgba(255,255,255,0.1);
-              border-radius: 20px;
-              color: white;
-              font-weight: bold;
-              font-size: 14px;
-            " id="smartKnobStatus">OFF</span>
+        <!-- Button Status -->
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+          <div style="color: white; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold;">Button Status:</span>
+            <span id="knobButtonStatus" style="color: #888;">Waiting...</span>
           </div>
         </div>
 
-        <!-- Recording Stats -->
-        <div style="
-          background: rgba(255,255,255,0.1);
-          padding: 20px;
-          border-radius: 12px;
-          margin-bottom: 20px;
-        ">
-          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
-            <span>Recording Duration:</span>
-            <span id="recordingDuration">0:00</span>
-          </div>
-          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
-            <span>Audio Level:</span>
-            <div style="flex: 1; margin-left: 10px; background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
-              <div id="audioLevelBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.1s;"></div>
+        <!-- TODO List -->
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+          <h4 style="color: #0ff; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid rgba(0,255,255,0.2); padding-bottom: 10px;">
+            📋 Development TODO
+          </h4>
+
+          <!-- TODO Item 1 -->
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid rgba(255,255,255,0.3);">
+            <div style="color: white; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
+              <span style="font-size: 20px; margin-right: 10px;">☐</span>
+              <span>Voice Dictation Flow</span>
+            </div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; padding-left: 30px;">
+              Press and hold button on knob → Dictate into knob → Release → Send to computer
             </div>
           </div>
-          <div style="color: white; display: flex; justify-content: space-between;">
-            <span>Mic Status:</span>
-            <span id="micStatus">
-              <span class="indicator offline"></span> Not Recording
-            </span>
-          </div>
-        </div>
 
-        <!-- Audio Waveform Visualization -->
-        <div style="
-          background: rgba(0,0,0,0.3);
-          padding: 10px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-        ">
-          <canvas id="waveformCanvas" width="360" height="100" style="width: 100%; height: 100px;"></canvas>
-        </div>
-
-        <!-- Test Buttons -->
-        <div style="display: flex; gap: 10px; flex-direction: column;">
-          <button class="btn btn-primary" onclick="testUARTCommand('START_REC')" style="width: 100%;">
-            📡 Send START_REC
-          </button>
-          <button class="btn btn-secondary" onclick="testUARTCommand('STOP_REC')" style="width: 100%;">
-            📡 Send STOP_REC
-          </button>
-        </div>
-
-        <!-- UART Log -->
-        <div style="margin-top: 20px;">
-          <h4 style="color: white; margin-bottom: 10px; font-size: 14px;">UART Communication Log:</h4>
-          <div id="uartLog" style="
-            background: rgba(0,0,0,0.4);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #0f0;
-            max-height: 200px;
-            overflow-y: auto;
-          ">
-            <div style="color: #888;">Waiting for commands...</div>
+          <!-- TODO Item 2 -->
+          <div style="padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid rgba(255,255,255,0.3);">
+            <div style="color: white; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
+              <span style="font-size: 20px; margin-right: 10px;">☐</span>
+              <span>ASCII Avatar Display</span>
+            </div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; padding-left: 30px;">
+              AI ASCII depictions on the knob display
+              <br>
+              <span style="color: #0ff; font-family: monospace; font-size: 12px;">→ Check: ~/Desktop/ascii_ai/</span>
+            </div>
           </div>
         </div>
       </div>

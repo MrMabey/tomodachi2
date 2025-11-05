@@ -111,11 +111,12 @@ current_stack:
 
 file_structure:
  ai/: Models and training scripts
- campground/: 3D UI and avatars
+ campground/: 3D UI and frontend
  server/: Flask API backend
  memories/: Vector memory system
  smartKnob/: ESP32 hardware code
- docs/: Project documentation
+ documentation/: Project documentation site
+ scripts/: Automation scripts
 
 integration_plan:
  ascii_avatars: Move to campground/public/avatars/ascii/
@@ -123,15 +124,16 @@ integration_plan:
  scanner_ui: Create campground/src/scanner/
  world_expansion: campground/src/scene/zones/
 
-next_integrations[5]{feature,status,priority}:
+next_integrations[6]{feature,status,priority}:
  HUD_toggle_system,Not started,High
  ASCII_avatar_integration,Not started,High
+ Voice_input_(Whisper_STT),Not started,Medium
  Scanner_interface,Partially implemented,Medium
  World_zone_expansion,Not started,Medium
  Claude_API_integration,Not started,Low
 
 experimental_features:
- location: ~/Desktop/ascii_ai/
+ location: archived/ascii_ai/
  techniques: Braille,Particles,Fluid,Zalgo,Matrix
  modes: idle,thinking,working,fluid,matrix,celebrating
  integration_method: WebSocket or JavaScript port
