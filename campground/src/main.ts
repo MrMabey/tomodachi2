@@ -22,8 +22,10 @@ function animate() {
 
 animate()
 
-// Make Flow Buddy available globally for UI controls
+// Make Flow Buddy and Scene available globally for UI controls
 ;(window as any).flowBuddy = flowBuddy
+;(window as any).campgroundScene = scene
 
 console.log('🏕️ Base Camp initializing...')
 console.log('🎀 Flow Buddy is ready!')
+console.log('🦾 Mechanical HUD Arm: Attached to side panels')

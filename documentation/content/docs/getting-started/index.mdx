@@ -1,29 +1,113 @@
 ---
-title: Quick Start
-description: Get Tomodachi running in 5 minutes
+title: Installation & Setup
+description: Complete guide to getting Tomodachi running
 ---
 
-## TL;DR
+## TL;DR (Quick Start)
 
 ```bash
+git clone <repo-url>
+cd tomodachi
 ./start.sh
 ```
 
 Open http://localhost:5173 🏕️
 
-## Common Commands
+## Prerequisites
 
-### Start Everything
+- **Python 3.8+** - [Download](https://python.org)
+- **Node.js 16+** - [Download](https://nodejs.org)
+- **Git** (for cloning)
+
+## Step-by-Step Setup
+
+### 1. Clone Repository
+
 ```bash
-./start.sh
+git clone <repo-url>
+cd tomodachi
 ```
 
-### Check Setup
+### 2. Validate Your Setup
+
 ```bash
 python3 validate.py
 ```
 
-### View Config
+This checks for Python, Node, and required dependencies.
+
+### 3. ⚠️ Train Adapter Weights (Required for Full Functionality)
+
+**The adapter weights are NOT included in this repository.** You must train them locally to unlock Tomo's full capabilities (personality system, smart routing, command detection).
+
+**Why train locally?**
+- Adapter weights are binary files (~100MB) that don't belong in git
+- Training from source data ensures reproducibility
+- Keeps the repo clean and accessible
+- You get the latest training data improvements
+
+**Training commands:**
+
+```bash
+# Train orchestrator (routes between chat/command modes)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/orchestrator_training_v2.jsonl \
+  --output_dir ai/orchestrator_adapter_v2
+
+# Train persona (handles mood-based responses)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/persona_training.jsonl \
+  --output_dir ai/persona_adapter
+```
+
+**Training time:** ~10-30 minutes per adapter (depends on your hardware)
+
+**Hardware requirements:**
+- Works on CPU (slower) or GPU (faster)
+- ~4GB RAM minimum
+- ~100MB disk space per adapter
+
+**Without adapters:** Tomodachi will still run using the base TinyLlama model (auto-downloaded), but you won't have mood system or smart routing.
+
+For more details, see the **[Adapter Guide](/docs/guides/adapters)**.
+
+### 4. Start Everything
+
+```bash
+./start.sh
+```
+
+This automatically:
+- Creates virtual environments
+- Installs Python dependencies
+- Installs Node dependencies
+- Starts all three services (Memory, API, GUI)
+
+## Configuration (Optional)
+
+Create a `.env` file to customize ports:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` if you need custom ports:
+
+```bash
+# Example: Change ports to avoid conflicts
+TOMO_MEMORY_PORT=5010
+TOMO_API_PORT=8090
+TOMO_GUI_PORT=5180
+```
+
+## Common Commands
+
+### Check Setup Status
+```bash
+python3 validate.py
+```
+
+### View Current Config
 ```bash
 python3 config.py
 ```
@@ -38,56 +122,221 @@ tail -f logs/api.log
 tail -f logs/gui.log
 ```
 
-## Port Conflicts?
-
-Edit `.env`:
+### Disable Adapters (even if trained)
 ```bash
-TOMO_MEMORY_PORT=5010
-TOMO_API_PORT=8090
-TOMO_GUI_PORT=5180
+# In .env
+TOMO_USE_ADAPTERS=false
 ```
 
-## Missing Adapters?
+## Manual Setup (Advanced)
 
-**It's fine!** System uses base TinyLlama model. Everything still works.
+If you prefer to set up services individually:
 
-## Need Help?
+### Virtual Environments
 
-1. `python3 validate.py` - What's wrong?
-2. [Setup Guide](/docs/getting-started/installation) - Detailed guide
-3. `logs/` - Error details
+```bash
+# Main environment (API server)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r server/requirements.txt
+
+# Memory service environment (separate for annoy compatibility)
+cd memories
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+deactivate
+cd ..
+```
+
+**Important:** memories/ needs its own Python environment for annoy compatibility. Don't merge the venvs!
+
+### Frontend Dependencies
+
+```bash
+cd campground
+npm install
+cd ..
+```
+
+### Start Services Individually
+
+```bash
+# Terminal 1 - Memory Service
+cd memories
+source .venv/bin/activate
+FLASK_APP=edge_rag.web:create_app FLASK_RUN_PORT=5003 python3 -m flask run
+
+# Terminal 2 - API Server
+source venv/bin/activate
+python3 server/tomo_api.py
+
+# Terminal 3 - GUI
+cd campground
+npm run dev
+```
+
+## Troubleshooting
+
+### Port Conflicts
+
+If you get "port already in use" errors:
+
+1. **Option 1**: Change ports in `.env`
+   ```bash
+   TOMO_MEMORY_PORT=5010  # Pick any available port
+   TOMO_API_PORT=8090
+   TOMO_GUI_PORT=5180
+   ```
+
+2. **Option 2**: Let the system auto-allocate
+   - The config system will automatically find available ports if defaults are taken
+
+3. **Option 3**: Kill conflicting processes
+   ```bash
+   # Find what's using port 5003
+   lsof -i :5003
+   # Kill it
+   kill <PID>
+   ```
+
+### "annoy" Build Errors (macOS)
+
+If you see C++ compiler errors when installing annoy:
+
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Set C++ include path in .env
+CPLUS_INCLUDE_PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+```
+
+### "PEFT not found" Warnings
+
+This is fine! Tomodachi will use the base model without adapters.
+
+To install PEFT:
+```bash
+source venv/bin/activate
+pip install peft>=0.7.0
+```
+
+### Memory Service Won't Start
+
+Check the logs:
+```bash
+tail -f logs/memory.log
+```
+
+Common issues:
+- Port conflict → Change `TOMO_MEMORY_PORT` in `.env`
+- Missing dependencies → Run `cd memories && source .venv/bin/activate && pip install -r requirements.txt`
+
+### API Server Errors
+
+Check the logs:
+```bash
+tail -f logs/api.log
+```
+
+Common issues:
+- PyTorch not installed → `pip install torch>=2.0.0`
+- Transformers error → `pip install transformers>=4.35.0`
+
+### GUI Won't Load
+
+Check the logs:
+```bash
+tail -f logs/gui.log
+```
+
+Common issues:
+- Node modules → `cd campground && npm install`
+- Port conflict → Change `TOMO_GUI_PORT` in `.env`
 
 ## Architecture
 
+Tomodachi runs three services:
+
+1. **Memory Service** (Port 5003) - Vector database (Annoy + SQLite)
+2. **API Server** (Port 8080) - Flask backend with TinyLlama
+3. **Campground GUI** (Port 5173) - Three.js frontend (Vite dev server)
+
 ```
-Campground (5173)
-    ↓
-API Server (8080)
-    ↓
-TinyLlama + Memory (5003)
+┌─────────────────┐
+│  Campground UI  │  (Three.js - Port 5173)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   API Server    │  (Flask - Port 8080)
+└────┬────────┬───┘
+     │        │
+     ▼        ▼
+┌─────────┐  ┌──────────┐
+│ TinyLlama│  │ Memory   │  (Flask - Port 5003)
+│ + LoRA  │  │ (Annoy)  │
+└─────────┘  └──────────┘
 ```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TOMO_MEMORY_PORT` | 5003 | Memory service port |
+| `TOMO_API_PORT` | 8080 | API server port |
+| `TOMO_GUI_PORT` | 5173 | GUI port (Vite) |
+| `TOMO_BASE_MODEL` | TinyLlama/TinyLlama-1.1B-Chat-v1.0 | HuggingFace model |
+| `TOMO_USE_ADAPTERS` | auto | auto/true/false |
+| `TOMO_USE_MEMORY` | true | Enable memory system |
+| `TOMO_DEBUG` | false | Debug logging |
+
+## Next Steps
+
+Once running:
+
+1. **Open Campground**: http://localhost:5173
+2. **Explore the world**:
+   - 🏕️ Campground - Chat with AI friends
+   - 🌲 Sequoia - Knowledge visualization
+   - 🕳️ Caves - Memory archives
+   - 🌊 Waterfall - Data streams
+
+3. **Use the toolbox** (bottom-right):
+   - 💬 Chat - Open chat panel
+   - 🎭 Mood - Switch AI personalities
+   - 📊 Status - System monitoring
+   - 🧠 Memories - Memory admin
+   - 🎛️ Smart Knob - Hardware controls
 
 ## Development
 
-### Frontend
+To modify the project:
+
+- **Frontend**: Edit `campground/src/`, changes auto-reload
+- **API**: Edit `server/tomo_api.py`, restart API server
+- **Memory**: Edit `memories/edge_rag/`, restart memory service
+
+### Individual Service Development
+
+**Frontend:**
 ```bash
 cd campground
 npm run dev
 ```
 
-### API
+**API:**
 ```bash
 source venv/bin/activate
 python3 server/tomo_api.py
 ```
 
-### Memory
+**Memory:**
 ```bash
 cd memories
 source .venv/bin/activate
 FLASK_APP=edge_rag.web:create_app python3 -m flask run
 ```
 
----
-
-**That's it!** For more details, see the [full setup guide](/docs/getting-started/installation).
+Happy camping! 🏕️

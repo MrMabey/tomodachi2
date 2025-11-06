@@ -1,0 +1,268 @@
+{
+  "projectOverview": {
+    "now": [
+      {
+        "id": "adapter-training-v3",
+        "title": "Adapter Training V3 - Address Test Failures",
+        "description": "Add training data for query vs command detection and model escalation",
+        "priority": "high",
+        "workgroups": ["mental-models"]
+      },
+      {
+        "id": "memory-architecture-design",
+        "title": "Design Memory Architecture for Multi-Adapter System",
+        "description": "Define how memories are stored, filtered, and retrieved across orchestrator and persona adapters",
+        "priority": "high",
+        "workgroups": ["memories", "mental-models"]
+      }
+    ],
+    "next": [
+      {
+        "id": "memory-rag-implementation",
+        "title": "Implement RAG Pipeline for Persona Adapter",
+        "description": "Build embed → query → retrieve → inject flow for context-aware responses",
+        "priority": "medium",
+        "workgroups": ["memories", "mental-models"]
+      },
+      {
+        "id": "voice-input-whisper",
+        "title": "Voice Input Integration (Whisper STT)",
+        "description": "Integrate Whisper for speech-to-text via Smart Knob microphone",
+        "priority": "medium",
+        "workgroups": ["hardware", "automation"]
+      }
+    ],
+    "later": [
+      {
+        "id": "command-execution",
+        "title": "Command Execution Layer",
+        "description": "Build handlers for intents: add_to_list, take_note, phone_home, set_reminder",
+        "priority": "low",
+        "workgroups": ["automation", "memories"]
+      },
+      {
+        "id": "base-model-upgrade",
+        "title": "Evaluate Base Model Upgrade Path",
+        "description": "Research swapping TinyLlama for Gemma 2B when more compute available",
+        "priority": "low",
+        "workgroups": ["mental-models"]
+      }
+    ]
+  },
+  "workgroups": {
+    "frontend": {
+      "name": "Frontend",
+      "description": "Campground UI, web interfaces, and user experience",
+      "backlog": [],
+      "now": [],
+      "next": [
+        {
+          "id": "frontend-dark-mode",
+          "title": "Dark Mode Toggle",
+          "description": "Add dark/light theme switcher to Campground UI",
+          "priority": "low"
+        }
+      ],
+      "later": [
+        {
+          "id": "frontend-mobile-responsive",
+          "title": "Mobile-Responsive Design",
+          "description": "Optimize Campground UI for mobile devices",
+          "priority": "low"
+        },
+        {
+          "id": "frontend-pwa",
+          "title": "Progressive Web App (PWA)",
+          "description": "Enable offline functionality and installability",
+          "priority": "low"
+        }
+      ]
+    },
+    "hardware": {
+      "name": "Hardware",
+      "description": "ESP32-S3 Smart Knob, sensors, and physical integration",
+      "backlog": [],
+      "now": [
+        {
+          "id": "hardware-i2s-audio",
+          "title": "I2S Microphone Audio Recording",
+          "description": "Capture audio from ESP32-S3 digital microphone",
+          "priority": "high"
+        }
+      ],
+      "next": [
+        {
+          "id": "hardware-audio-streaming",
+          "title": "Stream Audio to Mac for Processing",
+          "description": "Send recorded audio over WiFi to Flask API for Whisper processing",
+          "priority": "medium"
+        }
+      ],
+      "later": [
+        {
+          "id": "hardware-haptic-feedback",
+          "title": "Haptic Feedback Integration",
+          "description": "Use DRV2605 motor driver for touch response",
+          "priority": "low"
+        },
+        {
+          "id": "hardware-mqtt",
+          "title": "MQTT Communication Protocol",
+          "description": "Alternative to HTTP for real-time hardware communication",
+          "priority": "low"
+        },
+        {
+          "id": "hardware-rpi5-deployment",
+          "title": "Raspberry Pi 5 Deployment",
+          "description": "Migrate from Mac development environment to RPi5 production",
+          "priority": "low"
+        }
+      ]
+    },
+    "automation": {
+      "name": "Automation",
+      "description": "Command execution, integrations, and workflow automation",
+      "backlog": [],
+      "now": [],
+      "next": [],
+      "later": [
+        {
+          "id": "automation-phone-home",
+          "title": "Phone Home to Claude/GPT",
+          "description": "API integration for complex task delegation to larger models",
+          "priority": "low"
+        },
+        {
+          "id": "automation-reminders",
+          "title": "Reminder System",
+          "description": "Time-based notifications and task reminders",
+          "priority": "low"
+        },
+        {
+          "id": "automation-email-text",
+          "title": "Email & Text Integration",
+          "description": "Send messages via external APIs",
+          "priority": "low"
+        }
+      ]
+    },
+    "memories": {
+      "name": "Memories",
+      "description": "Vector memory, SQLite, and data persistence",
+      "backlog": [
+        {
+          "id": "db-memory-architecture-decisions",
+          "title": "Memory Architecture Design Decisions",
+          "description": "Questions from memory team that need resolution",
+          "priority": "high",
+          "notes": [
+            "❓ NEEDS DECISION: Should we use metadata filtering for memories? (e.g., adapter, mood fields)",
+            "What's the SQLite schema for conversation threads? (Need: thread_id, message_id, role, content, adapter, mood, timestamp)",
+            "Should we implement memory pruning? (Delete old/irrelevant memories to keep DB fast)",
+            "Context window problem: TinyLlama only has 2048 tokens (~1500 words)",
+            "Token budget allocation across system prompt, RAG context, history, and output",
+            "Adapter-specific memory strategies:",
+            "  - Orchestrator: No RAG, last 2-3 messages only, fast routing",
+            "  - Persona (FOCUSED): Last 5 messages, top-3 RAG, short responses",
+            "  - Persona (CREATIVE): Last 3 messages, top-5 RAG, long responses",
+            "  - Persona (THINKING): Last 7 messages, top-5 RAG, step-by-step analysis",
+            "RAG integration flow: EMBED query → QUERY vector DB → RETRIEVE history → BUILD PROMPT → SEND TO MODEL → EMBED & STORE response",
+            "Cross-adapter learning: Orchestrator can see persona's past conversations for better routing over time",
+            "Implementation priority: 1) One persona adapter first, 2) Add mood filtering, 3) Add orchestrator passive storage, 4) Cross-adapter retrieval"
+          ]
+        }
+      ],
+      "now": [
+        {
+          "id": "db-memory-decisions-made",
+          "title": "Document Decisions Already Made",
+          "description": "Record the architectural decisions we've already agreed on",
+          "priority": "high",
+          "decisions": [
+            "✅ DECIDED: Orchestrator will NOT use RAG - speed matters for routing",
+            "✅ DECIDED: Adapter weights are generated locally, NOT hosted in repo (see README)",
+            "✅ DECIDED: Single thread for Tomo (not multi-threaded conversations)",
+            "✅ DECIDED: Store story notes and contextual memories that might be useful to remember",
+            "✅ DECIDED: Implementation priority: Start with one persona adapter, then add mood filtering, then orchestrator passive storage, finally cross-adapter retrieval"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "id": "db-rag-pipeline",
+          "title": "Build RAG Pipeline Infrastructure",
+          "description": "Implement embed → query → retrieve flow with Annoy + SQLite",
+          "priority": "medium"
+        }
+      ],
+      "later": [
+        {
+          "id": "db-memory-pruning",
+          "title": "Memory Pruning System",
+          "description": "Automatically remove old or irrelevant memories",
+          "priority": "low"
+        },
+        {
+          "id": "db-cross-adapter-memory",
+          "title": "Cross-Adapter Memory Retrieval",
+          "description": "Allow orchestrator to learn from persona conversations",
+          "priority": "low"
+        }
+      ]
+    },
+    "mental-models": {
+      "name": "Mental Models",
+      "description": "Adapter training, fine-tuning, and model optimization",
+      "backlog": [
+        {
+          "id": "models-qa-opinion-routing",
+          "title": "Q&A: Should opinion questions route to chat or command?",
+          "description": "Testing shows orchestrator incorrectly routes opinion questions to COMMAND mode",
+          "priority": "high",
+          "examples": [
+            "User: 'What's your favorite color?'",
+            "Current: Mode=COMMAND, Intent=get_favorite_color",
+            "Expected: Mode=CHAT (conversational response with personality)",
+            "Issue: Questions asking for Tomo's opinion/preferences should route to chat, not command execution"
+          ]
+        }
+      ],
+      "now": [
+        {
+          "id": "models-training-data-expansion",
+          "title": "Expand Training Data Based on V2 Test Results",
+          "description": "Add Priority 1 & 2 training examples from test analysis",
+          "priority": "high",
+          "details": {
+            "priority1": "Query vs Command - 'Is X on my list?' vs 'Add X to my list'",
+            "priority2": "Model Escalation - 'I need a more powerful model', 'phone home'",
+            "priority3": "Structured Message Extraction - recipient fields for texts/emails",
+            "priority4": "Opinion Chat Routing - 'What do you think about X?'"
+          }
+        }
+      ],
+      "next": [
+        {
+          "id": "models-retrain-adapters",
+          "title": "Retrain Adapters with Expanded Dataset",
+          "description": "Fine-tune orchestrator_adapter_v3 and persona_adapter_v2",
+          "priority": "medium"
+        },
+        {
+          "id": "models-test-suite-expansion",
+          "title": "Expand Test Suite to 50+ Prompts",
+          "description": "Add edge cases and challenging scenarios to validation",
+          "priority": "medium"
+        }
+      ],
+      "later": [
+        {
+          "id": "models-mood-specific-adapters",
+          "title": "Train Mood-Specific Persona Adapters",
+          "description": "Separate adapters for FOCUSED, CREATIVE, THINKING personalities",
+          "priority": "low"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,86 @@
+---
+title: Memories Workgroup
+description: Vector memory, SQLite, and data persistence
+---
+
+# 🧠 Memories
+
+Vector memory, SQLite, and data persistence
+
+## Backlog
+
+### Memory Architecture Design Decisions
+
+Critical questions from memory team:
+
+**Decisions Already Made:**
+- ✅ **Orchestrator will NOT use RAG** - speed matters for routing
+- ✅ **Adapter weights are generated locally** - NOT hosted in repo (see README)
+- ✅ **Single thread for Tomo** - not multi-threaded conversations
+- ✅ **Store story notes and contextual memories** - things that might be useful to remember
+- ✅ **Implementation priority:** Start with one persona adapter → add mood filtering → orchestrator passive storage → cross-adapter retrieval
+
+**Open Questions:**
+1. **❓ Should we use metadata filtering for memories?**
+   - e.g., `adapter`, `mood`, `thread_id` fields for filtering
+
+2. **What's the SQLite schema for conversation threads?**
+   - Need: `thread_id`, `message_id`, `role`, `content`, `adapter`, `mood`, `timestamp`
+
+3. **Should we implement memory pruning?**
+   - Delete old/irrelevant memories to keep DB fast
+
+**Technical Details:**
+- Context window problem: TinyLlama only has 2048 tokens (~1500 words)
+- Token budget allocation across system prompt, RAG context, history, and output
+
+**Adapter-Specific Memory Strategies:**
+```
+Orchestrator:
+  - No RAG (too slow for routing)
+  - Last 2-3 messages only
+  - Fast routing priority
+
+Persona (FOCUSED):
+  - Last 5 messages
+  - Top-3 RAG results
+  - Short responses = more context room
+
+Persona (CREATIVE):
+  - Last 3 messages
+  - Top-5 RAG results
+  - Long responses = less history room
+
+Persona (THINKING):
+  - Last 7 messages
+  - Top-5 RAG results
+  - Step-by-step analysis needs
+```
+
+**RAG Integration Flow:**
+```
+EMBED query → QUERY vector DB → RETRIEVE history →
+BUILD PROMPT → SEND TO MODEL → EMBED & STORE response
+```
+
+**Implementation Priority:**
+1. Get memory working with ONE persona adapter (no mood switching)
+2. Add mood-specific filtering
+3. Add orchestrator memory (passive storage only)
+4. Add cross-adapter memory retrieval
+
+**Cross-Adapter Learning:**
+- Orchestrator can see persona's past conversations for better routing over time
+
+## Now
+
+- **Document Decisions Already Made** - Record the architectural decisions we've already agreed on (see decisions above ✅)
+
+## Next
+
+- **Build RAG Pipeline Infrastructure** - Implement embed → query → retrieve flow with Annoy + SQLite
+
+## Later
+
+- **Memory Pruning System** - Automatically remove old or irrelevant memories
+- **Cross-Adapter Memory Retrieval** - Allow orchestrator to learn from persona conversations

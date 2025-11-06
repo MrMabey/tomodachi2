@@ -8,9 +8,9 @@ import argparse
 
 # --- Configuration ---
 base_model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-persona_router_adapter_dir = "./persona_router_adapter"
-orchestrator_adapter_dir = "./orchestrator_adapter"
-persona_adapter_dir = "./persona_adapter" # General purpose persona
+persona_router_adapter_dir = "ai/persona_router_adapter"
+orchestrator_adapter_dir = "ai/orchestrator_adapter_v2"
+persona_adapter_dir = "ai/persona_adapter" # General purpose persona
 
 # --- Mappings for future adapters ---
 ADAPTER_MAP = {

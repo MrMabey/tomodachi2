@@ -1,0 +1,48 @@
+---
+title: Mental Models Workgroup
+description: Adapter training, fine-tuning, and model optimization
+---
+
+# 🤖 Mental Models
+
+Adapter training, fine-tuning, and model optimization
+
+## Backlog
+
+### Q&A: Should opinion questions route to chat or command?
+
+Testing shows orchestrator incorrectly routes opinion questions to COMMAND mode.
+
+**Example:**
+- **User:** "What's your favorite color?"
+- **Current:** `Mode=COMMAND`, `Intent=get_favorite_color`
+- **Expected:** `Mode=CHAT` (conversational response with personality)
+
+**Issue:** Questions asking for Tomo's opinion/preferences should route to chat, not command execution.
+
+## Now
+
+### Expand Training Data Based on V2 Test Results
+
+Add Priority 1 & 2 training examples from test analysis:
+
+- **Priority 1:** Query vs Command detection
+  - "Is X on my list?" vs "Add X to my list"
+
+- **Priority 2:** Model Escalation understanding
+  - "I need a more powerful model", "phone home and ask Claude..."
+
+- **Priority 3:** Structured Message Extraction
+  - Recipient fields for texts/emails
+
+- **Priority 4:** Opinion Chat Routing
+  - "What do you think about X?" → chat mode
+
+## Next
+
+- **Retrain Adapters with Expanded Dataset** - Fine-tune orchestrator_adapter_v3 and persona_adapter_v2
+- **Expand Test Suite to 50+ Prompts** - Add edge cases and challenging scenarios to validation
+
+## Later
+
+- **Train Mood-Specific Persona Adapters** - Separate adapters for FOCUSED, CREATIVE, THINKING personalities

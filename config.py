@@ -68,19 +68,18 @@ DEFAULT_MEMORY_PORT = 5003
 DEFAULT_API_PORT = 8080
 DEFAULT_GUI_PORT = 5173
 
-# Try to use configured ports, fall back to finding available ones
+# Memory service port - this is for CONNECTING to an already-running service
+# Don't check availability since we don't start this service, we just connect to it
 MEMORY_PORT = get_int("TOMO_MEMORY_PORT", DEFAULT_MEMORY_PORT)
-if not is_port_available(MEMORY_PORT):
-    print(f"⚠️  Port {MEMORY_PORT} is in use, finding alternative...", file=sys.stderr)
-    MEMORY_PORT = find_available_port(DEFAULT_MEMORY_PORT + 1)
-    print(f"✓ Using port {MEMORY_PORT} for memory service", file=sys.stderr)
 
+# API server port - check availability since we're going to BIND to this port
 API_PORT = get_int("TOMO_API_PORT", DEFAULT_API_PORT)
 if not is_port_available(API_PORT):
     print(f"⚠️  Port {API_PORT} is in use, finding alternative...", file=sys.stderr)
     API_PORT = find_available_port(DEFAULT_API_PORT + 1)
     print(f"✓ Using port {API_PORT} for API server", file=sys.stderr)
 
+# GUI port - check availability since we're going to BIND to this port
 GUI_PORT = get_int("TOMO_GUI_PORT", DEFAULT_GUI_PORT)
 if not is_port_available(GUI_PORT):
     print(f"⚠️  Port {GUI_PORT} is in use, finding alternative...", file=sys.stderr)

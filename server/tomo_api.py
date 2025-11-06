@@ -219,8 +219,8 @@ def load_base_model():
         state.tokenizer = AutoTokenizer.from_pretrained(state.model_config["base_model_name"])
         state.base_model = AutoModelForCausalLM.from_pretrained(
             state.model_config["base_model_name"],
-            torch_dtype=torch.float32,
-            device_map="auto"
+            torch_dtype=torch.float16,
+            device_map="mps"
         )
         logger.info("Base model loaded successfully")
     return state.base_model, state.tokenizer
@@ -331,6 +331,11 @@ def process_orchestrator_decision(user_input):
         use_mood_params=False  # Disable mood influence for routing
     )
 
+    # Clean up the response string before parsing
+    # The model sometimes includes the <|im_end|> token, which breaks JSON parsing
+    if "<|im_end|>" in response:
+        response = response.split("<|im_end|>")[0]
+
     # Try to parse as JSON
     try:
         decision = json.loads(response)
@@ -426,8 +431,8 @@ def inference():
 
         # Stage 2: Route based on decision
         if decision.get("action") == "chat":
-            # Generate conversational response (memory disabled for now)
-            response, persona_latency, memories = process_chat_response(user_input, thread_id="default", use_memory=False)
+            # Generate conversational response with memory enabled
+            response, persona_latency, memories = process_chat_response(user_input, thread_id="default", use_memory=True)
             result["response"] = response
             result["persona_latency"] = persona_latency
             result["route"] = "chat"
@@ -732,6 +737,59 @@ def knob_status():
             "event": latest
         })
     return jsonify({"has_event": False})
+
+@app.route('/api/memory/metrics', methods=['GET'])
+def memory_metrics():
+    """Get memory storage metrics from the memory service"""
+    try:
+        resp = requests.get(f"{MEMORY_SERVICE_URL}/api/metrics", timeout=5)
+        resp.raise_for_status()
+        return jsonify(resp.json())
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"⚠️ Memory metrics unavailable (service may be offline): {e}")
+        return jsonify({
+            "error": "Memory service unavailable",
+            "total_documents": 0,
+            "total_size_mb": 0
+        }), 503
+    except Exception as e:
+        logger.error(f"Error fetching memory metrics: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/model/memory', methods=['GET'])
+def model_memory_usage():
+    """Get model memory usage statistics"""
+    try:
+        import psutil
+        import os
+
+        # Get current process memory
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+
+        # Convert to MB
+        rss_mb = memory_info.rss / (1024 * 1024)
+        vms_mb = memory_info.vms / (1024 * 1024)
+
+        # Check if model is loaded
+        model_loaded = state.base_model is not None
+
+        return jsonify({
+            "model_loaded": model_loaded,
+            "rss_mb": round(rss_mb, 2),  # Resident Set Size (actual RAM used)
+            "vms_mb": round(vms_mb, 2),  # Virtual Memory Size
+            "rss_human": f"{rss_mb:.1f} MB",
+            "process_id": os.getpid()
+        })
+    except ImportError:
+        return jsonify({
+            "error": "psutil not installed",
+            "model_loaded": state.base_model is not None,
+            "rss_human": "N/A (install psutil)"
+        }), 200
+    except Exception as e:
+        logger.error(f"Error fetching model memory: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     print("=" * 60)

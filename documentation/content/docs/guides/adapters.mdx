@@ -15,9 +15,59 @@ Tomodachi uses **two fine-tuned LoRA adapters** on top of the TinyLlama 1.1B bas
 **Without adapters**: Tomodachi falls back to the base TinyLlama model (still functional, just less specialized)
 **With adapters**: Full personality system and intelligent routing ✨
 
-## For Users: Installing Adapters
+## ⚠️ Important: Adapter Weights NOT Included
 
-### Quick Install
+**The adapter weights are NOT included in this repository.** You must either train them locally or obtain them from a distribution source.
+
+**Why aren't they in the repo?**
+- Adapter weights are binary files (~100MB total)
+- Binary files don't belong in git (bloats repo history)
+- Training from source ensures reproducibility
+- Keeps the repository clean and accessible
+
+## Option 1: Train Adapters Locally (Recommended)
+
+This is the **primary method** for getting adapter weights. Training from the source data ensures you have the latest version and understand the training process.
+
+### Training Commands
+
+```bash
+# Train orchestrator adapter (routes between chat/command modes)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/orchestrator_training_v2.jsonl \
+  --output_dir ai/orchestrator_adapter_v2
+
+# Train persona adapter (handles mood-based responses)
+python ai/scripts/fine_tune.py \
+  --dataset ai/training_data/persona_training.jsonl \
+  --output_dir ai/persona_adapter
+```
+
+### Training Time & Requirements
+
+- **Time**: ~10-30 minutes per adapter (depending on hardware)
+- **Hardware**: Works on CPU, faster with GPU
+- **Disk Space**: ~100MB per adapter for final weights
+- **Memory**: ~4GB RAM minimum
+
+### What Gets Created
+
+After training, you'll have:
+```
+ai/
+├── orchestrator_adapter_v2/
+│   ├── adapter_config.json
+│   ├── adapter_model.safetensors
+│   └── ...
+└── persona_adapter/
+    ├── adapter_config.json
+    ├── adapter_model.safetensors
+    └── ...
+```
+
+These directories are already in `.gitignore` - they won't be committed to git.
+
+## Option 2: Install Pre-trained Adapters
 
 If you have a download link from the project maintainer:
 

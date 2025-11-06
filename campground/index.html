@@ -55,12 +55,12 @@
         font-size: 20px;
       }
 
-      /* Side Panels - Glassmorphism Sidebar */
+      /* Side Panels - With 3D Mechanical Arm */
       .side-panel {
         position: fixed;
         left: -450px;
         top: 20px;
-        bottom: 20px;
+        bottom: 8%;
         width: 400px;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(20px);
@@ -71,7 +71,7 @@
             0 20px 40px rgba(0, 0, 0, 0.1),
             inset 0 0 20px rgba(255, 255, 255, 0.05);
         color: white;
-        transition: left 0.3s ease;
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1000;
         overflow: hidden;
         display: flex;
@@ -80,6 +80,19 @@
 
       .side-panel.active {
         left: 20px;
+        border-left: 3px solid rgba(0, 255, 255, 0.6);
+        box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            inset 0 0 20px rgba(255, 255, 255, 0.05),
+            -8px 0 30px rgba(0, 255, 255, 0.4),
+            inset -2px 0 20px rgba(0, 255, 255, 0.2);
+        animation: hologramFlicker 0.1s ease-in;
+      }
+
+      @keyframes hologramFlicker {
+        0% { opacity: 0.7; }
+        50% { opacity: 0.9; }
+        100% { opacity: 1; }
       }
 
       .panel-header {
@@ -110,91 +123,168 @@
         display: none;
       }
 
-      /* Messages container */
+      /* Messages container - takes remaining space */
       .chat-conversation {
         flex: 1;
         position: relative;
-        overflow: hidden;
+        overflow-y: auto; /* Enable vertical scrolling */
+        overflow-x: hidden;
         padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
-      /* Fade at top for messages sliding up */
+      /* Custom scrollbar styling */
+      .chat-conversation::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .chat-conversation::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+
+      .chat-conversation::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+      }
+
+      .chat-conversation::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      /* Fade at top for visual effect */
       .chat-conversation::before {
         content: '';
-        position: absolute;
+        position: sticky;
         top: 0;
         left: 0;
         right: 0;
-        height: 100px;
+        height: 30px;
         background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, transparent 100%);
         pointer-events: none;
         z-index: 10;
+        display: block;
       }
 
-      /* Message bubbles - absolute positioned like reference */
+      /* Message bubbles - iMessage style */
       .chat-bubble {
-        position: absolute;
-        left: 20px;
-        right: 20px;
-        padding: 12px 18px;
+        position: relative;
+        padding: 10px 16px;
         border-radius: 18px;
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.4;
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        max-width: calc(100% - 40px);
+        max-width: 75%;
         word-wrap: break-word;
-        pointer-events: all;
+        animation: slideIn 0.3s ease-out;
+        margin: 0; /* Remove margin since we use gap */
       }
 
+      /* User messages - right aligned, blue bubble like iMessage */
       .chat-bubble.user {
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%);
+        background: linear-gradient(135deg, #0B93F6 0%, #007AFF 100%);
         color: white;
-        box-shadow:
-            0 10px 30px rgba(139, 92, 246, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
       }
 
+      /* Assistant messages - left aligned, gray bubble like iMessage */
       .chat-bubble.assistant {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
         color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow:
-            0 10px 30px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Loading bubble */
+      .chat-bubble.loading {
+        background: rgba(255, 255, 255, 0.15);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+
+      /* System messages - centered */
+      .chat-bubble.system {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        align-self: center;
+        font-size: 13px;
+        max-width: 90%;
+        text-align: center;
       }
 
       .bubble-time {
         display: none;
       }
 
-      /* Floating Input */
-      /* Pump bar at bottom of sidebar */
+      /* Input bar at bottom - iMessage style */
       .floating-input-container {
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        flex-shrink: 0;
       }
 
       .input-group {
         display: flex;
         align-items: flex-end;
+        gap: 8px;
+      }
+
+      .mic-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .mic-button:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+      }
+
+      .mic-button:active {
+        transform: scale(0.95);
+      }
+
+      .mic-button.recording {
+        background: #ff3b30;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
       }
 
       .pill-input {
-        width: 100%;
-        background: rgba(255, 255, 255, 0.1);
+        flex: 1;
+        background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 12px 16px;
+        border-radius: 20px;
+        padding: 10px 16px;
         color: white;
-        font-size: 14px;
+        font-size: 15px;
         outline: none;
         transition: all 0.3s ease;
         resize: none;
-        min-height: 44px;
-        max-height: 200px;
+        min-height: 36px;
+        max-height: 120px;
         overflow-y: auto;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         line-height: 1.4;
@@ -670,13 +760,16 @@
         <div id="sidebarConversation" class="chat-conversation">
           <!-- Messages will appear here positioned absolutely -->
         </div>
-        <!-- Pump bar at bottom -->
+        <!-- iMessage-style input bar at bottom -->
         <div class="floating-input-container">
           <div class="input-group">
+            <button class="mic-button" id="micButton" onclick="toggleVoiceInput()" title="Voice input">
+              🎤
+            </button>
             <textarea
               id="userInput"
               class="pill-input"
-              placeholder="Enter your prompt..."
+              placeholder="iMessage"
               autocomplete="off"
               rows="1"
             ></textarea>
@@ -693,97 +786,12 @@
       <div class="toolbox-button">🧰</div>
       <div class="toolbox-options">
         <div class="toolbox-option" data-panel="chat">💬</div>
-        <div class="toolbox-option" data-panel="inference">🎛️</div>
         <div class="toolbox-option" data-panel="mood">🎭</div>
         <div class="toolbox-option" data-panel="status">📊</div>
         <div class="toolbox-option" data-panel="checklist">📝</div>
         <div class="toolbox-option" data-panel="music">📻</div>
         <div class="toolbox-option" data-action="memories">🧠</div>
         <div class="toolbox-option" data-panel="smartknob">🎛️</div>
-      </div>
-    </div>
-
-    <div class="side-panel" id="inferencePanel" data-panel="inference">
-      <div class="panel-header">
-        <h2>🎛️ Inference Parameters</h2>
-        <button class="close-panel" onclick="closePanel()">×</button>
-      </div>
-      <div class="panel-content">
-        <div class="param-group">
-          <label>Temperature: <span class="param-value" id="tempValue">0.7</span></label>
-          <input
-            type="range"
-            id="temperature"
-            min="0"
-            max="2"
-            step="0.1"
-            value="0.7"
-            oninput="updateParam('temperature', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Max Tokens: <span class="param-value" id="tokensValue">150</span></label>
-          <input
-            type="range"
-            id="maxTokens"
-            min="10"
-            max="500"
-            step="10"
-            value="150"
-            oninput="updateParam('max_new_tokens', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Top-K: <span class="param-value" id="topkValue">50</span></label>
-          <input
-            type="range"
-            id="topK"
-            min="1"
-            max="100"
-            step="1"
-            value="50"
-            oninput="updateParam('top_k', this.value)"
-          >
-        </div>
-
-        <div class="param-group">
-          <label>Top-P: <span class="param-value" id="toppValue">0.95</span></label>
-          <input
-            type="range"
-            id="topP"
-            min="0"
-            max="1"
-            step="0.05"
-            value="0.95"
-            oninput="updateParam('top_p', this.value)"
-          >
-        </div>
-
-        <div class="checkbox-group">
-          <input
-            type="checkbox"
-            id="doSample"
-            checked
-            onchange="updateParam('do_sample', this.checked)"
-          >
-          <label for="doSample">Enable Sampling</label>
-        </div>
-
-        <div class="checkbox-group">
-          <input
-            type="checkbox"
-            id="moodMode"
-            checked
-            onchange="toggleMoodMode(this.checked)"
-          >
-          <label for="moodMode">Mood Controls Parameters</label>
-        </div>
-
-        <button class="btn btn-primary" onclick="applyParameters()" style="width: 100%;">
-          Apply Parameters
-        </button>
       </div>
     </div>
 
@@ -848,6 +856,87 @@
         <div id="moodDescription" style="padding: 10px; background: #f5f5f5; border-radius: 6px; font-size: 0.9em; margin-top: 10px;">
           Click a mood to see its description and parameters
         </div>
+
+        <!-- Inference Parameters -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.2);">
+          <h3 style="color: #fff; font-size: 1em; margin-bottom: 15px;">⚙️ Inference Parameters</h3>
+
+          <div class="param-group">
+            <label>Temperature: <span class="param-value" id="tempValue">0.7</span></label>
+            <input
+              type="range"
+              id="temperature"
+              min="0"
+              max="2"
+              step="0.1"
+              value="0.7"
+              oninput="updateParam('temperature', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Max Tokens: <span class="param-value" id="tokensValue">150</span></label>
+            <input
+              type="range"
+              id="maxTokens"
+              min="10"
+              max="500"
+              step="10"
+              value="150"
+              oninput="updateParam('max_new_tokens', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Top-K: <span class="param-value" id="topkValue">50</span></label>
+            <input
+              type="range"
+              id="topK"
+              min="1"
+              max="100"
+              step="1"
+              value="50"
+              oninput="updateParam('top_k', this.value)"
+            >
+          </div>
+
+          <div class="param-group">
+            <label>Top-P: <span class="param-value" id="toppValue">0.95</span></label>
+            <input
+              type="range"
+              id="topP"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.95"
+              oninput="updateParam('top_p', this.value)"
+            >
+          </div>
+
+          <div class="checkbox-group">
+            <input
+              type="checkbox"
+              id="doSample"
+              checked
+              onchange="updateParam('do_sample', this.checked)"
+            >
+            <label for="doSample">Enable Sampling</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input
+              type="checkbox"
+              id="moodMode"
+              checked
+              onchange="toggleMoodMode(this.checked)"
+            >
+            <label for="moodMode">Mood Controls Parameters</label>
+          </div>
+
+          <button class="btn btn-primary" onclick="applyParameters()" style="width: 100%;">
+            Apply Parameters
+          </button>
+        </div>
       </div>
     </div>
 
@@ -883,6 +972,49 @@
         <div class="status-item">
           <span class="status-label">Messages</span>
           <span class="status-value" id="messageCount">0</span>
+        </div>
+
+        <div style="margin: 20px 0; padding-top: 15px; border-top: 1px solid #ddd;">
+          <h3 style="color: #333; font-size: 1.1em; margin-bottom: 10px;">⚡ Inference Metrics</h3>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Last Latency</span>
+          <span class="status-value" id="hudLatency">-</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Tokens Generated</span>
+          <span class="status-value" id="hudTokens">-</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Tokens/Second</span>
+          <span class="status-value" id="hudTokensPerSec">-</span>
+        </div>
+
+        <div style="margin: 20px 0; padding-top: 15px; border-top: 1px solid #ddd;">
+          <h3 style="color: #333; font-size: 1.1em; margin-bottom: 10px;">💾 Memory Storage</h3>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Model RAM Usage</span>
+          <span class="status-value" id="hudModelMemory">-</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Total Memories</span>
+          <span class="status-value" id="memoryCount">-</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Storage Used</span>
+          <span class="status-value" id="memorySize">-</span>
+        </div>
+
+        <div class="status-item">
+          <span class="status-label">Oldest Memory</span>
+          <span class="status-value" id="memoryOldest" style="font-size: 0.85em;">-</span>
         </div>
 
         <button class="btn btn-secondary" onclick="unloadModel()" style="width: 100%; margin-top: 10px;">
@@ -1000,116 +1132,34 @@
     <!-- Smart Knob Simulator Panel -->
     <div class="side-panel" id="smartknobPanel" data-panel="smartknob">
       <div class="panel-header">
-        <h2>🎛️ Smart Knob Simulator</h2>
+        <h2>🎛️ ESP32 Smart Knob</h2>
         <button class="close-panel" onclick="closePanel()">×</button>
       </div>
       <div class="panel-content" style="padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h3 style="color: white; margin-bottom: 10px;">Test Audio Recording</h3>
+          <h3 style="color: white; margin-bottom: 10px;">Hardware Integration</h3>
           <p style="color: rgba(255,255,255,0.7); font-size: 0.9em;">
-            Simulates the ESP32 smart knob hardware
+            ESP32-S3 Smart Knob with voice input
           </p>
         </div>
 
-        <!-- Smart Knob Switch (simulating LVGL switch) -->
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="
-            display: inline-block;
-            position: relative;
-            width: 100px;
-            height: 60px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid rgba(255,255,255,0.3);
-          " id="smartKnobSwitch" onclick="toggleSmartKnobRecording()">
-            <div style="
-              position: absolute;
-              top: 5px;
-              left: 5px;
-              width: 46px;
-              height: 46px;
-              background: white;
-              border-radius: 50%;
-              transition: all 0.3s;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            " id="smartKnobToggle"></div>
+        <!-- Polling Control -->
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+          <div style="color: white; margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="knobPollingToggle" checked onchange="toggleKnobPolling()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+              <span style="font-weight: bold;">Enable Knob Polling</span>
+            </label>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.85em; margin-top: 8px; margin-left: 28px;">
+              Continuously check for button presses every 500ms
+            </p>
           </div>
-          <div style="margin-top: 15px;">
-            <span style="
-              display: inline-block;
-              padding: 8px 20px;
-              background: rgba(255,255,255,0.1);
-              border-radius: 20px;
-              color: white;
-              font-weight: bold;
-              font-size: 14px;
-            " id="smartKnobStatus">OFF</span>
+          <div style="color: white; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-weight: bold;">Button Status:</span>
+            <span id="knobButtonStatus" style="color: #888;">Waiting...</span>
           </div>
         </div>
 
-        <!-- Recording Stats -->
-        <div style="
-          background: rgba(255,255,255,0.1);
-          padding: 20px;
-          border-radius: 12px;
-          margin-bottom: 20px;
-        ">
-          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
-            <span>Recording Duration:</span>
-            <span id="recordingDuration">0:00</span>
-          </div>
-          <div style="color: white; margin-bottom: 10px; display: flex; justify-content: space-between;">
-            <span>Audio Level:</span>
-            <div style="flex: 1; margin-left: 10px; background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
-              <div id="audioLevelBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.1s;"></div>
-            </div>
-          </div>
-          <div style="color: white; display: flex; justify-content: space-between;">
-            <span>Mic Status:</span>
-            <span id="micStatus">
-              <span class="indicator offline"></span> Not Recording
-            </span>
-          </div>
-        </div>
-
-        <!-- Audio Waveform Visualization -->
-        <div style="
-          background: rgba(0,0,0,0.3);
-          padding: 10px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-        ">
-          <canvas id="waveformCanvas" width="360" height="100" style="width: 100%; height: 100px;"></canvas>
-        </div>
-
-        <!-- Test Buttons -->
-        <div style="display: flex; gap: 10px; flex-direction: column;">
-          <button class="btn btn-primary" onclick="testUARTCommand('START_REC')" style="width: 100%;">
-            📡 Send START_REC
-          </button>
-          <button class="btn btn-secondary" onclick="testUARTCommand('STOP_REC')" style="width: 100%;">
-            📡 Send STOP_REC
-          </button>
-        </div>
-
-        <!-- UART Log -->
-        <div style="margin-top: 20px;">
-          <h4 style="color: white; margin-bottom: 10px; font-size: 14px;">UART Communication Log:</h4>
-          <div id="uartLog" style="
-            background: rgba(0,0,0,0.4);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #0f0;
-            max-height: 200px;
-            overflow-y: auto;
-          ">
-            <div style="color: #888;">Waiting for commands...</div>
-          </div>
-        </div>
       </div>
     </div>
 

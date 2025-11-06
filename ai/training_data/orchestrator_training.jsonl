@@ -5,4 +5,8 @@
 {"text": "<|im_start|>user\nnew idea for a React component. Let's create a bare-bones mockup...<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"forward_to_home_llm\", \"content\": \"new idea for a React component. Let's create a bare-bones mockup...\"}<|im_end|>"}
 {"text": "<|im_start|>user\nremind me to buy milk tomorrow<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"set_reminder\", \"content\": \"buy milk\", \"time\": \"tomorrow\"}<|im_end|>"}
 {"text": "<|im_start|>user\nwhat is on my to-do list?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"get_todos\", \"content\": null}<|im_end|>"}
-{"text": "<|im_start|>user\nJot down that I need to call the dentist<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"take_note\", \"content\": \"Call the dentist\"}<|im_end|>"}
+{"text": "<|im_start|>user\nJot down that I need to call the dentist<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"take_note\", \"content\": \"Call the dentist\"}<|im_end|>"}{"text": "<|im_start|>user\nCan you play some music that's good for coding?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"play_music\", \"genre\": \"coding\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI need to remember to buy milk on my way home.<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"create_reminder\", \"content\": \"buy milk\"}<|im_end|>"}
+{"text": "<|im_start|>user\nWhat's the latest news about the new Llama 3 model?<|im_end|>\n<|im_start|>assistant\n{\"intent\": \"search_news\", \"topic\": \"Llama 3 model\"}<|im_end|>"}
+{"text": "<|im_start|>user\nI'm feeling really stressed out right now.<|im_end|>\n<|im_start|>assistant\n{\"action\": \"chat\"}<|im_end|>"}
+{"text": "<|im_start|>user\nCan you write a poem about a sad robot?<|im_end|>\n<|im_start|>assistant\n{\"action\": \"chat\"}<|im_end|>"}

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Forest } from './Forest'
 import { Campground } from './Campground'
 import { AvatarManager } from './AvatarSprite'
+import { MechanicalArm } from '../hud/MechanicalArm'
 
 export class IsometricScene {
   private scene: THREE.Scene
@@ -10,6 +11,7 @@ export class IsometricScene {
   private clock: THREE.Clock
   private campground!: Campground
   private avatarManager!: AvatarManager
+  private mechanicalArm!: MechanicalArm
   private raycaster: THREE.Raycaster
   private mouse: THREE.Vector2
   private draggedAvatar: any = null
@@ -76,8 +78,15 @@ export class IsometricScene {
       console.log('✨ Avatars are now floating in the campground!')
     })
 
+    // Create mechanical HUD arm
+    this.mechanicalArm = new MechanicalArm(this.scene)
+    console.log('🦾 Mechanical HUD arm initialized')
+
     // Setup drag and drop event listeners
     this.setupDragAndDrop()
+
+    // Setup keyboard controls for HUD arm
+    this.setupHUDControls()
   }
 
   private setupLighting() {
@@ -142,9 +151,15 @@ export class IsometricScene {
 
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(window.innerWidth, window.innerHeight)
+
+    // Update HUD arm camera
+    if (this.mechanicalArm) {
+      this.mechanicalArm.handleResize(window.innerWidth, window.innerHeight)
+    }
   }
 
   public update() {
+    const delta = this.clock.getDelta()
     const elapsedTime = this.clock.getElapsedTime()
 
     // Update campground animations (fire flickering, etc.)
@@ -154,10 +169,21 @@ export class IsometricScene {
     if (this.avatarManager) {
       this.avatarManager.update(elapsedTime)
     }
+
+    // Update mechanical arm animations
+    if (this.mechanicalArm) {
+      this.mechanicalArm.update(delta)
+    }
   }
 
   public render() {
+    // Render main scene
     this.renderer.render(this.scene, this.camera)
+
+    // Render HUD overlay
+    if (this.mechanicalArm) {
+      this.mechanicalArm.render(this.renderer)
+    }
   }
 
   private setupDragAndDrop() {
@@ -330,6 +356,15 @@ export class IsometricScene {
     canvas.addEventListener('mousemove', onMouseMove)
     canvas.addEventListener('mouseup', onMouseUp)
     canvas.addEventListener('mouseleave', onMouseLeave)
+  }
+
+  private setupHUDControls() {
+    // Mechanical arm is now controlled by side panel opening/closing
+    // No keyboard controls needed
+  }
+
+  public getMechanicalArm(): MechanicalArm {
+    return this.mechanicalArm
   }
 
   public getScene(): THREE.Scene {
