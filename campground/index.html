@@ -697,6 +697,7 @@
         <div class="toolbox-option" data-panel="mood">🎭</div>
         <div class="toolbox-option" data-panel="status">📊</div>
         <div class="toolbox-option" data-panel="checklist">📝</div>
+        <div class="toolbox-option" data-panel="music">📻</div>
         <div class="toolbox-option" data-action="memories">🧠</div>
         <div class="toolbox-option" data-panel="smartknob">🎛️</div>
       </div>
@@ -933,6 +934,69 @@
       </div>
     </div>
 
+    <!-- Music Panel -->
+    <div class="side-panel" id="musicPanel" data-panel="music">
+      <div class="panel-header">
+        <h2>📻 Radio Music</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content" style="padding: 20px; overflow-y: auto;">
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">🎵 Add YouTube Music</h3>
+          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input
+              type="text"
+              id="youtubeUrlInput"
+              placeholder="Paste YouTube URL here..."
+              style="
+                flex: 1;
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 14px;
+                outline: none;
+              "
+              onfocus="this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.boxShadow='0 0 20px rgba(139, 92, 246, 0.2)'"
+              onblur="this.style.borderColor='rgba(255,255,255,0.3)'; this.style.boxShadow='none'"
+            />
+            <button
+              onclick="addYoutubeVideo()"
+              class="btn btn-primary"
+              style="padding: 10px 20px; white-space: nowrap;"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- Now Playing Section -->
+        <div id="nowPlayingSection" style="
+          background: rgba(255,255,255,0.1);
+          padding: 15px;
+          border-radius: 12px;
+          margin-bottom: 20px;
+          display: none;
+        ">
+          <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 5px;">NOW PLAYING</div>
+          <div id="nowPlayingTitle" style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 10px;">-</div>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="pauseMusic()" class="btn btn-secondary" style="padding: 8px 15px;">⏸ Pause</button>
+            <button onclick="stopMusic()" class="btn btn-secondary" style="padding: 8px 15px;">⏹ Stop</button>
+          </div>
+        </div>
+
+        <!-- Saved Videos List -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">💾 Saved Videos</h3>
+          <div id="youtubeVideoList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- YouTube videos will be added here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Smart Knob Simulator Panel -->
     <div class="side-panel" id="smartknobPanel" data-panel="smartknob">
       <div class="panel-header">
@@ -1052,5 +1116,6 @@
     <script type="module" src="/src/main.ts"></script>
     <script src="/ui.js"></script>
     <script src="/smartknob.js"></script>
+    <script src="/music.js"></script>
   </body>
 </html>

@@ -196,6 +196,34 @@ export class IsometricScene {
             checklistPanel.classList.add('active')
           }
         }
+        return // Don't check for other clicks
+      }
+
+      // Check for radio click
+      const radio = this.campground.getRadio()
+      const radioObjects: THREE.Object3D[] = []
+      radio.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          radioObjects.push(child)
+        }
+      })
+
+      const radioIntersects = this.raycaster.intersectObjects(radioObjects)
+      if (radioIntersects.length > 0) {
+        // Clicked on radio - open music panel
+        event.stopPropagation() // Prevent close-panel logic from triggering
+        const musicPanel = document.getElementById('musicPanel')
+        if (musicPanel) {
+          const isAlreadyOpen = musicPanel.classList.contains('active')
+          // Close other panels
+          document.querySelectorAll('.side-panel').forEach(panel => {
+            panel.classList.remove('active')
+          })
+          // Toggle or open the music panel
+          if (!isAlreadyOpen) {
+            musicPanel.classList.add('active')
+          }
+        }
         return // Don't check for avatar clicks
       }
 

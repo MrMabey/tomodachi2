@@ -735,15 +735,15 @@ def knob_status():
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("🤖 TOMO API Server Starting...")
+    print("TOMO API Server Starting...")
     print("=" * 60)
     print(f"Base Model: {state.model_config['base_model_name']}")
     if state.adapters_available:
-        print(f"✓ Adapters enabled:")
+        print(f"[OK] Adapters enabled:")
         print(f"  Orchestrator: {state.model_config['orchestrator_adapter_dir']}")
         print(f"  Persona:      {state.model_config['persona_adapter_dir']}")
     else:
-        print(f"⚠️  Adapters disabled (using base model only)")
+        print(f"[WARN] Adapters disabled (using base model only)")
         if not PEFT_AVAILABLE:
             print("   Reason: PEFT library not installed")
         elif not config.USE_ADAPTERS:

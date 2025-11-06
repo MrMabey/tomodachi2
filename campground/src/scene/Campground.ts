@@ -6,6 +6,9 @@ export class Campground {
   private smokeParticles: THREE.Mesh[] = []
   private scene: THREE.Scene
   private cabin!: THREE.Group
+  private radio!: THREE.Group
+  private musicNotes: THREE.Sprite[] = []
+  private isMusicPlaying: boolean = false
 
   constructor(scene: THREE.Scene) {
     this.scene = scene
@@ -13,10 +16,23 @@ export class Campground {
     this.createTent(scene)
     this.createRocks(scene)
     this.createCabin(scene)
+    this.createRadio(scene)
+
+    // Listen for music playback events
+    window.addEventListener('musicPlaying', () => {
+      this.isMusicPlaying = true
+    })
+    window.addEventListener('musicStopped', () => {
+      this.isMusicPlaying = false
+    })
   }
 
   public getCabin(): THREE.Group {
     return this.cabin
+  }
+
+  public getRadio(): THREE.Group {
+    return this.radio
   }
 
   private createCampfire(scene: THREE.Scene) {
@@ -29,13 +45,14 @@ export class Campground {
       flatShading: true
     })
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       const stone = new THREE.Mesh(stoneGeometry, stoneMaterial)
-      const angle = (i / 8) * Math.PI * 2
+      const angle = (i / 10) * Math.PI * 2
+      const radius = 1.3 + Math.random() * 0.3
       stone.position.set(
-        Math.cos(angle) * 1.5,
-        0.2,
-        Math.sin(angle) * 1.5
+        Math.cos(angle) * radius,
+        0.15,
+        Math.sin(angle) * radius
       )
       stone.rotation.set(
         Math.random() * 0.5,
@@ -46,21 +63,107 @@ export class Campground {
       this.campfire.add(stone)
     }
 
-    // Fire (glowing pyramid)
-    const fireGeometry = new THREE.ConeGeometry(0.8, 2, 4)
-    const fireMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff6600,
-      transparent: true,
-      opacity: 0.8
+    // Logs arranged in teepee style
+    const logGeometry = new THREE.CylinderGeometry(0.1, 0.12, 1.2, 8)
+    const logMaterial = new THREE.MeshLambertMaterial({
+      color: 0x4A2511, // Dark brown
+      flatShading: true
     })
-    const fire = new THREE.Mesh(fireGeometry, fireMaterial)
-    fire.position.y = 1
-    this.campfire.add(fire)
 
-    // Fire glow light
-    this.fireLight = new THREE.PointLight(0xff6600, 2, 10)
-    this.fireLight.position.set(0, 1.5, 0)
+    // Create 6 logs leaning inward like a teepee
+    for (let i = 0; i < 6; i++) {
+      const log = new THREE.Mesh(logGeometry, logMaterial)
+      const angle = (i / 6) * Math.PI * 2
+      const radius = 0.4
+
+      log.position.set(
+        Math.cos(angle) * radius,
+        0.4,
+        Math.sin(angle) * radius
+      )
+
+      // Lean logs inward toward center
+      log.rotation.z = Math.cos(angle) * 0.3
+      log.rotation.x = Math.sin(angle) * 0.3
+      log.rotation.y = angle
+
+      log.castShadow = true
+      this.campfire.add(log)
+    }
+
+    // Inner flame layers (multiple for depth)
+    // Bottom layer - red/orange
+    const innerFlameGeometry = new THREE.ConeGeometry(0.5, 1.2, 4)
+    const innerFlameMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF4500, // Orange red
+      transparent: true,
+      opacity: 0.9
+    })
+    const innerFlame = new THREE.Mesh(innerFlameGeometry, innerFlameMaterial)
+    innerFlame.position.y = 0.8
+    innerFlame.rotation.y = Math.PI / 4
+    this.campfire.add(innerFlame)
+
+    // Middle layer - orange/yellow
+    const midFlameGeometry = new THREE.ConeGeometry(0.6, 1.5, 4)
+    const midFlameMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF8C00, // Dark orange
+      transparent: true,
+      opacity: 0.7
+    })
+    const midFlame = new THREE.Mesh(midFlameGeometry, midFlameMaterial)
+    midFlame.position.y = 0.9
+    midFlame.rotation.y = 0
+    this.campfire.add(midFlame)
+
+    // Outer layer - yellow
+    const outerFlameGeometry = new THREE.ConeGeometry(0.7, 1.8, 4)
+    const outerFlameMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFFAA00, // Yellow orange
+      transparent: true,
+      opacity: 0.5
+    })
+    const outerFlame = new THREE.Mesh(outerFlameGeometry, outerFlameMaterial)
+    outerFlame.position.y = 1.0
+    outerFlame.rotation.y = Math.PI / 8
+    this.campfire.add(outerFlame)
+
+    // Hot coals/embers at the base
+    const emberGeometry = new THREE.SphereGeometry(0.08, 6, 6)
+    const emberMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF2200, // Bright red
+      emissive: 0xFF2200,
+      emissiveIntensity: 0.8
+    })
+
+    // Create glowing embers scattered at the base
+    for (let i = 0; i < 15; i++) {
+      const ember = new THREE.Mesh(emberGeometry, emberMaterial)
+      const angle = Math.random() * Math.PI * 2
+      const radius = Math.random() * 0.5
+      ember.position.set(
+        Math.cos(angle) * radius,
+        0.1,
+        Math.sin(angle) * radius
+      )
+      ember.scale.set(
+        0.5 + Math.random() * 0.8,
+        0.5 + Math.random() * 0.8,
+        0.5 + Math.random() * 0.8
+      )
+      this.campfire.add(ember)
+    }
+
+    // Fire glow light (main)
+    this.fireLight = new THREE.PointLight(0xFF6600, 3, 12)
+    this.fireLight.position.set(0, 1.2, 0)
+    this.fireLight.castShadow = true
     this.campfire.add(this.fireLight)
+
+    // Additional warm glow at base
+    const emberLight = new THREE.PointLight(0xFF2200, 1, 5)
+    emberLight.position.set(0, 0.2, 0)
+    this.campfire.add(emberLight)
 
     scene.add(this.campfire)
   }
@@ -356,6 +459,162 @@ export class Campground {
     scene.add(this.cabin)
   }
 
+  private createRadio(scene: THREE.Scene) {
+    this.radio = new THREE.Group()
+
+    // Main boombox body (large rectangular box) - scaled to 0.81 (0.9 * 0.9)
+    const bodyGeometry = new THREE.BoxGeometry(1.62, 0.81, 0.486)
+    const bodyMaterial = new THREE.MeshLambertMaterial({
+      color: 0x2C2C2C, // Dark gray/black
+      flatShading: true
+    })
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+    body.castShadow = true
+    this.radio.add(body)
+
+    // Left speaker (circular speaker with grille)
+    const speakerGeometry = new THREE.CylinderGeometry(0.2835, 0.2835, 0.0648, 16)
+    const speakerMaterial = new THREE.MeshLambertMaterial({
+      color: 0x1A1A1A, // Darker black
+      flatShading: true
+    })
+    const leftSpeaker = new THREE.Mesh(speakerGeometry, speakerMaterial)
+    leftSpeaker.position.set(-0.4455, 0.081, 0.2835)
+    leftSpeaker.rotation.x = Math.PI / 2
+    this.radio.add(leftSpeaker)
+
+    // Left speaker grille (inner circle)
+    const grilleGeometry = new THREE.CylinderGeometry(0.2268, 0.2268, 0.081, 16)
+    const grilleMaterial = new THREE.MeshLambertMaterial({
+      color: 0x3A3A3A // Medium gray
+    })
+    const leftGrille = new THREE.Mesh(grilleGeometry, grilleMaterial)
+    leftGrille.position.set(-0.4455, 0.081, 0.2916)
+    leftGrille.rotation.x = Math.PI / 2
+    this.radio.add(leftGrille)
+
+    // Right speaker (mirror of left)
+    const rightSpeaker = new THREE.Mesh(speakerGeometry, speakerMaterial)
+    rightSpeaker.position.set(0.4455, 0.081, 0.2835)
+    rightSpeaker.rotation.x = Math.PI / 2
+    this.radio.add(rightSpeaker)
+
+    const rightGrille = new THREE.Mesh(grilleGeometry, grilleMaterial)
+    rightGrille.position.set(0.4455, 0.081, 0.2916)
+    rightGrille.rotation.x = Math.PI / 2
+    this.radio.add(rightGrille)
+
+    // Cassette deck area (center panel)
+    const deckGeometry = new THREE.BoxGeometry(0.486, 0.2835, 0.0648)
+    const deckMaterial = new THREE.MeshLambertMaterial({
+      color: 0x505050, // Light gray
+      flatShading: true
+    })
+    const deck = new THREE.Mesh(deckGeometry, deckMaterial)
+    deck.position.set(0, 0.1215, 0.2592)
+    this.radio.add(deck)
+
+    // Cassette window (clear/dark)
+    const windowGeometry = new THREE.BoxGeometry(0.3645, 0.162, 0.0162)
+    const windowMaterial = new THREE.MeshLambertMaterial({
+      color: 0x1C1C1C,
+      transparent: true,
+      opacity: 0.8
+    })
+    const cassWindow = new THREE.Mesh(windowGeometry, windowMaterial)
+    cassWindow.position.set(0, 0.1215, 0.2997)
+    this.radio.add(cassWindow)
+
+    // Control buttons below deck
+    const buttonGeometry = new THREE.BoxGeometry(0.0648, 0.0648, 0.0324)
+    const buttonMaterial = new THREE.MeshLambertMaterial({
+      color: 0x8B0000 // Dark red
+    })
+
+    // Play button
+    const playButton = new THREE.Mesh(buttonGeometry, buttonMaterial)
+    playButton.position.set(-0.1215, -0.081, 0.2673)
+    this.radio.add(playButton)
+
+    // Stop button
+    const stopMaterial = new THREE.MeshLambertMaterial({ color: 0x4A4A4A })
+    const stopButton = new THREE.Mesh(buttonGeometry, stopMaterial)
+    stopButton.position.set(-0.0405, -0.081, 0.2673)
+    this.radio.add(stopButton)
+
+    // Pause button
+    const pauseButton = new THREE.Mesh(buttonGeometry, stopMaterial)
+    pauseButton.position.set(0.0405, -0.081, 0.2673)
+    this.radio.add(pauseButton)
+
+    // Forward button
+    const fwdButton = new THREE.Mesh(buttonGeometry, stopMaterial)
+    fwdButton.position.set(0.1215, -0.081, 0.2673)
+    this.radio.add(fwdButton)
+
+    // Antenna (telescoping style)
+    const antennaGeometry = new THREE.CylinderGeometry(0.0162, 0.02025, 1.215, 8)
+    const antennaMaterial = new THREE.MeshLambertMaterial({
+      color: 0xC0C0C0 // Silver
+    })
+    const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial)
+    antenna.position.set(0.6885, 0.972, -0.081)
+    antenna.rotation.z = -Math.PI / 8 // Slight angle
+    this.radio.add(antenna)
+
+    // Volume knob (left side)
+    const knobGeometry = new THREE.CylinderGeometry(0.0648, 0.0648, 0.0486, 12)
+    const knobMaterial = new THREE.MeshLambertMaterial({
+      color: 0xFFD700 // Gold
+    })
+    const volumeKnob = new THREE.Mesh(knobGeometry, knobMaterial)
+    volumeKnob.position.set(-0.567, -0.2025, 0.2673)
+    volumeKnob.rotation.x = Math.PI / 2
+    this.radio.add(volumeKnob)
+
+    // Tuning knob (right side)
+    const tuningKnob = new THREE.Mesh(knobGeometry, knobMaterial)
+    tuningKnob.position.set(0.567, -0.2025, 0.2673)
+    tuningKnob.rotation.x = Math.PI / 2
+    this.radio.add(tuningKnob)
+
+    // Carrying handle (arc on top)
+    const handleCurve = new THREE.EllipseCurve(
+      0, 0,            // center
+      0.567, 0.405,    // xRadius, yRadius (scaled by 0.81)
+      0, Math.PI,      // startAngle, endAngle
+      false,           // clockwise
+      0                // rotation
+    )
+    const handlePoints = handleCurve.getPoints(24)
+    const handleGeometry = new THREE.BufferGeometry().setFromPoints(handlePoints)
+    const handleMaterial = new THREE.LineBasicMaterial({
+      color: 0x505050, // Gray
+      linewidth: 4
+    })
+    const handle = new THREE.Line(handleGeometry, handleMaterial)
+    handle.position.set(0, 0.405, 0)
+    handle.rotation.x = Math.PI / 2
+    this.radio.add(handle)
+
+    // LED indicator (small red light)
+    const ledGeometry = new THREE.SphereGeometry(0.0243, 8, 8)
+    const ledMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF0000, // Red
+      emissive: 0xFF0000
+    })
+    const led = new THREE.Mesh(ledGeometry, ledMaterial)
+    led.position.set(0.2025, 0.2835, 0.2592)
+    this.radio.add(led)
+
+    // Position boombox next to campfire (on the ground)
+    // Height is 0.81, so y position should be 0.81/2 = 0.405
+    this.radio.position.set(-2.5, 0.6, -3)
+    this.radio.rotation.y = Math.PI / 2 - (40 * Math.PI / 180) // Face forward, rotated 40 degrees right
+
+    scene.add(this.radio)
+  }
+
   private createSmokeParticle() {
     // Create a puff of smoke
     const smokeGeometry = new THREE.SphereGeometry(0.2, 8, 8)
@@ -385,19 +644,94 @@ export class Campground {
     this.smokeParticles.push(smoke)
   }
 
-  public update(time: number) {
-    // Animate fire flickering
-    if (this.fireLight) {
-      this.fireLight.intensity = 2 + Math.sin(time * 5) * 0.5
+  private createMusicNote() {
+    // Create canvas for music note
+    const canvas = document.createElement('canvas')
+    canvas.width = 64
+    canvas.height = 64
+    const ctx = canvas.getContext('2d')!
+
+    // Draw music note (♪ or ♫)
+    ctx.fillStyle = '#FF69B4' // Hot pink
+    ctx.font = 'bold 48px Arial'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    // Randomly choose single or double note
+    const notes = ['♪', '♫']
+    const note = notes[Math.floor(Math.random() * notes.length)]
+    ctx.fillText(note, 32, 32)
+
+    // Create texture from canvas
+    const texture = new THREE.CanvasTexture(canvas)
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1
+    })
+
+    const sprite = new THREE.Sprite(material)
+
+    // Position at radio location with some randomness
+    const radioPos = this.radio.position
+    sprite.position.set(
+      radioPos.x + (Math.random() - 0.5) * 0.5,
+      radioPos.y + 0.5,
+      radioPos.z + (Math.random() - 0.5) * 0.5
+    )
+
+    sprite.scale.set(0.3, 0.3, 1)
+
+    // Store birth time and velocity
+    ;(sprite as any).birthTime = Date.now()
+    ;(sprite as any).velocity = {
+      x: (Math.random() - 0.5) * 0.005,
+      y: 0.008 + Math.random() * 0.005,
+      z: (Math.random() - 0.5) * 0.005
     }
 
-    // Rotate fire mesh slightly
-    const fire = this.campfire.children.find(
-      child => child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial
-    )
-    if (fire) {
-      fire.rotation.y = time * 0.5
+    this.scene.add(sprite)
+    this.musicNotes.push(sprite)
+  }
+
+  public update(time: number) {
+    // Animate fire flickering (more dramatic)
+    if (this.fireLight) {
+      this.fireLight.intensity = 3 + Math.sin(time * 5) * 0.8 + Math.sin(time * 3.7) * 0.3
     }
+
+    // Animate all flame layers with different rotations and scales
+    const flames = this.campfire.children.filter(
+      child => child instanceof THREE.Mesh &&
+      child.material instanceof THREE.MeshBasicMaterial &&
+      (child.material as THREE.MeshBasicMaterial).transparent
+    )
+
+    if (flames.length >= 3) {
+      // Inner flame - rotate one way
+      flames[0].rotation.y = time * 0.8
+      flames[0].scale.y = 1 + Math.sin(time * 4) * 0.1
+
+      // Middle flame - rotate opposite way
+      flames[1].rotation.y = -time * 0.6
+      flames[1].scale.y = 1 + Math.sin(time * 3.5 + 0.5) * 0.15
+
+      // Outer flame - slower rotation
+      flames[2].rotation.y = time * 0.4
+      flames[2].scale.y = 1 + Math.sin(time * 3 + 1) * 0.12
+    }
+
+    // Make embers flicker
+    const embers = this.campfire.children.filter(
+      child => child instanceof THREE.Mesh &&
+      child.material instanceof THREE.MeshBasicMaterial &&
+      (child.material as THREE.MeshBasicMaterial).emissive
+    )
+
+    embers.forEach((ember, index) => {
+      const material = ember.material as THREE.MeshBasicMaterial
+      material.emissiveIntensity = 0.5 + Math.sin(time * 4 + index) * 0.4
+    })
 
     // Generate smoke particles periodically
     if (Math.random() < 0.1) { // 10% chance each frame
@@ -430,6 +764,37 @@ export class Campground {
         smoke.geometry.dispose()
         material.dispose()
         this.smokeParticles.splice(i, 1)
+      }
+    }
+
+    // Generate music notes when music is playing
+    if (this.isMusicPlaying && Math.random() < 0.03) { // 3% chance each frame
+      this.createMusicNote()
+    }
+
+    // Update music note particles
+    for (let i = this.musicNotes.length - 1; i >= 0; i--) {
+      const note = this.musicNotes[i]
+      const age = (now - (note as any).birthTime) / 1000 // Age in seconds
+      const velocity = (note as any).velocity
+
+      // Move note up and drift
+      note.position.x += velocity.x
+      note.position.y += velocity.y
+      note.position.z += velocity.z
+
+      // Gentle rotation
+      note.material.rotation += 0.02
+
+      // Fade out
+      note.material.opacity = Math.max(0, 1 - age * 0.5)
+
+      // Remove old particles (after 2 seconds)
+      if (age > 2) {
+        this.scene.remove(note)
+        note.material.map?.dispose()
+        note.material.dispose()
+        this.musicNotes.splice(i, 1)
       }
     }
   }
