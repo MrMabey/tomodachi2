@@ -34,33 +34,10 @@ export class VRManager {
     )
     this.vrCamera.position.set(0, 1.6, 0) // Average eye height
 
-    // Create tabletop group to scale and position the scene
+    // Create tabletop group (but don't populate it yet - only when entering VR)
     this.tabletopGroup = new THREE.Group()
     this.tabletopGroup.name = 'VR_Tabletop'
     this.scene.add(this.tabletopGroup)
-
-    // Move all existing scene children into the tabletop group
-    // BUT skip lights and cameras
-    const sceneChildren = [...this.scene.children]
-    for (const child of sceneChildren) {
-      if (
-        child !== this.tabletopGroup &&
-        !(child instanceof THREE.Light) &&
-        !(child instanceof THREE.Camera) &&
-        child.type !== 'HUD' // Skip HUD elements
-      ) {
-        this.scene.remove(child)
-        this.tabletopGroup.add(child)
-      }
-    }
-
-    // Scale down to tabletop size (campground becomes ~1 meter wide)
-    this.tabletopGroup.scale.setScalar(0.05) // 20x smaller
-
-    // Position in front of user at comfortable viewing height
-    this.tabletopGroup.position.set(0, 0.8, -1.5) // On a table ~80cm high, 1.5m away
-
-    console.log(`📦 Tabletop group created with ${this.tabletopGroup.children.length} objects`)
 
     // Enable XR
     this.renderer.xr.enabled = true
@@ -110,6 +87,9 @@ export class VRManager {
       // Setup XR session
       await this.renderer.xr.setSession(session)
 
+      // Move scene objects into tabletop group and scale down
+      this.setupTabletopView()
+
       // Setup controllers
       this.setupControllers()
 
@@ -145,6 +125,9 @@ export class VRManager {
       this.xrSession = null
     }
 
+    // Restore scene to normal view
+    this.restoreNormalView()
+
     // Clean up controllers
     this.cleanupControllers()
 
@@ -154,6 +137,52 @@ export class VRManager {
     }
 
     console.log('👋 Exited VR mode')
+  }
+
+  /**
+   * Setup tabletop view by moving objects into scaled group
+   */
+  private setupTabletopView(): void {
+    // Move all existing scene children into the tabletop group
+    // BUT skip lights, cameras, and the tabletop group itself
+    const sceneChildren = [...this.scene.children]
+    for (const child of sceneChildren) {
+      if (
+        child !== this.tabletopGroup &&
+        !(child instanceof THREE.Light) &&
+        !(child instanceof THREE.Camera) &&
+        child.type !== 'HUD' // Skip HUD elements
+      ) {
+        this.scene.remove(child)
+        this.tabletopGroup.add(child)
+      }
+    }
+
+    // Scale down to tabletop size (campground becomes ~1 meter wide)
+    this.tabletopGroup.scale.setScalar(0.05) // 20x smaller
+
+    // Position in front of user at comfortable viewing height
+    this.tabletopGroup.position.set(0, 0.8, -1.5) // On a table ~80cm high, 1.5m away
+
+    console.log(`📦 Tabletop view activated with ${this.tabletopGroup.children.length} objects`)
+  }
+
+  /**
+   * Restore normal view by moving objects back to scene
+   */
+  private restoreNormalView(): void {
+    // Move all objects back to the main scene
+    const tabletopChildren = [...this.tabletopGroup.children]
+    for (const child of tabletopChildren) {
+      this.tabletopGroup.remove(child)
+      this.scene.add(child)
+    }
+
+    // Reset tabletop group transform
+    this.tabletopGroup.scale.setScalar(1)
+    this.tabletopGroup.position.set(0, 0, 0)
+
+    console.log('🔄 Normal view restored')
   }
 
   /**
