@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Campground Asset Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Left Sidebar - Controls */
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .controls-panel h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls-panel p {
+            opacity: 0.8;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .asset-type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .asset-type-btn {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .asset-type-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .asset-type-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .asset-type-btn .emoji {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .color-picker-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-input input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Right Side - Preview */
+        .preview-panel {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        #preview-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .preview-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .preview-info h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .preview-info p {
+            opacity: 0.8;
+            margin: 5px 0;
+        }
+
+        /* Code editor styling */
+        .code-editor {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #fff;
+            min-height: 150px;
+            overflow: auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid #4ade80;
+        }
+
+        .toast.error {
+            border-left: 4px solid #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Controls Panel -->
+        <div class="controls-panel">
+            <a href="/" class="back-button">
+                ← Back to Campground
+            </a>
+
+            <h1>🎨 Asset Creator</h1>
+            <p>Create custom 3D objects, avatars, and particles for your campground</p>
+
+            <!-- Asset Type Selection -->
+            <div class="section">
+                <h2>Asset Type</h2>
+                <div class="asset-type-grid">
+                    <button class="asset-type-btn active" data-type="3d-object">
+                        <span class="emoji">🏕️</span>
+                        3D Object
+                    </button>
+                    <button class="asset-type-btn" data-type="avatar">
+                        <span class="emoji">👾</span>
+                        Avatar
+                    </button>
+                    <button class="asset-type-btn" data-type="particle">
+                        <span class="emoji">✨</span>
+                        Particle
+                    </button>
+                    <button class="asset-type-btn" data-type="light">
+                        <span class="emoji">💡</span>
+                        Light
+                    </button>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="section">
+                <h2>Basic Information</h2>
+                <div class="input-group">
+                    <label>Asset Name</label>
+                    <input type="text" id="assetName" placeholder="My Custom Asset" value="Custom Object">
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea id="assetDescription" placeholder="Describe your asset...">A custom 3D object for the campground</textarea>
+                </div>
+            </div>
+
+            <!-- 3D Object Settings -->
+            <div class="section" id="objectSettings">
+                <h2>Object Settings</h2>
+                <div class="input-group">
+                    <label>Geometry Type</label>
+                    <select id="geometryType">
+                        <option value="box">Box</option>
+                        <option value="sphere">Sphere</option>
+                        <option value="cylinder">Cylinder</option>
+                        <option value="cone">Cone</option>
+                        <option value="torus">Torus</option>
+                        <option value="dodecahedron">Dodecahedron</option>
+                        <option value="octahedron">Octahedron</option>
+                        <option value="tetrahedron">Tetrahedron</option>
+                    </select>
+                </div>
+
+                <div class="slider-group">
+                    <label>
+                        <span>Scale</span>
+                        <span id="scaleValue">1.0</span>
+                    </label>
+                    <input type="range" id="scaleSlider" min="0.1" max="5" step="0.1" value="1">
+                </div>
+
+                <div class="color-picker-group">
+                    <div class="input-group">
+                        <label>Color</label>
+                        <div class="color-input">
+                            <input type="color" id="objectColor" value="#667eea">
+                            <span id="colorValue">#667eea</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Material</label>
+                        <select id="materialType">
+                            <option value="standard">Standard</option>
+                            <option value="phong">Phong</option>
+                            <option value="lambert">Lambert</option>
+                            <option value="basic">Basic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="castShadow" checked>
+                    <label for="castShadow">Cast Shadow</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="animated">
+                    <label for="animated">Animated (Rotating)</label>
+                </div>
+            </div>
+
+            <!-- Avatar Settings -->
+            <div class="section" id="avatarSettings" style="display: none;">
+                <h2>Avatar Settings</h2>
+                <div class="input-group">
+                    <label>Canvas Size</label>
+                    <select id="canvasSize">
+                        <option value="64">64x64</option>
+                        <option value="128" selected>128x128</option>
+                        <option value="256">256x256</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Custom Draw Code (JavaScript)</label>
+                    <textarea id="avatarCode" class="code-editor" placeholder="// Draw your avatar&#10;ctx.fillStyle = 'blue';&#10;ctx.fillRect(0, 0, canvas.width, canvas.height);">// Custom avatar drawing code
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Draw circle face
+ctx.fillStyle = '#FFD700';
+ctx.beginPath();
+ctx.arc(canvas.width/2, canvas.height/2, 40, 0, Math.PI * 2);
+ctx.fill();
+
+// Draw eyes
+ctx.fillStyle = '#000';
+ctx.beginPath();
+ctx.arc(canvas.width/2 - 12, canvas.height/2 - 8, 4, 0, Math.PI * 2);
+ctx.arc(canvas.width/2 + 12, canvas.height/2 - 8, 4, 0, Math.PI * 2);
+ctx.fill();
+
+// Draw smile
+ctx.strokeStyle = '#000';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(canvas.width/2, canvas.height/2, 20, 0, Math.PI, false);
+ctx.stroke();</textarea>
+                </div>
+            </div>
+
+            <!-- Particle Settings -->
+            <div class="section" id="particleSettings" style="display: none;">
+                <h2>Particle Settings</h2>
+                <div class="slider-group">
+                    <label>
+                        <span>Particle Count</span>
+                        <span id="particleCountValue">100</span>
+                    </label>
+                    <input type="range" id="particleCount" min="10" max="1000" step="10" value="100">
+                </div>
+                <div class="input-group">
+                    <label>Particle Color</label>
+                    <div class="color-input">
+                        <input type="color" id="particleColor" value="#ffffff">
+                    </div>
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>Particle Size</span>
+                        <span id="particleSizeValue">0.1</span>
+                    </label>
+                    <input type="range" id="particleSize" min="0.01" max="1" step="0.01" value="0.1">
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>Speed</span>
+                        <span id="particleSpeedValue">0.5</span>
+                    </label>
+                    <input type="range" id="particleSpeed" min="0.1" max="5" step="0.1" value="0.5">
+                </div>
+            </div>
+
+            <!-- Light Settings -->
+            <div class="section" id="lightSettings" style="display: none;">
+                <h2>Light Settings</h2>
+                <div class="input-group">
+                    <label>Light Type</label>
+                    <select id="lightType">
+                        <option value="point">Point Light</option>
+                        <option value="directional">Directional Light</option>
+                        <option value="spot">Spot Light</option>
+                        <option value="ambient">Ambient Light</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Color</label>
+                    <div class="color-input">
+                        <input type="color" id="lightColor" value="#ffffff">
+                    </div>
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>Intensity</span>
+                        <span id="lightIntensityValue">1.0</span>
+                    </label>
+                    <input type="range" id="lightIntensity" min="0" max="5" step="0.1" value="1">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="createBtn">Create Asset</button>
+                <button class="btn btn-secondary" id="exportBtn">Export Code</button>
+                <button class="btn btn-secondary" id="saveBtn">Save to Campground</button>
+            </div>
+        </div>
+
+        <!-- Right Preview Panel -->
+        <div class="preview-panel">
+            <canvas id="preview-canvas"></canvas>
+            <div class="preview-info">
+                <h3>Live Preview</h3>
+                <p id="previewType">3D Object</p>
+                <p id="previewVertices">Vertices: 0</p>
+                <p id="previewFaces">Faces: 0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">Asset created successfully!</span>
+    </div>
+
+    <script type="module" src="/creator.js"></script>
+</body>
+</html>
