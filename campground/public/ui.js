@@ -1084,6 +1084,257 @@ function stopRecording() {
 // Initialize voice recognition on load
 initializeVoiceRecognition();
 
+// ============================================================================
+// WEBHOOK FUNCTIONALITY
+// ============================================================================
+
+let webhooks = [];
+let selectedWebhook = null;
+
+// Load webhooks when panel opens
+async function loadWebhooks() {
+    try {
+        const response = await apiCall('/webhooks', 'GET');
+        webhooks = response.webhooks || [];
+        renderWebhookList();
+    } catch (error) {
+        console.error('Error loading webhooks:', error);
+    }
+}
+
+// Render webhook list
+function renderWebhookList() {
+    const webhookList = document.getElementById('webhookList');
+    if (!webhookList) return;
+
+    if (webhooks.length === 0) {
+        webhookList.innerHTML = `
+            <div style="
+                color: rgba(255,255,255,0.5);
+                text-align: center;
+                padding: 30px;
+                font-style: italic;
+            ">
+                No webhooks saved yet. Add one above!
+            </div>
+        `;
+        return;
+    }
+
+    webhookList.innerHTML = webhooks.map(webhook => `
+        <div style="
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        "
+        onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(139, 92, 246, 0.5)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.1)'"
+        >
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div>
+                    <div style="color: white; font-weight: bold; font-size: 16px; margin-bottom: 4px;">
+                        ${webhook.name}
+                    </div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 4px;">
+                        <span style="
+                            background: rgba(139, 92, 246, 0.3);
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            font-weight: bold;
+                        ">${webhook.method}</span>
+                    </div>
+                    <div style="
+                        color: rgba(255,255,255,0.5);
+                        font-size: 11px;
+                        word-break: break-all;
+                        margin-top: 4px;
+                    ">
+                        ${webhook.url}
+                    </div>
+                </div>
+                <button
+                    onclick="deleteWebhook('${webhook.id}')"
+                    style="
+                        background: rgba(255, 0, 0, 0.2);
+                        border: 1px solid rgba(255, 0, 0, 0.3);
+                        color: #ff6b6b;
+                        padding: 6px 10px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.2s ease;
+                    "
+                    onmouseover="this.style.background='rgba(255, 0, 0, 0.4)'"
+                    onmouseout="this.style.background='rgba(255, 0, 0, 0.2)'"
+                >
+                    🗑️
+                </button>
+            </div>
+            <button
+                onclick="selectWebhook('${webhook.id}')"
+                class="btn btn-primary"
+                style="width: 100%; padding: 8px; margin-top: 8px; font-size: 13px;"
+            >
+                🚀 Fire This Webhook
+            </button>
+        </div>
+    `).join('');
+}
+
+// Add webhook
+async function addWebhook() {
+    const nameInput = document.getElementById('webhookNameInput');
+    const urlInput = document.getElementById('webhookUrlInput');
+    const methodInput = document.getElementById('webhookMethodInput');
+
+    const name = nameInput.value.trim();
+    const url = urlInput.value.trim();
+    const method = methodInput.value;
+
+    if (!name) {
+        alert('Please enter a webhook name');
+        return;
+    }
+
+    if (!url) {
+        alert('Please enter a webhook URL');
+        return;
+    }
+
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        alert('URL must start with http:// or https://');
+        return;
+    }
+
+    try {
+        const response = await apiCall('/webhooks', 'POST', {
+            name,
+            url,
+            method
+        });
+
+        // Clear inputs
+        nameInput.value = '';
+        urlInput.value = '';
+        methodInput.value = 'POST';
+
+        // Reload list
+        await loadWebhooks();
+
+        console.log('Webhook added:', response.webhook);
+    } catch (error) {
+        console.error('Error adding webhook:', error);
+        alert('Failed to add webhook: ' + error.message);
+    }
+}
+
+// Delete webhook
+async function deleteWebhook(webhookId) {
+    if (!confirm('Are you sure you want to delete this webhook?')) {
+        return;
+    }
+
+    try {
+        await apiCall(`/webhooks/${webhookId}`, 'DELETE');
+        await loadWebhooks();
+        console.log('Webhook deleted:', webhookId);
+    } catch (error) {
+        console.error('Error deleting webhook:', error);
+        alert('Failed to delete webhook: ' + error.message);
+    }
+}
+
+// Select webhook for firing
+function selectWebhook(webhookId) {
+    selectedWebhook = webhooks.find(wh => wh.id === webhookId);
+    if (!selectedWebhook) return;
+
+    // Hide webhook list, show fire section
+    document.querySelector('#webhookList').parentElement.style.display = 'none';
+    document.querySelector('#webhookNameInput').parentElement.parentElement.style.display = 'none';
+    document.getElementById('fireWebhookSection').style.display = 'block';
+
+    // Populate fire section
+    document.getElementById('selectedWebhookName').textContent = selectedWebhook.name;
+    document.getElementById('selectedWebhookMethod').textContent = selectedWebhook.method;
+    document.getElementById('selectedWebhookUrl').textContent = selectedWebhook.url;
+
+    // Reset response
+    document.getElementById('webhookResponse').style.display = 'none';
+}
+
+// Deselect webhook
+function deselectWebhook() {
+    selectedWebhook = null;
+
+    // Show webhook list, hide fire section
+    document.querySelector('#webhookList').parentElement.style.display = 'block';
+    document.querySelector('#webhookNameInput').parentElement.parentElement.style.display = 'block';
+    document.getElementById('fireWebhookSection').style.display = 'none';
+}
+
+// Fire webhook
+async function fireWebhook() {
+    if (!selectedWebhook) return;
+
+    const payloadInput = document.getElementById('webhookPayloadInput');
+    const responseDiv = document.getElementById('webhookResponse');
+    const responseContent = document.getElementById('webhookResponseContent');
+
+    // Parse payload
+    let payload;
+    try {
+        payload = JSON.parse(payloadInput.value);
+    } catch (error) {
+        alert('Invalid JSON payload: ' + error.message);
+        return;
+    }
+
+    // Show loading
+    responseDiv.style.display = 'block';
+    responseContent.textContent = 'Firing webhook...';
+
+    try {
+        const result = await apiCall('/webhooks/fire', 'POST', {
+            webhook_id: selectedWebhook.id,
+            payload: payload
+        });
+
+        // Display response
+        responseContent.textContent = JSON.stringify(result, null, 2);
+
+        // Update response styling based on success
+        if (result.success) {
+            responseDiv.style.background = 'rgba(0, 255, 0, 0.1)';
+            responseDiv.style.border = '1px solid rgba(0, 255, 0, 0.3)';
+        } else {
+            responseDiv.style.background = 'rgba(255, 0, 0, 0.1)';
+            responseDiv.style.border = '1px solid rgba(255, 0, 0, 0.3)';
+        }
+
+        console.log('Webhook fired:', result);
+    } catch (error) {
+        console.error('Error firing webhook:', error);
+        responseContent.textContent = 'Error: ' + error.message;
+        responseDiv.style.background = 'rgba(255, 0, 0, 0.1)';
+        responseDiv.style.border = '1px solid rgba(255, 0, 0, 0.3)';
+    }
+}
+
+// Load webhooks when webhook panel is opened
+const originalOpenPanel = window.openPanel;
+window.openPanel = function(panelName) {
+    if (originalOpenPanel) {
+        originalOpenPanel(panelName);
+    }
+
+    if (panelName === 'webhook') {
+        loadWebhooks();
+    }
+};
+
 console.log('🏕️ Campground UI loaded successfully');
 console.log('Keyboard shortcuts:');
 console.log('  Ctrl/Cmd + K: Focus input');

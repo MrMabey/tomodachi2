@@ -7,6 +7,7 @@ export class Campground {
   private scene: THREE.Scene
   private cabin!: THREE.Group
   private radio!: THREE.Group
+  private controlPanel!: THREE.Group
   private musicNotes: THREE.Sprite[] = []
   private isMusicPlaying: boolean = false
 
@@ -17,6 +18,7 @@ export class Campground {
     this.createRocks(scene)
     this.createCabin(scene)
     this.createRadio(scene)
+    this.createControlPanel(scene)
 
     // Listen for music playback events
     window.addEventListener('musicPlaying', () => {
@@ -33,6 +35,10 @@ export class Campground {
 
   public getRadio(): THREE.Group {
     return this.radio
+  }
+
+  public getControlPanel(): THREE.Group {
+    return this.controlPanel
   }
 
   private createCampfire(scene: THREE.Scene) {
@@ -613,6 +619,157 @@ export class Campground {
     this.radio.rotation.y = Math.PI / 2 - (40 * Math.PI / 180) // Face forward, rotated 40 degrees right
 
     scene.add(this.radio)
+  }
+
+  private createControlPanel(scene: THREE.Scene) {
+    this.controlPanel = new THREE.Group()
+
+    // Base/stand (truncated pyramid)
+    const baseGeometry = new THREE.CylinderGeometry(0.5, 0.6, 0.3, 6)
+    const baseMaterial = new THREE.MeshLambertMaterial({
+      color: 0x2F4F4F, // Dark slate gray
+      flatShading: true
+    })
+    const base = new THREE.Mesh(baseGeometry, baseMaterial)
+    base.position.y = 0.15
+    base.castShadow = true
+    this.controlPanel.add(base)
+
+    // Main console body (box)
+    const bodyGeometry = new THREE.BoxGeometry(1.2, 0.8, 0.6)
+    const bodyMaterial = new THREE.MeshLambertMaterial({
+      color: 0x4682B4, // Steel blue
+      flatShading: true
+    })
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+    body.position.y = 0.7
+    body.castShadow = true
+    this.controlPanel.add(body)
+
+    // Screen (dark with slight glow)
+    const screenGeometry = new THREE.BoxGeometry(0.9, 0.55, 0.05)
+    const screenMaterial = new THREE.MeshBasicMaterial({
+      color: 0x001a33, // Very dark blue
+      emissive: 0x00ff88, // Cyan/green glow
+      emissiveIntensity: 0.3
+    })
+    const screen = new THREE.Mesh(screenGeometry, screenMaterial)
+    screen.position.set(0, 0.8, 0.33)
+    this.controlPanel.add(screen)
+
+    // Screen frame/bezel
+    const frameGeometry = new THREE.BoxGeometry(1.0, 0.65, 0.02)
+    const frameMaterial = new THREE.MeshLambertMaterial({
+      color: 0x2F4F4F // Dark slate gray
+    })
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial)
+    frame.position.set(0, 0.8, 0.32)
+    this.controlPanel.add(frame)
+
+    // LED indicators (3 small lights on top)
+    const ledColors = [0xff0000, 0xffff00, 0x00ff00] // Red, Yellow, Green
+    const ledGeometry = new THREE.SphereGeometry(0.04, 8, 8)
+
+    for (let i = 0; i < 3; i++) {
+      const ledMaterial = new THREE.MeshBasicMaterial({
+        color: ledColors[i],
+        emissive: ledColors[i],
+        emissiveIntensity: 0.8
+      })
+      const led = new THREE.Mesh(ledGeometry, ledMaterial)
+      led.position.set(-0.3 + i * 0.3, 1.15, 0.3)
+      this.controlPanel.add(led)
+    }
+
+    // Keyboard area (lower front panel)
+    const keyboardGeometry = new THREE.BoxGeometry(1.0, 0.1, 0.4)
+    const keyboardMaterial = new THREE.MeshLambertMaterial({
+      color: 0x696969, // Dim gray
+      flatShading: true
+    })
+    const keyboard = new THREE.Mesh(keyboardGeometry, keyboardMaterial)
+    keyboard.position.set(0, 0.4, 0.2)
+    keyboard.rotation.x = -Math.PI / 8
+    this.controlPanel.add(keyboard)
+
+    // Key details (small squares)
+    const keyGeometry = new THREE.BoxGeometry(0.08, 0.03, 0.08)
+    const keyMaterial = new THREE.MeshLambertMaterial({
+      color: 0x2F2F2F // Very dark gray
+    })
+
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 8; col++) {
+        const key = new THREE.Mesh(keyGeometry, keyMaterial)
+        key.position.set(
+          -0.35 + col * 0.1,
+          0.42 + row * 0.04,
+          0.15 + row * 0.08
+        )
+        key.rotation.x = -Math.PI / 8
+        this.controlPanel.add(key)
+      }
+    }
+
+    // Big red button (the webhook trigger button!)
+    const buttonGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.08, 16)
+    const buttonMaterial = new THREE.MeshLambertMaterial({
+      color: 0xFF0000, // Bright red
+      emissive: 0x440000,
+      emissiveIntensity: 0.5
+    })
+    const bigButton = new THREE.Mesh(buttonGeometry, buttonMaterial)
+    bigButton.position.set(0.5, 0.5, 0.35)
+    bigButton.rotation.x = Math.PI / 2
+    this.controlPanel.add(bigButton)
+
+    // Button label plate
+    const labelGeometry = new THREE.BoxGeometry(0.25, 0.02, 0.08)
+    const labelMaterial = new THREE.MeshLambertMaterial({
+      color: 0xFFFF00 // Yellow warning stripe
+    })
+    const label = new THREE.Mesh(labelGeometry, labelMaterial)
+    label.position.set(0.5, 0.5, 0.2)
+    this.controlPanel.add(label)
+
+    // Side panel with vents
+    const ventGeometry = new THREE.BoxGeometry(0.05, 0.6, 0.4)
+    const ventMaterial = new THREE.MeshLambertMaterial({
+      color: 0x2F2F2F
+    })
+    const leftVent = new THREE.Mesh(ventGeometry, ventMaterial)
+    leftVent.position.set(-0.6, 0.7, 0)
+    this.controlPanel.add(leftVent)
+
+    const rightVent = new THREE.Mesh(ventGeometry, ventMaterial)
+    rightVent.position.set(0.6, 0.7, 0)
+    this.controlPanel.add(rightVent)
+
+    // Antenna on top
+    const antennaGeometry = new THREE.CylinderGeometry(0.02, 0.03, 0.4, 8)
+    const antennaMaterial = new THREE.MeshLambertMaterial({
+      color: 0xC0C0C0 // Silver
+    })
+    const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial)
+    antenna.position.set(-0.4, 1.4, -0.1)
+    antenna.rotation.z = Math.PI / 12
+    this.controlPanel.add(antenna)
+
+    // Antenna tip (small sphere)
+    const tipGeometry = new THREE.SphereGeometry(0.05, 8, 8)
+    const tipMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF0000,
+      emissive: 0xFF0000
+    })
+    const antennaTip = new THREE.Mesh(tipGeometry, tipMaterial)
+    antennaTip.position.set(-0.42, 1.6, -0.1)
+    this.controlPanel.add(antennaTip)
+
+    // Position control panel to the right of campfire
+    this.controlPanel.position.set(3.5, 0, 1.5)
+    this.controlPanel.rotation.y = -Math.PI / 4 // Angle it nicely
+
+    scene.add(this.controlPanel)
   }
 
   private createSmokeParticle() {

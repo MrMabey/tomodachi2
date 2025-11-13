@@ -791,6 +791,187 @@ def model_memory_usage():
         logger.error(f"Error fetching model memory: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ============================================================================
+# WEBHOOK ENDPOINTS
+# ============================================================================
+
+# Webhook storage (simple JSON file persistence)
+WEBHOOK_STORAGE_FILE = Path(__file__).parent / 'webhooks.json'
+
+def load_webhooks():
+    """Load webhooks from JSON file"""
+    try:
+        if WEBHOOK_STORAGE_FILE.exists():
+            with open(WEBHOOK_STORAGE_FILE, 'r') as f:
+                return json.load(f)
+        return []
+    except Exception as e:
+        logger.error(f"Error loading webhooks: {e}")
+        return []
+
+def save_webhooks(webhooks):
+    """Save webhooks to JSON file"""
+    try:
+        with open(WEBHOOK_STORAGE_FILE, 'w') as f:
+            json.dump(webhooks, f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving webhooks: {e}")
+        return False
+
+@app.route('/api/webhooks', methods=['GET'])
+def get_webhooks():
+    """Get all saved webhooks"""
+    try:
+        webhooks = load_webhooks()
+        return jsonify({"webhooks": webhooks})
+    except Exception as e:
+        logger.error(f"Error getting webhooks: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/webhooks', methods=['POST'])
+def add_webhook():
+    """Add a new webhook"""
+    try:
+        data = request.json
+        name = data.get('name', '').strip()
+        url = data.get('url', '').strip()
+        method = data.get('method', 'POST').upper()
+
+        # Validation
+        if not name:
+            return jsonify({"error": "Webhook name is required"}), 400
+        if not url:
+            return jsonify({"error": "Webhook URL is required"}), 400
+        if not url.startswith(('http://', 'https://')):
+            return jsonify({"error": "URL must start with http:// or https://"}), 400
+        if method not in ['GET', 'POST', 'PUT', 'DELETE']:
+            return jsonify({"error": "Invalid HTTP method"}), 400
+
+        # Load existing webhooks
+        webhooks = load_webhooks()
+
+        # Generate unique ID
+        webhook_id = f"wh_{int(datetime.now().timestamp() * 1000)}"
+
+        # Create new webhook
+        new_webhook = {
+            "id": webhook_id,
+            "name": name,
+            "url": url,
+            "method": method,
+            "created_at": datetime.now().isoformat()
+        }
+
+        webhooks.append(new_webhook)
+
+        # Save to file
+        if save_webhooks(webhooks):
+            logger.info(f"Webhook added: {name} ({url})")
+            return jsonify({"webhook": new_webhook}), 201
+        else:
+            return jsonify({"error": "Failed to save webhook"}), 500
+
+    except Exception as e:
+        logger.error(f"Error adding webhook: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/webhooks/<webhook_id>', methods=['DELETE'])
+def delete_webhook(webhook_id):
+    """Delete a webhook"""
+    try:
+        webhooks = load_webhooks()
+
+        # Find and remove webhook
+        webhooks = [wh for wh in webhooks if wh['id'] != webhook_id]
+
+        # Save to file
+        if save_webhooks(webhooks):
+            logger.info(f"Webhook deleted: {webhook_id}")
+            return jsonify({"success": True})
+        else:
+            return jsonify({"error": "Failed to save webhooks"}), 500
+
+    except Exception as e:
+        logger.error(f"Error deleting webhook: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/webhooks/fire', methods=['POST'])
+def fire_webhook():
+    """Fire a webhook with the given payload"""
+    try:
+        data = request.json
+        webhook_id = data.get('webhook_id')
+        payload = data.get('payload', {})
+
+        # Load webhooks
+        webhooks = load_webhooks()
+
+        # Find the webhook
+        webhook = None
+        for wh in webhooks:
+            if wh['id'] == webhook_id:
+                webhook = wh
+                break
+
+        if not webhook:
+            return jsonify({"error": "Webhook not found"}), 404
+
+        # Fire the webhook
+        url = webhook['url']
+        method = webhook['method']
+
+        logger.info(f"Firing webhook: {webhook['name']} ({method} {url})")
+
+        # Make the HTTP request
+        try:
+            if method == 'GET':
+                response = requests.get(url, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=payload, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=payload, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, json=payload, timeout=10)
+            else:
+                return jsonify({"error": f"Unsupported method: {method}"}), 400
+
+            # Parse response
+            try:
+                response_data = response.json()
+            except:
+                response_data = response.text
+
+            result = {
+                "success": True,
+                "status_code": response.status_code,
+                "response": response_data,
+                "timestamp": datetime.now().isoformat()
+            }
+
+            logger.info(f"Webhook fired successfully: {webhook['name']} (status: {response.status_code})")
+            return jsonify(result)
+
+        except requests.exceptions.Timeout:
+            logger.error(f"Webhook timeout: {webhook['name']}")
+            return jsonify({
+                "success": False,
+                "error": "Request timeout (10s)",
+                "timestamp": datetime.now().isoformat()
+            }), 408
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Webhook request failed: {webhook['name']} - {str(e)}")
+            return jsonify({
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Error firing webhook: {e}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     print("=" * 60)
     print("TOMO API Server Starting...")

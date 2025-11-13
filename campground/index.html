@@ -1163,6 +1163,184 @@
       </div>
     </div>
 
+    <!-- Webhook Control Panel -->
+    <div class="side-panel" id="webhookPanel" data-panel="webhook">
+      <div class="panel-header">
+        <h2>🚀 Webhook Control</h2>
+        <button class="close-panel" onclick="closePanel()">×</button>
+      </div>
+      <div class="panel-content" style="padding: 20px; overflow-y: auto;">
+
+        <!-- Add New Webhook Section -->
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">➕ Add New Webhook</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input
+              type="text"
+              id="webhookNameInput"
+              placeholder="Webhook Name"
+              style="
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 14px;
+                outline: none;
+              "
+              onfocus="this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.boxShadow='0 0 20px rgba(139, 92, 246, 0.2)'"
+              onblur="this.style.borderColor='rgba(255,255,255,0.3)'; this.style.boxShadow='none'"
+            />
+            <input
+              type="text"
+              id="webhookUrlInput"
+              placeholder="Webhook URL (https://...)"
+              style="
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 14px;
+                outline: none;
+              "
+              onfocus="this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.boxShadow='0 0 20px rgba(139, 92, 246, 0.2)'"
+              onblur="this.style.borderColor='rgba(255,255,255,0.3)'; this.style.boxShadow='none'"
+            />
+            <select
+              id="webhookMethodInput"
+              style="
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 14px;
+                outline: none;
+              "
+            >
+              <option value="POST">POST</option>
+              <option value="GET">GET</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+            <button
+              onclick="addWebhook()"
+              class="btn btn-primary"
+              style="padding: 10px 20px;"
+            >
+              Add Webhook
+            </button>
+          </div>
+        </div>
+
+        <!-- Saved Webhooks List -->
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: white; margin-bottom: 15px;">📋 Saved Webhooks</h3>
+          <div id="webhookList" style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- Webhooks will be added here -->
+          </div>
+        </div>
+
+        <!-- Fire Webhook Section -->
+        <div id="fireWebhookSection" style="
+          background: rgba(255,255,255,0.1);
+          padding: 20px;
+          border-radius: 12px;
+          display: none;
+        ">
+          <h3 style="color: white; margin-bottom: 15px;">🔥 Fire Webhook</h3>
+          <div style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 10px;">
+            <strong id="selectedWebhookName" style="color: white;">-</strong>
+          </div>
+          <div style="color: rgba(255,255,255,0.5); font-size: 12px; margin-bottom: 15px;">
+            <span id="selectedWebhookMethod">POST</span> <span id="selectedWebhookUrl">-</span>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label style="color: white; font-size: 14px; display: block; margin-bottom: 8px;">Payload (JSON):</label>
+            <textarea
+              id="webhookPayloadInput"
+              rows="8"
+              placeholder='{"key": "value"}'
+              style="
+                width: 100%;
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-size: 13px;
+                font-family: 'Courier New', monospace;
+                outline: none;
+                resize: vertical;
+              "
+              onfocus="this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.boxShadow='0 0 20px rgba(139, 92, 246, 0.2)'"
+              onblur="this.style.borderColor='rgba(255,255,255,0.3)'; this.style.boxShadow='none'"
+            >{
+  "message": "Hello from campground!",
+  "timestamp": "2025-01-01T00:00:00Z"
+}</textarea>
+          </div>
+
+          <!-- BIG RED BUTTON -->
+          <button
+            onclick="fireWebhook()"
+            style="
+              width: 100%;
+              padding: 20px;
+              border-radius: 15px;
+              border: none;
+              background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+              color: white;
+              font-size: 24px;
+              font-weight: bold;
+              cursor: pointer;
+              box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
+              transition: all 0.3s ease;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+            "
+            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 15px 40px rgba(255, 0, 0, 0.6)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 10px 30px rgba(255, 0, 0, 0.4)'"
+            onmousedown="this.style.transform='scale(0.95)'"
+            onmouseup="this.style.transform='scale(1.05)'"
+          >
+            🚀 FIRE WEBHOOK 🚀
+          </button>
+
+          <!-- Response Section -->
+          <div id="webhookResponse" style="
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            display: none;
+          ">
+            <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 5px;">RESPONSE</div>
+            <pre id="webhookResponseContent" style="
+              color: white;
+              font-size: 12px;
+              margin: 0;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              max-height: 200px;
+              overflow-y: auto;
+            "></pre>
+          </div>
+
+          <button
+            onclick="deselectWebhook()"
+            class="btn btn-secondary"
+            style="width: 100%; margin-top: 15px; padding: 10px;"
+          >
+            Back to List
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
     <script src="/ui.js"></script>
     <script src="/smartknob.js"></script>

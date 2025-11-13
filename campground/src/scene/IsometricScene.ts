@@ -253,6 +253,34 @@ export class IsometricScene {
         return // Don't check for avatar clicks
       }
 
+      // Check for control panel click
+      const controlPanel = this.campground.getControlPanel()
+      const controlPanelObjects: THREE.Object3D[] = []
+      controlPanel.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          controlPanelObjects.push(child)
+        }
+      })
+
+      const controlPanelIntersects = this.raycaster.intersectObjects(controlPanelObjects)
+      if (controlPanelIntersects.length > 0) {
+        // Clicked on control panel - open webhook panel
+        event.stopPropagation() // Prevent close-panel logic from triggering
+        const webhookPanel = document.getElementById('webhookPanel')
+        if (webhookPanel) {
+          const isAlreadyOpen = webhookPanel.classList.contains('active')
+          // Close other panels
+          document.querySelectorAll('.side-panel').forEach(panel => {
+            panel.classList.remove('active')
+          })
+          // Toggle or open the webhook panel
+          if (!isAlreadyOpen) {
+            webhookPanel.classList.add('active')
+          }
+        }
+        return // Don't check for avatar clicks
+      }
+
       // Get all avatar sprites
       const avatars = this.avatarManager.getAvatars()
       const sprites = avatars.map(avatar => avatar.getSprite())
