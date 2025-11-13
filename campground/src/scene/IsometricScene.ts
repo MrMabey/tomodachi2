@@ -3,6 +3,7 @@ import { Forest } from './Forest'
 import { Campground } from './Campground'
 import { AvatarManager } from './AvatarSprite'
 import { MechanicalArm } from '../hud/MechanicalArm'
+import { VRManager } from './VRManager'
 
 export class IsometricScene {
   private scene: THREE.Scene
@@ -20,6 +21,8 @@ export class IsometricScene {
   private dragOffset: THREE.Vector3
   private hoveredAvatar: any = null
   private tooltip: HTMLElement
+  private vrManager!: VRManager
+  private isVRMode: boolean = false
 
   constructor() {
     this.clock = new THREE.Clock()
@@ -87,6 +90,17 @@ export class IsometricScene {
 
     // Setup keyboard controls for HUD arm
     this.setupHUDControls()
+
+    // Initialize VR Manager
+    this.vrManager = new VRManager(
+      this.renderer,
+      this.scene,
+      this.onVRModeChange.bind(this)
+    )
+    console.log('🥽 VR Manager initialized')
+
+    // Setup VR button
+    this.setupVRButton()
   }
 
   private setupLighting() {
@@ -174,15 +188,24 @@ export class IsometricScene {
     if (this.mechanicalArm) {
       this.mechanicalArm.update(delta)
     }
+
+    // Update VR interactions (controller raycasting, etc.)
+    if (this.vrManager) {
+      this.vrManager.update()
+    }
   }
 
   public render() {
-    // Render main scene
-    this.renderer.render(this.scene, this.camera)
+    // In VR mode, renderer uses XR animation loop automatically
+    // So we only render manually in non-VR mode
+    if (!this.isVRMode) {
+      // Render main scene
+      this.renderer.render(this.scene, this.camera)
 
-    // Render HUD overlay
-    if (this.mechanicalArm) {
-      this.mechanicalArm.render(this.renderer)
+      // Render HUD overlay
+      if (this.mechanicalArm) {
+        this.mechanicalArm.render(this.renderer)
+      }
     }
   }
 
@@ -369,5 +392,60 @@ export class IsometricScene {
 
   public getScene(): THREE.Scene {
     return this.scene
+  }
+
+  public getRenderer(): THREE.WebGLRenderer {
+    return this.renderer
+  }
+
+  public getVRManager(): VRManager {
+    return this.vrManager
+  }
+
+  private setupVRButton() {
+    const vrButton = document.getElementById('vrButton')
+    if (!vrButton) {
+      console.warn('VR button not found in DOM')
+      return
+    }
+
+    vrButton.addEventListener('click', async () => {
+      if (this.isVRMode) {
+        // Exit VR
+        await this.vrManager.exitVR()
+      } else {
+        // Enter VR
+        const success = await this.vrManager.enterVR()
+        if (!success) {
+          console.error('Failed to enter VR mode')
+        }
+      }
+    })
+
+    console.log('🥽 VR button event listener attached')
+  }
+
+  private onVRModeChange(isVR: boolean) {
+    this.isVRMode = isVR
+    console.log(`VR mode ${isVR ? 'activated' : 'deactivated'}`)
+
+    const vrButton = document.getElementById('vrButton')
+    if (vrButton) {
+      if (isVR) {
+        vrButton.classList.add('in-vr')
+        vrButton.textContent = '🚪' // Exit icon
+        vrButton.title = 'Exit VR Mode'
+      } else {
+        vrButton.classList.remove('in-vr')
+        vrButton.textContent = '🥽' // VR goggles icon
+        vrButton.title = 'Enter VR Tabletop Mode'
+      }
+    }
+
+    // Update tooltip
+    const tooltip = document.querySelector('.vr-tooltip') as HTMLElement
+    if (tooltip) {
+      tooltip.textContent = isVR ? 'Exit VR' : 'Enter VR Tabletop'
+    }
   }
 }

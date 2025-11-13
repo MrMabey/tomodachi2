@@ -13,14 +13,12 @@ window.addEventListener('resize', () => {
   scene.handleResize()
 })
 
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate)
+// Animation loop - Use renderer.setAnimationLoop for WebXR compatibility
+// This automatically handles both VR and non-VR rendering
+scene.getRenderer().setAnimationLoop(() => {
   scene.update()
   scene.render()
-}
-
-animate()
+})
 
 // Make Flow Buddy and Scene available globally for UI controls
 ;(window as any).flowBuddy = flowBuddy

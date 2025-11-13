@@ -724,11 +724,82 @@
       #avatarTooltip.visible {
         opacity: 1;
       }
+
+      /* VR Button */
+      #vrButton {
+        position: fixed;
+        bottom: 40px;
+        left: 40px;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2em;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        z-index: 1100;
+      }
+
+      #vrButton:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 35px rgba(0, 210, 255, 0.6);
+        background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      #vrButton.in-vr {
+        background: linear-gradient(135deg, #ff006e 0%, #ff4d6d 100%);
+        animation: vrPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes vrPulse {
+        0%, 100% {
+          box-shadow: 0 4px 20px rgba(255, 0, 110, 0.4);
+        }
+        50% {
+          box-shadow: 0 8px 35px rgba(255, 0, 110, 0.8);
+        }
+      }
+
+      #vrButton:active {
+        transform: scale(0.95);
+      }
+
+      .vr-tooltip {
+        position: fixed;
+        bottom: 115px;
+        left: 40px;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 1099;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      #vrButton:hover + .vr-tooltip {
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
     <!-- Avatar Name Tooltip -->
     <div id="avatarTooltip"></div>
+
+    <!-- VR Button -->
+    <div id="vrButton" title="Enter VR Tabletop Mode">🥽</div>
+    <div class="vr-tooltip">Enter VR Tabletop</div>
 
     <!-- Performance HUD -->
     <div class="perf-hud">
