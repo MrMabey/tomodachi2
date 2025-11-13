@@ -7,6 +7,12 @@ let currentAsset = null
 let animationId = null
 let currentAssetType = '3d-object'
 
+// Composition mode state
+let compositionMode = false
+let compositionShapes = []
+let selectedShapeIndex = -1
+let compositionGroup = null
+
 // Initialize Three.js scene
 function initScene() {
     // Scene
@@ -107,8 +113,305 @@ function animate() {
     renderer.render(scene, camera)
 }
 
+// Composition Mode Functions
+function toggleCompositionMode() {
+    compositionMode = !compositionMode
+
+    const toggle = document.getElementById('compositionToggle')
+    const switchEl = document.getElementById('compositionSwitch')
+    const section = document.getElementById('compositionSection')
+
+    if (compositionMode) {
+        toggle.classList.add('active')
+        switchEl.classList.add('active')
+        section.style.display = 'block'
+
+        // Initialize composition group
+        if (!compositionGroup) {
+            compositionGroup = new THREE.Group()
+            scene.add(compositionGroup)
+            currentAsset = compositionGroup
+        }
+
+        // Add first shape if empty
+        if (compositionShapes.length === 0) {
+            addShapeToComposition()
+        }
+    } else {
+        toggle.classList.remove('active')
+        switchEl.classList.remove('active')
+        section.style.display = 'none'
+
+        // Clear composition
+        if (compositionGroup) {
+            scene.remove(compositionGroup)
+            compositionGroup = null
+        }
+        compositionShapes = []
+        selectedShapeIndex = -1
+        updateShapeList()
+
+        // Return to single object mode
+        create3DObject()
+    }
+}
+
+function addShapeToComposition() {
+    const geometryType = document.getElementById('geometryType').value
+    const scale = parseFloat(document.getElementById('scaleSlider').value)
+    const color = document.getElementById('objectColor').value
+    const materialType = document.getElementById('materialType').value
+    const castShadow = document.getElementById('castShadow').checked
+
+    const shapeData = {
+        id: Date.now(),
+        geometryType,
+        scale,
+        color,
+        materialType,
+        castShadow,
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        localScale: { x: 1, y: 1, z: 1 }
+    }
+
+    compositionShapes.push(shapeData)
+    updateComposition()
+    updateShapeList()
+    showToast('Shape added to composition', 'success')
+}
+
+function removeShapeFromComposition(index) {
+    compositionShapes.splice(index, 1)
+    if (selectedShapeIndex === index) {
+        selectedShapeIndex = -1
+    } else if (selectedShapeIndex > index) {
+        selectedShapeIndex--
+    }
+    updateComposition()
+    updateShapeList()
+}
+
+function selectShape(index) {
+    selectedShapeIndex = index
+    updateShapeList()
+}
+
+function updateShapeTransform(index, property, axis, value) {
+    if (compositionShapes[index]) {
+        compositionShapes[index][property][axis] = parseFloat(value)
+        updateComposition()
+    }
+}
+
+function updateComposition() {
+    if (!compositionGroup) return
+
+    // Clear existing meshes
+    while (compositionGroup.children.length > 0) {
+        compositionGroup.remove(compositionGroup.children[0])
+    }
+
+    // Add all shapes
+    compositionShapes.forEach(shapeData => {
+        const mesh = createMeshFromData(shapeData)
+        compositionGroup.add(mesh)
+    })
+
+    // Update preview info
+    let totalVertices = 0
+    let totalFaces = 0
+    compositionShapes.forEach(shapeData => {
+        const tempGeometry = createGeometry(shapeData.geometryType)
+        if (tempGeometry) {
+            const positions = tempGeometry.attributes.position
+            totalVertices += positions ? positions.count : 0
+            totalFaces += tempGeometry.index ? tempGeometry.index.count / 3 : (positions ? positions.count / 3 : 0)
+        }
+    })
+
+    document.getElementById('previewType').textContent = `Composition (${compositionShapes.length} shapes)`
+    document.getElementById('previewVertices').textContent = `Vertices: ${totalVertices}`
+    document.getElementById('previewFaces').textContent = `Faces: ${Math.floor(totalFaces)}`
+}
+
+function createMeshFromData(shapeData) {
+    const geometry = createGeometry(shapeData.geometryType)
+    const material = createMaterial(shapeData.materialType, shapeData.color)
+    const mesh = new THREE.Mesh(geometry, material)
+
+    mesh.position.set(shapeData.position.x, shapeData.position.y, shapeData.position.z)
+    mesh.rotation.set(shapeData.rotation.x, shapeData.rotation.y, shapeData.rotation.z)
+    mesh.scale.set(
+        shapeData.scale * shapeData.localScale.x,
+        shapeData.scale * shapeData.localScale.y,
+        shapeData.scale * shapeData.localScale.z
+    )
+    mesh.castShadow = shapeData.castShadow
+    mesh.receiveShadow = true
+
+    return mesh
+}
+
+function createGeometry(geometryType) {
+    switch (geometryType) {
+        case 'box':
+            return new THREE.BoxGeometry(1, 1, 1)
+        case 'sphere':
+            return new THREE.SphereGeometry(0.5, 32, 32)
+        case 'cylinder':
+            return new THREE.CylinderGeometry(0.5, 0.5, 1, 32)
+        case 'cone':
+            return new THREE.ConeGeometry(0.5, 1, 32)
+        case 'torus':
+            return new THREE.TorusGeometry(0.5, 0.2, 16, 100)
+        case 'dodecahedron':
+            return new THREE.DodecahedronGeometry(0.5, 0)
+        case 'octahedron':
+            return new THREE.OctahedronGeometry(0.5, 0)
+        case 'tetrahedron':
+            return new THREE.TetrahedronGeometry(0.5, 0)
+        default:
+            return new THREE.BoxGeometry(1, 1, 1)
+    }
+}
+
+function createMaterial(materialType, color) {
+    const materialColor = new THREE.Color(color)
+    switch (materialType) {
+        case 'standard':
+            return new THREE.MeshStandardMaterial({
+                color: materialColor,
+                roughness: 0.5,
+                metalness: 0.5
+            })
+        case 'phong':
+            return new THREE.MeshPhongMaterial({
+                color: materialColor,
+                shininess: 100
+            })
+        case 'lambert':
+            return new THREE.MeshLambertMaterial({
+                color: materialColor
+            })
+        case 'basic':
+            return new THREE.MeshBasicMaterial({
+                color: materialColor
+            })
+        default:
+            return new THREE.MeshStandardMaterial({
+                color: materialColor,
+                roughness: 0.5,
+                metalness: 0.5
+            })
+    }
+}
+
+function updateShapeList() {
+    const shapeList = document.getElementById('shapeList')
+
+    if (compositionShapes.length === 0) {
+        shapeList.innerHTML = '<div style="text-align: center; opacity: 0.6; padding: 20px;">No shapes yet. Add a shape to get started!</div>'
+        return
+    }
+
+    shapeList.innerHTML = compositionShapes.map((shape, index) => `
+        <div class="shape-item ${selectedShapeIndex === index ? 'selected' : ''}" onclick="selectShape(${index})">
+            <div class="shape-item-header">
+                <div class="shape-item-title">
+                    <span>${getShapeEmoji(shape.geometryType)}</span>
+                    <span>${shape.geometryType.charAt(0).toUpperCase() + shape.geometryType.slice(1)}</span>
+                    <span style="color: ${shape.color}; font-size: 12px;">●</span>
+                </div>
+                <div class="shape-item-actions">
+                    <button class="shape-item-btn danger" onclick="event.stopPropagation(); removeShapeFromComposition(${index})">🗑️</button>
+                </div>
+            </div>
+            <div class="shape-transform">
+                <div>
+                    <div class="shape-transform-label">Position X</div>
+                    <input type="number" step="0.1" value="${shape.position.x}"
+                           onchange="updateShapeTransform(${index}, 'position', 'x', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Position Y</div>
+                    <input type="number" step="0.1" value="${shape.position.y}"
+                           onchange="updateShapeTransform(${index}, 'position', 'y', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Position Z</div>
+                    <input type="number" step="0.1" value="${shape.position.z}"
+                           onchange="updateShapeTransform(${index}, 'position', 'z', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+            </div>
+            <div class="shape-transform">
+                <div>
+                    <div class="shape-transform-label">Rotation X</div>
+                    <input type="number" step="0.1" value="${shape.rotation.x}"
+                           onchange="updateShapeTransform(${index}, 'rotation', 'x', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Rotation Y</div>
+                    <input type="number" step="0.1" value="${shape.rotation.y}"
+                           onchange="updateShapeTransform(${index}, 'rotation', 'y', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Rotation Z</div>
+                    <input type="number" step="0.1" value="${shape.rotation.z}"
+                           onchange="updateShapeTransform(${index}, 'rotation', 'z', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+            </div>
+            <div class="shape-transform">
+                <div>
+                    <div class="shape-transform-label">Scale X</div>
+                    <input type="number" step="0.1" value="${shape.localScale.x}"
+                           onchange="updateShapeTransform(${index}, 'localScale', 'x', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Scale Y</div>
+                    <input type="number" step="0.1" value="${shape.localScale.y}"
+                           onchange="updateShapeTransform(${index}, 'localScale', 'y', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+                <div>
+                    <div class="shape-transform-label">Scale Z</div>
+                    <input type="number" step="0.1" value="${shape.localScale.z}"
+                           onchange="updateShapeTransform(${index}, 'localScale', 'z', this.value)"
+                           onclick="event.stopPropagation()">
+                </div>
+            </div>
+        </div>
+    `).join('')
+}
+
+function getShapeEmoji(geometryType) {
+    const emojis = {
+        box: '📦',
+        sphere: '⚽',
+        cylinder: '🥫',
+        cone: '🔺',
+        torus: '🍩',
+        dodecahedron: '⬢',
+        octahedron: '💎',
+        tetrahedron: '🔷'
+    }
+    return emojis[geometryType] || '📦'
+}
+
 // Create 3D Object
 function create3DObject() {
+    // If in composition mode, don't create single object
+    if (compositionMode) {
+        return
+    }
+
     const geometryType = document.getElementById('geometryType').value
     const scale = parseFloat(document.getElementById('scaleSlider').value)
     const color = document.getElementById('objectColor').value
@@ -410,12 +713,43 @@ function exportCode() {
     let code = ''
 
     if (currentAssetType === '3d-object') {
-        const geometryType = document.getElementById('geometryType').value
-        const scale = document.getElementById('scaleSlider').value
-        const color = document.getElementById('objectColor').value
-        const materialType = document.getElementById('materialType').value
+        // Check if composition mode
+        if (compositionMode && compositionShapes.length > 0) {
+            // Generate code for composition
+            const shapesCode = compositionShapes.map((shape, index) => `
+    // Shape ${index + 1}: ${shape.geometryType}
+    const geometry${index} = new THREE.${shape.geometryType.charAt(0).toUpperCase() + shape.geometryType.slice(1)}Geometry(${getGeometryParams(shape.geometryType)})
+    const material${index} = new THREE.Mesh${shape.materialType.charAt(0).toUpperCase() + shape.materialType.slice(1)}Material({
+        color: 0x${shape.color.substring(1)},
+        ${shape.materialType === 'standard' ? 'roughness: 0.5,\n        metalness: 0.5' : ''}
+    })
+    const mesh${index} = new THREE.Mesh(geometry${index}, material${index})
+    mesh${index}.position.set(${shape.position.x}, ${shape.position.y}, ${shape.position.z})
+    mesh${index}.rotation.set(${shape.rotation.x}, ${shape.rotation.y}, ${shape.rotation.z})
+    mesh${index}.scale.set(${shape.scale * shape.localScale.x}, ${shape.scale * shape.localScale.y}, ${shape.scale * shape.localScale.z})
+    mesh${index}.castShadow = ${shape.castShadow}
+    mesh${index}.receiveShadow = true
+    group.add(mesh${index})`).join('\n')
 
-        code = `// ${assetName}
+            code = `// ${assetName} - Composition of ${compositionShapes.length} shapes
+import * as THREE from 'three'
+
+export function create${assetName.replace(/\s+/g, '')}(scene) {
+    const group = new THREE.Group()
+${shapesCode}
+
+    scene.add(group)
+    return group
+}
+`
+        } else {
+            // Single shape code
+            const geometryType = document.getElementById('geometryType').value
+            const scale = document.getElementById('scaleSlider').value
+            const color = document.getElementById('objectColor').value
+            const materialType = document.getElementById('materialType').value
+
+            code = `// ${assetName}
 import * as THREE from 'three'
 
 export function create${assetName.replace(/\s+/g, '')}(scene) {
@@ -432,6 +766,7 @@ export function create${assetName.replace(/\s+/g, '')}(scene) {
     return mesh
 }
 `
+        }
     } else if (currentAssetType === 'avatar') {
         const canvasSize = document.getElementById('canvasSize').value
         const drawCode = document.getElementById('avatarCode').value
@@ -620,6 +955,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('castShadow').addEventListener('change', create3DObject)
     document.getElementById('animated').addEventListener('change', create3DObject)
 
+    // Composition mode controls
+    document.getElementById('compositionToggle').addEventListener('click', toggleCompositionMode)
+    document.getElementById('addShapeBtn').addEventListener('click', addShapeToComposition)
+
     // Avatar controls
     document.getElementById('canvasSize').addEventListener('change', createAvatar)
     document.getElementById('avatarCode').addEventListener('input',
@@ -681,3 +1020,8 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait)
     }
 }
+
+// Expose functions globally for inline event handlers
+window.selectShape = selectShape
+window.removeShapeFromComposition = removeShapeFromComposition
+window.updateShapeTransform = updateShapeTransform

@@ -321,6 +321,178 @@
         .toast.error {
             border-left: 4px solid #f87171;
         }
+
+        /* Shape Composition Styles */
+        .composition-mode {
+            background: rgba(124, 58, 237, 0.2);
+            border: 2px solid rgba(124, 58, 237, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .composition-mode h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shape-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .shape-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .shape-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .shape-item.selected {
+            border-color: rgba(124, 58, 237, 0.8);
+            background: rgba(124, 58, 237, 0.2);
+        }
+
+        .shape-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .shape-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shape-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .shape-item-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .shape-item-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .shape-item-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+
+        .shape-transform {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .shape-transform input {
+            width: 100%;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+        }
+
+        .shape-transform-label {
+            opacity: 0.7;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        .btn-add-shape {
+            width: 100%;
+            padding: 12px;
+            background: rgba(124, 58, 237, 0.3);
+            border: 2px dashed rgba(124, 58, 237, 0.6);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-add-shape:hover {
+            background: rgba(124, 58, 237, 0.4);
+            border-color: rgba(124, 58, 237, 0.8);
+        }
+
+        .composition-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .composition-toggle:hover {
+            background: rgba(124, 58, 237, 0.3);
+        }
+
+        .composition-toggle.active {
+            background: rgba(124, 58, 237, 0.4);
+            border-color: rgba(124, 58, 237, 0.8);
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 13px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: rgba(124, 58, 237, 0.6);
+        }
+
+        .toggle-switch-knob {
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-switch-knob {
+            left: 26px;
+        }
     </style>
 </head>
 <body>
@@ -422,6 +594,29 @@
                 <div class="checkbox-group">
                     <input type="checkbox" id="animated">
                     <label for="animated">Animated (Rotating)</label>
+                </div>
+
+                <!-- Composition Mode -->
+                <div class="composition-toggle" id="compositionToggle">
+                    <div>
+                        <strong>🔨 Composition Mode</strong>
+                        <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Build complex objects from multiple shapes</div>
+                    </div>
+                    <div class="toggle-switch" id="compositionSwitch">
+                        <div class="toggle-switch-knob"></div>
+                    </div>
+                </div>
+
+                <div id="compositionSection" style="display: none;">
+                    <div class="composition-mode">
+                        <h3>📦 Shapes in Composition</h3>
+                        <div class="shape-list" id="shapeList">
+                            <!-- Shapes will be added here dynamically -->
+                        </div>
+                        <button class="btn-add-shape" id="addShapeBtn">
+                            + Add Shape to Composition
+                        </button>
+                    </div>
                 </div>
             </div>
 
