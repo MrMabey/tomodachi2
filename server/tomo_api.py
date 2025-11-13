@@ -6,8 +6,6 @@ Provides REST API endpoints for interacting with the Tomo AI system
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import json
 import os
 import sys
@@ -17,21 +15,44 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from pathlib import Path
 
+# Configure logging first (before config import which uses it)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Add parent directory to path for config import
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import config
+
+# Try to import config, but make it optional
+try:
+    import config
+    CONFIG_AVAILABLE = True
+except ImportError:
+    logger.warning("⚠️  config.py not available - using defaults")
+    CONFIG_AVAILABLE = False
+    class config:
+        DEBUG = False
+
+# Try to import ML libraries, but make them optional
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    ML_AVAILABLE = True
+    logger.info("✓ PyTorch and Transformers available")
+except ImportError as e:
+    ML_AVAILABLE = False
+    torch = None
+    AutoTokenizer = None
+    AutoModelForCausalLM = None
+    logger.warning(f"⚠️  ML libraries not available - model inference disabled ({e})")
 
 # Try to import PEFT, but make it optional
 try:
     from peft import PeftModel
     PEFT_AVAILABLE = True
 except ImportError:
-    logger.warning("⚠️  PEFT library not available - adapter support disabled")
     PEFT_AVAILABLE = False
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO)
-logger = logging.getLogger(__name__)
+    PeftModel = None
+    logger.warning("⚠️  PEFT library not available - adapter support disabled")
 
 app = Flask(__name__, static_folder='../gui', static_url_path='')
 CORS(app)
@@ -214,6 +235,10 @@ def retrieve_memories(query, top_k=3, thread_id=None):
 
 def load_base_model():
     """Load the base TinyLlama model"""
+    if not ML_AVAILABLE:
+        logger.error("Cannot load model - ML libraries not available")
+        return None, None
+
     if state.base_model is None:
         logger.info(f"Loading base model: {state.model_config['base_model_name']}")
         state.tokenizer = AutoTokenizer.from_pretrained(state.model_config["base_model_name"])
@@ -409,6 +434,12 @@ def index():
 @app.route('/api/inference', methods=['POST'])
 def inference():
     """Main inference endpoint - processes user input through Tomo"""
+    if not ML_AVAILABLE:
+        return jsonify({
+            "error": "ML libraries not available",
+            "message": "PyTorch and Transformers are still installing. Please wait or check server logs."
+        }), 503
+
     try:
         data = request.json
         user_input = data.get('input', '')
@@ -616,7 +647,7 @@ def unload_model():
             state.base_model = None
             state.tokenizer = None
 
-        if torch.cuda.is_available():
+        if ML_AVAILABLE and torch and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         return jsonify({"message": "Model unloaded successfully"})
